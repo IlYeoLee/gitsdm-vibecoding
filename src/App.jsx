@@ -4,7 +4,7 @@ import {
   ExternalLink, Sparkles, Image as ImageIcon, Heart, Ban, Upload, X, Sun, Moon,
   Coffee, Home, Building2, ChevronDown, FileImage, Calendar,
   MessageCircle, Dna, Phone, Instagram, Link as LinkIcon, Trash2, CheckCircle2,
-  Copy, Share2, Check, Navigation, AlertCircle, Smile, MapPinned, Flag, CalendarPlus, Circle, Monitor, Bed
+  Copy, Share2, Check, Navigation, AlertCircle, Smile, MapPinned, Flag, CalendarPlus, Circle, Monitor, Bed, Camera
 } from 'lucide-react';
 
 // --- Constants ---
@@ -106,13 +106,43 @@ const Button = ({ children, onClick, variant = 'primary', className = "", disabl
 };
 
 // --- Full Screen Finch Style Scene ---
+// Avatar sprite — 5 frames at /avatar/{1..5}.png, 759x909 each. Face circle ≈ left 39%, top 28%, dia 33% of sprite width.
+const SPRITE_FRAME_COUNT = 5;
+const SPRITE_ASPECT = 909 / 759; // h/w
+const FACE_LEFT = 0.39;
+const FACE_TOP = 0.28;
+const FACE_DIA = 0.34;
+
 const FinchWalkingScene = ({ members, onMemberClick }) => {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false);
+  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  const [tick, setTick] = useState(0);
+
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
     const handler = (e) => setIsMobile(e.matches);
     mq.addEventListener?.('change', handler);
     return () => mq.removeEventListener?.('change', handler);
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Walk-cycle frame ticker — 160ms per frame ≈ 0.8s full cycle
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => (t + 1) % SPRITE_FRAME_COUNT), 160);
+    return () => clearInterval(id);
+  }, []);
+
+  // Preload sprite frames so frame swaps don't flicker
+  useEffect(() => {
+    for (let i = 1; i <= SPRITE_FRAME_COUNT; i++) {
+      const img = new Image();
+      img.src = `/avatar/${i}.png`;
+    }
   }, []);
 
   const getRoleColor = (role) => {
@@ -125,18 +155,16 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
     }
   };
 
-  const getBackpackColor = (role) => {
-    switch(role) {
-      case 'PL': return '#e1306c';
-      case 'ID': return '#ffb300';
-      case 'VD': return '#f04452';
-      case 'UX': return '#00b8d9';
-      default: return '#f04452';
-    }
-  };
-
-  // Mobile spacing tighter so 5+ characters still fit
-  const charOffset = isMobile ? 70 : 110;
+  // Auto-scale character size + spacing to fit up to 10 members
+  const naturalCharWidth = isMobile ? 90 : 140;
+  const naturalSpacing = isMobile ? 95 : 150;
+  const usableWidth = viewportWidth * (isMobile ? 0.94 : 0.78);
+  const minScale = 0.45;
+  const requiredWidth = Math.max(1, members.length) * naturalSpacing;
+  const fitScale = requiredWidth > usableWidth ? Math.max(minScale, usableWidth / requiredWidth) : 1;
+  const charWidth = naturalCharWidth * fitScale;
+  const charHeight = charWidth * SPRITE_ASPECT;
+  const charOffset = naturalSpacing * fitScale;
 
   return (
     <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
@@ -144,15 +172,6 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
         .scene-bg-pan { animation: sceneScroll 70s linear infinite; }
         .scene-objects-pan { animation: sceneScroll 40s linear infinite; }
         @keyframes sceneScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-        .char-bounce { animation: walkBounce 0.5s ease-in-out infinite alternate; }
-        .leg-swing-f { animation: legFront 0.5s linear infinite alternate; }
-        .leg-swing-b { animation: legBack 0.5s linear infinite alternate; }
-
-        @keyframes walkBounce { 0% { transform: translateY(0); } 100% { transform: translateY(-12px); } }
-        @keyframes legFront { 0% { transform: rotate(-20deg); } 100% { transform: rotate(30deg); } }
-        @keyframes legBack { 0% { transform: rotate(30deg); } 100% { transform: rotate(-20deg); } }
-
         .text-shadow-sm { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
       `}</style>
 
@@ -171,55 +190,69 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
       </div>
 
       {/* Layer 3: Characters — anchored on the carpet, in front of furniture */}
-      <div className="absolute bottom-[6%] md:bottom-[8%] w-full h-[180px] md:h-[220px] pointer-events-auto flex items-end justify-center z-50">
+      <div
+        className="absolute bottom-[5%] md:bottom-[7%] w-full pointer-events-auto flex items-end justify-center z-50"
+        style={{ height: `${charHeight + 70}px` }}
+      >
         {members.map((member, index) => {
-          const delay = index * -0.4;
-          // Use CSS variable so we can swap offset between mobile/desktop without re-render
-          const indexOffset = (index - (members.length - 1) / 2);
+          const indexOffset = index - (members.length - 1) / 2;
           const zIndex = 50 - index;
-          const scale = 1 - (Math.abs(index - (members.length - 1) / 2) * 0.05);
+          const frame = ((tick + index) % SPRITE_FRAME_COUNT) + 1;
+          const ringColor = getRoleColor(member.role);
 
           return (
             <div
               key={member.id}
               onClick={() => onMemberClick(member)}
-              className="absolute bottom-8 md:bottom-10 flex flex-col items-center cursor-pointer transition-transform hover:scale-110"
+              className="absolute bottom-0 flex flex-col items-center cursor-pointer transition-transform hover:scale-110"
               style={{
-                transform: `translateX(${indexOffset * charOffset}px) scale(${scale})`,
+                transform: `translateX(${indexOffset * charOffset}px)`,
                 zIndex
               }}
             >
               {/* Speech Bubble */}
-              <div className="absolute -top-12 md:-top-16 bg-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl shadow-md border border-gray-100 animate-in fade-in zoom-in slide-in-from-bottom-2 duration-500 whitespace-nowrap text-center">
-                 <div className="text-[10px] md:text-sm font-black text-[#4e5968] max-w-[110px] md:max-w-[200px] truncate">"{member.intro || '안녕!'}"</div>
-                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-b border-r border-gray-100"></div>
+              <div
+                className="absolute bg-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl shadow-md border border-gray-100 animate-in fade-in zoom-in slide-in-from-bottom-2 duration-500 whitespace-nowrap text-center"
+                style={{ bottom: `${charHeight + 8}px` }}
+              >
+                <div
+                  className="text-[10px] md:text-sm font-black text-[#4e5968] truncate"
+                  style={{ maxWidth: `${charWidth + 70}px` }}
+                >"{member.intro || '안녕!'}"</div>
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-b border-r border-gray-100"></div>
               </div>
 
-              {/* Character Wrapper */}
-              <div className="relative w-[64px] h-[80px] md:w-[110px] md:h-[130px] char-bounce transition-all" style={{ animationDelay: `${delay}s` }}>
-
-                <div className="absolute top-2 md:top-3 -left-3 md:-left-5 w-10 md:w-16 h-12 md:h-20 rounded-xl md:rounded-2xl shadow-sm z-0" style={{ backgroundColor: getBackpackColor(member.role) }}></div>
-
-                <div className="absolute inset-0 rounded-[32px] md:rounded-[45px] shadow-[inset_0_-8px_0_rgba(0,0,0,0.1)] z-10 overflow-hidden" style={{ backgroundColor: getRoleColor(member.role) }}>
-                  <div className="absolute bottom-[-5px] right-[-10px] w-[55px] md:w-[90px] h-[65px] md:h-[110px] bg-white rounded-[30px] md:rounded-[40px]"></div>
-
-                  {member.role === 'PL' && <div className="absolute -top-1 right-0 w-full h-6 md:h-10 bg-yellow-400 rounded-t-full z-20 shadow-sm"></div>}
-
-                  <div className="absolute top-5 md:top-8 right-3 md:right-6 flex gap-2 md:gap-3 z-20">
-                    <div className="w-1.5 h-2.5 md:w-3 md:h-4 bg-[#191f28] rounded-full"></div>
-                    <div className="w-1.5 h-2.5 md:w-3 md:h-4 bg-[#191f28] rounded-full"></div>
-                  </div>
-
-                  <div className="absolute top-7 md:top-11 -right-1 w-5 md:w-8 h-3.5 md:h-6 bg-[#FFB300] rounded-full shadow-sm z-20 border-b-2 border-orange-500/30"></div>
-
-                  <div className="absolute top-7 md:top-11 right-7 md:right-12 w-2.5 md:w-3.5 h-1.5 md:h-2 bg-pink-300 rounded-full opacity-80 z-20"></div>
+              {/* Character (sprite + face photo overlay) */}
+              <div
+                className="relative drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)]"
+                style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
+              >
+                <img
+                  src={`/avatar/${frame}.png`}
+                  alt=""
+                  draggable={false}
+                  className="absolute inset-0 w-full h-full object-contain select-none"
+                />
+                {/* Face circle: profile photo (or role-colored placeholder) */}
+                <div
+                  className="absolute rounded-full overflow-hidden bg-white"
+                  style={{
+                    left: `${charWidth * FACE_LEFT}px`,
+                    top: `${charHeight * FACE_TOP}px`,
+                    width: `${charWidth * FACE_DIA}px`,
+                    height: `${charWidth * FACE_DIA}px`,
+                    boxShadow: `inset 0 0 0 2px ${ringColor}66`
+                  }}
+                >
+                  {member.photoUrl ? (
+                    <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center font-black text-white"
+                      style={{ backgroundColor: ringColor, fontSize: `${charWidth * FACE_DIA * 0.45}px` }}
+                    >{member.name?.[0] || '?'}</div>
+                  )}
                 </div>
-
-                <div className="absolute top-10 md:top-14 left-1 md:left-2 w-8 md:w-14 h-4 md:h-7 rounded-full z-20 origin-left shadow-sm leg-swing-b" style={{ backgroundColor: getRoleColor(member.role), animationDelay: `${delay}s` }}></div>
-
-                <div className="absolute -bottom-2 left-2.5 md:left-4 w-5 md:w-7 h-3.5 md:h-5 bg-[#FFB300] rounded-full origin-top z-0 leg-swing-b" style={{ animationDelay: `${delay}s` }}></div>
-
-                <div className="absolute -bottom-2 right-2.5 md:right-4 w-5 md:w-7 h-3.5 md:h-5 bg-[#FFB300] rounded-full origin-top z-20 leg-swing-f" style={{ animationDelay: `${delay}s` }}></div>
               </div>
             </div>
           );
@@ -262,7 +295,13 @@ const MemberDetailModal = ({ member, onClose }) => {
 
         <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-12">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
-            <div className="w-20 h-20 md:w-32 md:h-32 bg-gradient-to-br from-[#3182f6] to-[#00c471] rounded-3xl md:rounded-[40px] flex items-center justify-center text-white text-3xl md:text-5xl font-black shadow-lg">{member.name[0]}</div>
+            <div className="w-20 h-20 md:w-32 md:h-32 rounded-3xl md:rounded-[40px] flex items-center justify-center text-white text-3xl md:text-5xl font-black shadow-lg overflow-hidden bg-gradient-to-br from-[#3182f6] to-[#00c471] shrink-0">
+              {member.photoUrl ? (
+                <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" />
+              ) : (
+                <span>{member.name[0]}</span>
+              )}
+            </div>
             <div className="flex-1 w-full">
               <div className="flex items-center gap-2 md:gap-3 mb-1.5 md:mb-2 flex-wrap">
                 <h2 className="text-3xl md:text-5xl font-black tracking-tight">{member.name}</h2>
@@ -343,6 +382,7 @@ export default function App() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
   const fileInputRef = useRef(null);
+  const photoInputRef = useRef(null);
 
   const [showMembersSheet, setShowMembersSheet] = useState(false);
   const [showRulesSheet, setShowRulesSheet] = useState(false);
@@ -350,6 +390,7 @@ export default function App() {
 
   const [profileData, setProfileData] = useState({
     name: '', role: 'UX', generation: '34기', phone: '', snsLink: '',
+    photoUrl: '',
     portfolioLinks: [], workItems: [], workStyles: [], styleReasons: {},
     researchTopics: [], researchSubject: '',
     schedule: { start: '오전', night: '비선호', place: '출퇴근' },
@@ -413,6 +454,29 @@ export default function App() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
+  const handlePhotoUpload = (file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const SIZE = 240;
+        const sourceSize = Math.min(img.width, img.height);
+        const sx = (img.width - sourceSize) / 2;
+        const sy = (img.height - sourceSize) / 2;
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, sourceSize, sourceSize, 0, 0, SIZE, SIZE);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        setProfileData(prev => ({ ...prev, photoUrl: dataUrl }));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleFiles = (files) => {
     const validFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
     validFiles.forEach(file => {
@@ -447,6 +511,43 @@ export default function App() {
             <p className="text-[#8b95a1] text-sm md:text-lg font-bold">협업 멤버들에게 공유될 정보를 구성합니다.</p>
           </header>
           <div className="space-y-6 md:space-y-8">
+            {/* Profile Photo Upload — overlay on walking character */}
+            <div className="space-y-2.5 md:space-y-3">
+              <label className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                <Camera size={12}/> 프로필 사진 <span className="text-gray-300 normal-case font-bold tracking-normal">— 본인 얼굴 권장 (캐릭터 얼굴로 사용됩니다)</span>
+              </label>
+              <input type="file" accept="image/*" ref={photoInputRef} onChange={e => handlePhotoUpload(e.target.files?.[0])} className="hidden" />
+              <div className="flex items-center gap-4 md:gap-5 p-4 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px]">
+                <button onClick={() => photoInputRef.current?.click()} className="relative w-20 h-20 md:w-24 md:h-24 rounded-full bg-white overflow-hidden border-2 border-dashed border-gray-300 hover:border-[#3182f6] hover:bg-blue-50 transition-all shrink-0 flex items-center justify-center group">
+                  {profileData.photoUrl ? (
+                    <img src={profileData.photoUrl} alt="프로필 사진" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-0.5 text-gray-300 group-hover:text-[#3182f6] transition-colors">
+                      <Camera size={24}/>
+                      <span className="text-[9px] font-black uppercase tracking-wider">Upload</span>
+                    </div>
+                  )}
+                </button>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <p className="text-xs md:text-sm font-bold text-[#4e5968] leading-snug">
+                    {profileData.photoUrl
+                      ? '얼굴이 캐릭터의 동그란 얼굴 영역에 올라가요.'
+                      : '얼굴이 가운데에 오도록 정사각형 사진을 올려주세요.'}
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => photoInputRef.current?.click()} className="px-3 py-1.5 md:px-4 md:py-2 bg-[#3182f6] text-white rounded-lg md:rounded-xl font-black text-[11px] md:text-xs">
+                      {profileData.photoUrl ? '변경' : '사진 선택'}
+                    </button>
+                    {profileData.photoUrl && (
+                      <button onClick={() => setProfileData({...profileData, photoUrl: ''})} className="px-3 py-1.5 md:px-4 md:py-2 bg-white text-gray-500 rounded-lg md:rounded-xl font-black text-[11px] md:text-xs border border-gray-200 hover:bg-gray-50">
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               <div className="space-y-1.5 md:space-y-2">
                 <label className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest ml-1">이름</label>
@@ -794,7 +895,9 @@ export default function App() {
               <div className="space-y-3 md:space-y-4">
                  {team.members.map(member => (
                    <div key={member.id} onClick={() => { setShowMembersSheet(false); setSelectedMember(member); }} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-white rounded-2xl md:rounded-[24px] shadow-sm border border-gray-100 cursor-pointer hover:bg-gray-50 active:scale-95 transition-all">
-                      <div className="w-12 h-12 md:w-16 md:h-16 bg-[#3182f6] rounded-xl md:rounded-2xl flex items-center justify-center text-white font-black text-lg md:text-2xl shrink-0">{member.name[0]}</div>
+                      <div className="w-12 h-12 md:w-16 md:h-16 bg-[#3182f6] rounded-xl md:rounded-2xl flex items-center justify-center text-white font-black text-lg md:text-2xl shrink-0 overflow-hidden">
+                        {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : member.name[0]}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5 md:mb-1"><span className="font-black text-base md:text-xl">{member.name}</span><span className="text-[10px] md:text-xs font-bold text-[#3182f6] bg-blue-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md md:rounded-lg">{member.role}</span></div>
                         <p className="text-xs md:text-sm font-bold text-gray-400 truncate">"{member.intro}"</p>
