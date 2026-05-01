@@ -4,7 +4,7 @@ import {
   ExternalLink, Sparkles, Image as ImageIcon, Heart, Ban, Upload, X, Sun, Moon,
   Coffee, Home, Building2, ChevronDown, FileImage, Calendar,
   MessageCircle, Dna, Phone, Instagram, Link as LinkIcon, Trash2, CheckCircle2,
-  Copy, Share2, Check, Navigation, AlertCircle, Smile, MapPinned, Flag, CalendarPlus, Circle, Monitor
+  Copy, Share2, Check, Navigation, AlertCircle, Smile, MapPinned, Flag, CalendarPlus, Circle, Monitor, Bed
 } from 'lucide-react';
 
 // --- Constants ---
@@ -142,6 +142,7 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
     <div className="absolute inset-0 bg-[#8FCB81] overflow-hidden pointer-events-none">
       <style>{`
         .bg-scroll-fast { animation: bgScroll 8s linear infinite; }
+        .bg-scroll-mid { animation: bgScroll 14s linear infinite; }
         .bg-scroll-slow { animation: bgScroll 25s linear infinite; }
         .bg-scroll-clouds { animation: bgScroll 60s linear infinite; }
         @keyframes bgScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -191,6 +192,13 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
 
       <div className="absolute bottom-0 w-[200%] h-[35%] bg-[#81C784] border-t-8 border-[#66BB6A] bg-scroll-fast">
          <div className="w-full h-full opacity-30" style={{ backgroundImage: 'radial-gradient(circle, #4CAF50 4px, transparent 4px)', backgroundSize: '60px 40px' }}></div>
+      </div>
+
+      {/* Foreground Objects Parallax (sits on the path, behind characters) */}
+      <div className="absolute bottom-[8%] md:bottom-[10%] left-0 flex items-end h-[180px] md:h-[260px] pointer-events-none z-[15] bg-scroll-mid">
+        {[...Array(8)].map((_, i) => (
+          <img key={i} src="/objects.png" alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none drop-shadow-[0_8px_12px_rgba(0,0,0,0.15)]" />
+        ))}
       </div>
 
       {/* Characters Layer */}
@@ -575,7 +583,7 @@ export default function App() {
                  {[
                    { k: 'start', label: '시작 시간', opt: [{ v: '오전', d: '상쾌한 오전 시작', i: <Sun/> }, { v: '오후', d: '여유로운 오후 시작', i: <Coffee/> }] },
                    { k: 'night', label: '밤샘 여부', opt: [{ v: '선호', d: '밤의 집중력 선호', i: <Moon/> }, { v: '비선호', d: '컨디션 관리 중시', i: <X/> }] },
-                   { k: 'place', label: '작업 장소', opt: [{ v: '출퇴근', d: '개인 공간/재택', i: <Building2/> }, { v: '멤박', d: '멤버십 박스(Box)', i: <Home/> }] }
+                   { k: 'place', label: '작업 장소', opt: [{ v: '출퇴근', d: '개인 공간/재택', i: <Building2/> }, { v: '멤박', d: '멤버십에서 자기', i: <Bed/> }] }
                  ].map(section => (
                    <div key={section.k} className="space-y-3 md:space-y-4">
                       <div className="flex items-center gap-2 text-sm md:text-base font-black text-[#191f28]">{section.label}</div>
