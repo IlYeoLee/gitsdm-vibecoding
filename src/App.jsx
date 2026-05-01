@@ -141,8 +141,8 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
   return (
     <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
       <style>{`
-        .scene-bg-pan { animation: sceneScroll 28s linear infinite; }
-        .scene-objects-pan { animation: sceneScroll 14s linear infinite; }
+        .scene-bg-pan { animation: sceneScroll 70s linear infinite; }
+        .scene-objects-pan { animation: sceneScroll 40s linear infinite; }
         @keyframes sceneScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
         .char-bounce { animation: walkBounce 0.5s ease-in-out infinite alternate; }
