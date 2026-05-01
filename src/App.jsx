@@ -139,13 +139,11 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
   const charOffset = isMobile ? 70 : 110;
 
   return (
-    <div className="absolute inset-0 bg-[#8FCB81] overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
       <style>{`
-        .bg-scroll-fast { animation: bgScroll 8s linear infinite; }
-        .bg-scroll-mid { animation: bgScroll 14s linear infinite; }
-        .bg-scroll-slow { animation: bgScroll 25s linear infinite; }
-        .bg-scroll-clouds { animation: bgScroll 60s linear infinite; }
-        @keyframes bgScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .scene-bg-pan { animation: sceneScroll 28s linear infinite; }
+        .scene-objects-pan { animation: sceneScroll 14s linear infinite; }
+        @keyframes sceneScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
         .char-bounce { animation: walkBounce 0.5s ease-in-out infinite alternate; }
         .leg-swing-f { animation: legFront 0.5s linear infinite alternate; }
@@ -158,51 +156,22 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
         .text-shadow-sm { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
       `}</style>
 
-      {/* Sun & Sky Background */}
-      <div className="absolute top-0 left-0 w-full h-[60%] bg-gradient-to-b from-[#87CEEB] to-[#B0E0E6]"></div>
-      <div className="absolute top-12 left-8 md:top-16 md:left-16 w-20 h-20 md:w-32 md:h-32 bg-[#FFD54F] rounded-full blur-[2px] shadow-[0_0_50px_rgba(255,213,79,0.8)]"></div>
-
-      {/* Rainbow */}
-      <div className="absolute top-[-100px] md:top-[-150px] left-[50%] w-[400px] h-[400px] md:w-[800px] md:h-[800px] rounded-full border-t-[24px] md:border-t-[50px] border-[#FF8A65] opacity-50 transition-all"
-           style={{ borderTopColor: '#FF8A65', borderRightColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: 'transparent', boxShadow: 'inset 0 30px 0 #FFD54F, inset 0 60px 0 #4FC3F7, inset 0 90px 0 #81C784' }}></div>
-
-      {/* Clouds */}
-      <div className="absolute top-16 md:top-20 w-[200%] h-24 md:h-32 flex bg-scroll-clouds opacity-80">
-         {[...Array(8)].map((_, i) => (
-           <div key={i} className="flex-1 relative h-full">
-             <div className="absolute top-2 md:top-4 left-6 md:left-10 w-24 md:w-48 h-10 md:h-16 bg-white rounded-full"></div>
-             <div className="absolute top-0 left-12 md:left-16 w-12 md:w-24 h-12 md:h-24 bg-white rounded-full"></div>
-             <div className="absolute top-8 md:top-12 left-28 md:left-40 w-16 md:w-36 h-8 md:h-14 bg-white rounded-full opacity-60"></div>
-           </div>
-         ))}
-      </div>
-
-      {/* Back Mountains / Trees */}
-      <div className="absolute bottom-[35%] w-[200%] h-32 md:h-48 flex items-end bg-scroll-slow">
-        {[...Array(25)].map((_, i) => (
-          <div key={i} className="flex items-end mx-[-8px] md:mx-[-10px] scale-75 md:scale-125 transition-transform origin-bottom">
-            <div className="w-0 h-0 border-l-[60px] border-r-[60px] border-b-[120px] border-l-transparent border-r-transparent border-b-[#4CAF50] opacity-80 z-0"></div>
-            <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[80px] border-l-transparent border-r-transparent border-b-[#388E3C] opacity-90 z-10 -ml-10"></div>
-            <div className="w-0 h-0 border-l-[50px] border-r-[50px] border-b-[100px] border-l-transparent border-r-transparent border-b-[#2E7D32] opacity-70 z-0 -ml-10"></div>
-          </div>
+      {/* Layer 1: Office Interior Background — slow parallax */}
+      <div className="absolute top-0 left-0 h-full flex scene-bg-pan z-0" style={{ width: 'max-content' }}>
+        {[...Array(6)].map((_, i) => (
+          <img key={i} src="/scene-bg.png" alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none" />
         ))}
       </div>
 
-      <div className="absolute bottom-0 w-full h-[40%] bg-[#7CB342]"></div>
-
-      <div className="absolute bottom-0 w-[200%] h-[35%] bg-[#81C784] border-t-8 border-[#66BB6A] bg-scroll-fast">
-         <div className="w-full h-full opacity-30" style={{ backgroundImage: 'radial-gradient(circle, #4CAF50 4px, transparent 4px)', backgroundSize: '60px 40px' }}></div>
-      </div>
-
-      {/* Foreground Objects Parallax (sits on the path, behind characters) */}
-      <div className="absolute bottom-[8%] md:bottom-[10%] left-0 flex items-end h-[180px] md:h-[260px] pointer-events-none z-[15] bg-scroll-mid">
-        {[...Array(8)].map((_, i) => (
-          <img key={i} src="/objects.png" alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none drop-shadow-[0_8px_12px_rgba(0,0,0,0.15)]" />
+      {/* Layer 2: Foreground Furniture — faster parallax (chairs/desk align with carpet line per finished example) */}
+      <div className="absolute top-0 left-0 h-full flex scene-objects-pan z-10" style={{ width: 'max-content' }}>
+        {[...Array(6)].map((_, i) => (
+          <img key={i} src="/objects.png" alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none" />
         ))}
       </div>
 
-      {/* Characters Layer */}
-      <div className="absolute top-1/2 -translate-y-1/2 w-full h-[220px] md:h-[250px] pointer-events-auto flex items-end justify-center">
+      {/* Layer 3: Characters — anchored on the carpet, in front of furniture */}
+      <div className="absolute bottom-[6%] md:bottom-[8%] w-full h-[180px] md:h-[220px] pointer-events-auto flex items-end justify-center z-50">
         {members.map((member, index) => {
           const delay = index * -0.4;
           // Use CSS variable so we can swap offset between mobile/desktop without re-render
