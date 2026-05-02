@@ -968,6 +968,7 @@ export default function App() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [encKey, setEncKey] = useState(null);   // CryptoKey — null = no encryption
   const encKeyRaw = useRef(null);               // raw base64 key for URL/sessionStorage
+  const [pendingShareUrl, setPendingShareUrl] = useState(null); // invite URL waiting to be shared
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
@@ -1104,6 +1105,7 @@ export default function App() {
       copyToClipboard(inviteUrl);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 3000);
+      setPendingShareUrl(inviteUrl);
 
       setTeam(newTeam);
       setSelectedRoster([]);
@@ -1155,6 +1157,26 @@ export default function App() {
     copyToClipboard(raw ? `${base}#k=${raw}` : base);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const shareInviteLink = async (url) => {
+    playSfx();
+    const shareUrl = url || (() => {
+      const raw = encKeyRaw.current || (() => {
+        try { return sessionStorage.getItem(`ALIGN_ENC_KEY_${team.id}`); } catch { return null; }
+      })();
+      const base = getInviteUrl(team.id);
+      return raw ? `${base}#k=${raw}` : base;
+    })();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${team.name || '멤보딩'} 팀 합류 초대`, text: '프로필 작성하고 팀에 합류하세요!', url: shareUrl });
+      } catch {}
+    } else {
+      copyToClipboard(shareUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
   };
 
   // --- Kickoff scheduling ---
@@ -1807,6 +1829,29 @@ export default function App() {
 
         {view === VIEWS.ROSTER_SELECT && (
           <div className="max-w-2xl mx-auto py-8 md:py-16 px-5 md:px-6 pb-28 animate-in slide-in-from-bottom-8 duration-700">
+
+          {/* Share banner — appears right after team creation */}
+          {pendingShareUrl && (
+            <div className="mb-6 p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-500"
+              style={{ background: 'linear-gradient(135deg, rgba(74,144,226,0.12), rgba(107,180,255,0.08))', border: '2px solid var(--gc-blue)', boxShadow: '0 4px 0 var(--gc-blue-floor)' }}>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm" style={{ color: 'var(--gc-blue)' }}>초대 링크가 복사됐어요! 🎉</p>
+                <p className="text-xs font-medium mt-0.5 truncate" style={{ color: 'var(--gc-text-muted)' }}>{pendingShareUrl}</p>
+              </div>
+              <button
+                onClick={() => shareInviteLink(pendingShareUrl)}
+                className="gbtn gbtn-primary shrink-0"
+                style={{ padding: '10px 16px', fontSize: '13px', gap: '6px' }}
+              >
+                <Ico name="Share2" size={16}/> 공유하기
+              </button>
+              <button onClick={() => setPendingShareUrl(null)}
+                className="shrink-0 p-1.5 rounded-full transition-colors"
+                style={{ color: 'var(--gc-text-muted)', background: 'var(--gc-border)' }}>
+                <X size={14}/>
+              </button>
+            </div>
+          )}
             <div className="text-center mb-6 md:mb-10">
               <h2 className="text-3xl md:text-5xl font-bold mb-2 tracking-tight" style={{ color: 'var(--gc-text)' }}>
                 팀원을 선택하세요
@@ -2000,9 +2045,9 @@ export default function App() {
                        style={{ color: isAligned ? 'var(--gc-text-muted)' : 'var(--gc-text)', textDecoration: isAligned ? 'line-through' : 'none' }}>
                        팀원 합류 ({currentMembers}/{targetMembers})</h4>
                      {!isAligned && (
-                       <button onClick={copyInviteLink} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
+                       <button onClick={() => shareInviteLink()} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
                          style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }}>
-                         <Ico name="Plus" size={14}/> 초대 링크 복사하기
+                         <Ico name="Share2" size={14}/> 초대 링크 공유하기
                        </button>
                      )}
                    </div>
@@ -2087,10 +2132,10 @@ export default function App() {
                       <ChevronRight className="shrink-0" size={20} style={{ color: 'var(--gc-text-muted)' }}/>
                    </div>
                  ))}
-                 <button onClick={copyInviteLink}
+                 <button onClick={() => shareInviteLink()}
                    className="w-full p-4 md:p-6 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base transition-all"
                    style={{ border: '2px dashed var(--gc-tan)', color: 'var(--gc-text-sub)', background: 'var(--gc-input-bg)' }}>
-                    <Ico name="Plus" size={18}/> 팀원 더 초대하기
+                    <Ico name="Share2" size={18}/> 팀원 더 초대하기
                  </button>
               </div>
             </BottomSheet>
