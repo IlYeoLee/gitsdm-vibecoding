@@ -210,6 +210,14 @@ const ROLE_SPRITES = {
   },
 };
 
+// Demo members shown on the landing screen preview
+const DEMO_MEMBERS = [
+  { id: 'demo-pl', name: '김민준', role: 'PL', photoUrl: ASSET('preview/PL.png'), intro: '반가워요! 👑' },
+  { id: 'demo-id', name: '이서연', role: 'ID', photoUrl: ASSET('preview/ID.png'), intro: '잘부탁해요 🤖' },
+  { id: 'demo-ux', name: '박지후', role: 'UX', photoUrl: ASSET('preview/UX.png'), intro: '같이 해봐요! 🧡' },
+  { id: 'demo-vd', name: '최유나', role: 'VD', photoUrl: ASSET('preview/VD.png'), intro: '화이팅! 🌼' },
+];
+
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIME_SLOTS = ['오전', '오후', '저녁'];
 
@@ -1047,11 +1055,55 @@ export default function App() {
 
       <main>
         {view === VIEWS.LANDING && (
-          <div className="min-h-screen flex flex-col items-center justify-center p-5 md:p-6 text-center max-w-3xl mx-auto">
-             <div className="bg-[#e8f3ff] text-[#3182f6] px-3.5 md:px-5 py-1.5 md:py-2 rounded-full font-bold text-[10px] md:text-xs mb-5 md:mb-8 tracking-[0.15em] md:tracking-[0.2em] uppercase">Samsung Design Membership Team OS</div>
-             <h1 className="text-[2.5rem] leading-[1.05] md:text-7xl lg:text-8xl font-bold mb-5 md:mb-8 tracking-tighter text-[#191f28]">첫날의 얼라인을<br /><span className="text-[#3182f6]">실전</span>으로</h1>
-             <p className="text-[#4e5968] text-base md:text-2xl mb-8 md:mb-12 font-medium leading-relaxed">삼성디자인멤버십 팀 프로젝트의 시작.<br />어색한 자기소개는 줄이고,<br className="md:hidden" /> 바로 일할 수 있는 환경을 만드세요.</p>
-             <Button onClick={() => setView(VIEWS.SETUP_TEAM)} className="text-base md:text-2xl px-7 md:px-12 py-4 md:py-6 rounded-2xl md:rounded-[32px] shadow-2xl shadow-blue-500/40 w-full md:w-auto">지금 팀 생성하기 <ArrowRight size={20} className="md:hidden" /><ArrowRight size={28} className="hidden md:inline" /></Button>
+          <div className="fixed inset-0 overflow-hidden">
+            {/* Layer 1: Live animated scene with 4 demo members */}
+            <FinchWalkingScene
+              members={DEMO_MEMBERS}
+              onMemberClick={() => {}}
+              isJumping={false}
+              cheerMessages={{}}
+            />
+
+            {/* Layer 2: Gradient dim — dark top for text, fades to clear at bottom */}
+            <div
+              className="absolute inset-0 z-[60] pointer-events-none"
+              style={{ background: 'linear-gradient(to bottom, rgba(10,14,26,0.82) 0%, rgba(10,14,26,0.60) 30%, rgba(10,14,26,0.10) 65%, rgba(10,14,26,0.00) 100%)' }}
+            />
+
+            {/* Layer 3: Content — title top half / button bottom */}
+            <div className="absolute inset-0 z-[70]">
+
+              {/* Title + body — upper half, well above the walking characters */}
+              <div className="absolute inset-x-0 top-0 h-[46%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700">
+                <h1
+                  className="text-[2.6rem] leading-[1.05] md:text-6xl lg:text-7xl font-bold mb-3.5 md:mb-5 tracking-tighter text-[#e5e7eb]"
+                  style={{ textShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
+                >
+                  첫날의 얼라인을<br />실전으로
+                </h1>
+                <p
+                  className="text-[#9ca3af] text-sm md:text-base font-medium leading-relaxed max-w-[280px] md:max-w-sm"
+                  style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+                >
+                  삼성디자인멤버십 팀 프로젝트의 시작.<br />
+                  어색한 자기소개는 줄이고,<br />바로 일할 수 있는 환경을 만드세요.
+                </p>
+              </div>
+
+              {/* CTA button — pinned to bottom, below characters */}
+              <div
+                className="absolute inset-x-0 bottom-0 flex justify-center px-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
+                style={{ paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom) + 20px))' }}
+              >
+                <Button
+                  onClick={() => setView(VIEWS.SETUP_TEAM)}
+                  className="text-base md:text-lg px-8 md:px-14 py-4 md:py-5 rounded-2xl md:rounded-[28px] shadow-2xl shadow-blue-500/50 w-full max-w-xs md:max-w-sm"
+                >
+                  지금 팀 생성하기 <ArrowRight size={20} />
+                </Button>
+              </div>
+
+            </div>
           </div>
         )}
 
