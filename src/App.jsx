@@ -597,7 +597,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
   const charHeight = charWidth * SPRITE_ASPECT;
   const charOffset = naturalSpacing * fitScale;
   // Back row elevated slightly above front row
-  const rowShift = shouldSplit ? charHeight * 0.65 : 0;
+  const rowShift = shouldSplit ? charHeight * 0.78 : 0;
 
   return (
     <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
@@ -621,7 +621,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
         className="absolute w-full pointer-events-none flex items-end justify-center z-20"
         style={{
           height: `${shouldSplit ? rowShift + charHeight * 1.6 + 48 : charHeight + 64}px`,
-          bottom: isMobile ? '92px' : '130px',
+          bottom: isMobile ? '78px' : '130px',
         }}
       >
         {[
