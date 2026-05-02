@@ -95,7 +95,7 @@ const Card = ({ children, className = "", onClick }) => (
 );
 
 const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, type = "button" }) => {
-  const baseStyles = "px-5 md:px-6 py-3.5 md:py-4 rounded-2xl md:rounded-[20px] font-medium transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 text-sm md:text-base";
+  const baseStyles = "px-5 md:px-6 py-3.5 md:py-4 rounded-2xl md:rounded-[20px] font-bold transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 text-sm md:text-base";
   const variants = {
     primary: "bg-[#3182f6] text-white hover:bg-[#1b64da]",
     secondary: "bg-[#f2f4f6] text-[#4e5968] hover:bg-[#e5e8eb]",
@@ -115,14 +115,25 @@ const Button = ({ children, onClick, variant = 'primary', className = "", disabl
 // Frame 2 is the squat moment so the face drops dramatically — these are NOT all the same.
 const SPRITE_FRAME_COUNT = 5;
 const SPRITE_ASPECT = 909 / 759; // h/w
-const FACE_DIA = 0.32; // photo diameter as fraction of charWidth
+const FACE_DIA = 0.37; // Hough-detected 36.9% of sprite width
 const FACE_FRAMES = [
-  { cx: 470 / 759, cy: 415 / 909 }, // 1: standing stride
-  { cx: 476 / 759, cy: 530 / 909 }, // 2: squat (face drops)
-  { cx: 448 / 759, cy: 396 / 909 }, // 3: mid stride
-  { cx: 460 / 759, cy: 399 / 909 }, // 4: stride
-  { cx: 460 / 759, cy: 399 / 909 }, // 5: peak stride
+  { cx: 486 / 759, cy: 426 / 909 }, // 1: standing stride
+  { cx: 498 / 759, cy: 546 / 909 }, // 2: squat (face drops)
+  { cx: 459 / 759, cy: 401 / 909 }, // 3: mid stride
+  { cx: 471 / 759, cy: 404 / 909 }, // 4: stride
+  { cx: 471 / 759, cy: 404 / 909 }, // 5: peak stride
 ];
+
+const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const TIME_SLOTS = ['오전', '오후', '저녁'];
+
+const getBestSlots = (availability) => {
+  const counts = {};
+  Object.values(availability || {}).forEach(slots => {
+    (slots || []).forEach(slot => { counts[slot] = (counts[slot] || 0) + 1; });
+  });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([slot, count]) => ({ slot, count }));
+};
 
 const FinchWalkingScene = ({ members, onMemberClick }) => {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false);
@@ -407,6 +418,10 @@ export default function App() {
   const [showMembersSheet, setShowMembersSheet] = useState(false);
   const [showRulesSheet, setShowRulesSheet] = useState(false);
   const [showJourneySheet, setShowJourneySheet] = useState(false);
+  const [showKickoffSheet, setShowKickoffSheet] = useState(false);
+  const [currentMemberId, setCurrentMemberId] = useState(() => {
+    try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID') || null; } catch { return null; }
+  });
 
   // Photo crop modal state
   const [cropImageSrc, setCropImageSrc] = useState(null);
@@ -470,6 +485,8 @@ export default function App() {
     const updatedTeam = { ...team, members: [...team.members, newUser] };
     saveTeamToLocal(updatedTeam);
     setTeam(updatedTeam);
+    try { localStorage.setItem('ALIGN_CURRENT_MEMBER_ID', newUser.id); } catch {}
+    setCurrentMemberId(newUser.id);
     setView(VIEWS.DASHBOARD);
   };
 
@@ -478,6 +495,35 @@ export default function App() {
     copyToClipboard(inviteUrl);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  // --- Kickoff scheduling ---
+  const kickoff = team.kickoff || { availability: {}, proposal: null, agreements: {} };
+  const myAvailability = (kickoff.availability || {})[currentMemberId] || [];
+  const isKickoffAgreed = !!(kickoff.proposal &&
+    team.members.length > 0 &&
+    team.members.every(m => (kickoff.agreements || {})[m.id]));
+
+  const toggleAvailability = (slot) => {
+    if (!currentMemberId) return;
+    const current = (kickoff.availability || {})[currentMemberId] || [];
+    const updated = current.includes(slot) ? current.filter(s => s !== slot) : [...current, slot];
+    const k = { ...kickoff, availability: { ...(kickoff.availability || {}), [currentMemberId]: updated } };
+    const t = { ...team, kickoff: k };
+    setTeam(t); saveTeamToLocal(t);
+  };
+
+  const proposeSlot = (slot) => {
+    const k = { ...kickoff, proposal: slot, agreements: {} };
+    const t = { ...team, kickoff: k };
+    setTeam(t); saveTeamToLocal(t);
+  };
+
+  const agreeToProposal = () => {
+    if (!currentMemberId) return;
+    const k = { ...kickoff, agreements: { ...(kickoff.agreements || {}), [currentMemberId]: true } };
+    const t = { ...team, kickoff: k };
+    setTeam(t); saveTeamToLocal(t);
   };
 
   // Photo selection now opens an interactive crop modal instead of auto-cropping center.
@@ -945,6 +991,7 @@ export default function App() {
                    </div>
                  </div>
 
+                 {/* Step 2: 팀원 합류 */}
                  <div className="relative z-10 flex gap-3 md:gap-4">
                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${isAligned ? 'bg-[#00c471]' : 'bg-[#3182f6]'} text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm`}>
                      {isAligned ? <CheckCircle2 size={20}/> : <Users size={20}/>}
@@ -952,40 +999,47 @@ export default function App() {
                    <div className="pt-1.5 md:pt-2 flex-1">
                      <h4 className={`font-bold text-base md:text-lg mb-1 ${isAligned ? 'text-gray-400 line-through' : 'text-[#191f28]'}`}>팀원 합류 ({currentMembers}/{targetMembers})</h4>
                      {!isAligned && (
-                       <button onClick={copyInviteLink} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 bg-blue-50 text-[#3182f6] rounded-lg md:rounded-xl font-medium text-xs md:text-sm flex items-center gap-2 hover:bg-blue-100 transition-colors">
+                       <button onClick={copyInviteLink} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 bg-blue-50 text-[#3182f6] rounded-lg md:rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 hover:bg-blue-100 transition-colors">
                          <Plus size={14}/> 초대 링크 복사하기
                        </button>
                      )}
                    </div>
                  </div>
 
+                 {/* Step 3: 킥오프 일정 잡기 — active when isAligned, done when isKickoffAgreed */}
                  <div className="relative z-10 flex gap-3 md:gap-4">
-                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${isAligned ? 'bg-[#3182f6]' : 'bg-gray-100 text-gray-400'} text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm`}>
+                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${isKickoffAgreed ? 'bg-[#00c471]' : isAligned ? 'bg-[#3182f6]' : 'bg-gray-200'} text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm`}>
+                     {isKickoffAgreed ? <CheckCircle2 size={20}/> : <CalendarPlus size={20}/>}
+                   </div>
+                   <div className="pt-1.5 md:pt-2 flex-1">
+                     <h4 className={`font-bold text-base md:text-lg mb-1 ${isKickoffAgreed ? 'text-gray-400 line-through' : isAligned ? 'text-[#191f28]' : 'text-gray-400'}`}>첫 킥오프 일정 잡기</h4>
+                     {isAligned && !isKickoffAgreed && (
+                       <button onClick={() => { setShowJourneySheet(false); setShowKickoffSheet(true); }} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 bg-blue-50 text-[#3182f6] rounded-lg md:rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 hover:bg-blue-100 transition-colors">
+                         <CalendarPlus size={14}/> 가능 시간 선택하기
+                       </button>
+                     )}
+                     {isKickoffAgreed && kickoff.proposal && (
+                       <p className="text-xs md:text-sm font-bold text-[#00c471] mt-1">{kickoff.proposal.replace('-', ' ')} 확정 ✓</p>
+                     )}
+                   </div>
+                 </div>
+
+                 {/* Step 4: 그라운드 룰 — active when isKickoffAgreed */}
+                 <div className="relative z-10 flex gap-3 md:gap-4">
+                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${isKickoffAgreed ? 'bg-[#3182f6]' : 'bg-gray-200'} text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm`}>
                      <Heart size={20}/>
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
-                     <h4 className={`font-bold text-base md:text-lg mb-1 ${isAligned ? 'text-[#191f28]' : 'text-gray-400'}`}>그라운드 룰 숙지하기</h4>
-                     <button onClick={() => { setShowJourneySheet(false); setShowRulesSheet(true); }} className={`mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm flex items-center gap-2 transition-colors ${isAligned ? 'bg-blue-50 text-[#3182f6] hover:bg-blue-100' : 'bg-gray-100 text-gray-400'}`}>
-                        팀원들의 약속 읽어보기
+                     <h4 className={`font-bold text-base md:text-lg mb-1 ${isKickoffAgreed ? 'text-[#191f28]' : 'text-gray-400'}`}>그라운드 룰 숙지하기</h4>
+                     <button onClick={() => { setShowJourneySheet(false); setShowRulesSheet(true); }} className={`mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-lg md:rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-colors ${isKickoffAgreed ? 'bg-blue-50 text-[#3182f6] hover:bg-blue-100' : 'bg-gray-100 text-gray-400'}`}>
+                       팀원들의 약속 읽어보기
                      </button>
                    </div>
                  </div>
 
-                 <div className="relative z-10 flex gap-3 md:gap-4">
-                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center shrink-0 border-4 border-white shadow-sm">
-                     <CalendarPlus size={20}/>
-                   </div>
-                   <div className="pt-1.5 md:pt-2 flex-1">
-                     <h4 className="font-bold text-base md:text-lg mb-1 text-gray-400">첫 킥오프 미팅 잡기</h4>
-                     <p className="text-xs md:text-sm font-medium text-gray-400 mb-2 md:mb-3">모든 팀원이 얼라인되면 활성화됩니다.</p>
-                     <button disabled={!isAligned} onClick={() => alert("캘린더 연동 기능이 준비 중입니다!")} className={`px-3.5 md:px-4 py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm flex items-center gap-2 transition-colors ${isAligned ? 'bg-[#3182f6] text-white hover:bg-blue-600' : 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed'}`}>
-                        <CalendarPlus size={14}/> 미팅 일정 조율하기
-                     </button>
-                   </div>
-                 </div>
-
-                 <div className="relative z-10 flex gap-3 md:gap-4 opacity-50">
-                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center shrink-0 border-4 border-white shadow-sm">
+                 {/* Step 5: 프로젝트 시작 */}
+                 <div className={`relative z-10 flex gap-3 md:gap-4 ${isKickoffAgreed ? '' : 'opacity-40'}`}>
+                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center shrink-0 border-4 border-white shadow-sm">
                      <Flag size={20}/>
                    </div>
                    <div className="pt-2.5 md:pt-3">
@@ -1027,6 +1081,109 @@ export default function App() {
                </div>
             </BottomSheet>
 
+            <BottomSheet isOpen={showKickoffSheet} onClose={() => setShowKickoffSheet(false)} title="킥오프 일정 잡기">
+              <div className="space-y-5 md:space-y-6">
+                {!currentMemberId ? (
+                  <p className="text-center py-8 text-gray-400 font-medium text-sm">먼저 프로필을 등록해주세요.</p>
+                ) : (
+                  <>
+                    <p className="text-xs md:text-sm font-medium text-gray-500">내가 가능한 시간을 탭해서 선택하세요. 숫자는 겹치는 팀원 수입니다.</p>
+
+                    {/* Availability grid */}
+                    <div className="overflow-x-auto -mx-1 px-1">
+                      <div className="min-w-[300px]">
+                        <div className="grid grid-cols-8 gap-1 mb-2">
+                          <div />
+                          {DAYS.map(d => (
+                            <div key={d} className="text-center text-[10px] md:text-xs font-bold text-gray-400">{d}</div>
+                          ))}
+                        </div>
+                        {TIME_SLOTS.map(time => (
+                          <div key={time} className="grid grid-cols-8 gap-1 mb-1">
+                            <div className="flex items-center justify-end pr-1.5 text-[9px] md:text-[10px] font-bold text-gray-400">{time}</div>
+                            {DAYS.map(day => {
+                              const slot = `${day}-${time}`;
+                              const isMine = myAvailability.includes(slot);
+                              const count = Object.values(kickoff.availability || {}).filter(arr => (arr || []).includes(slot)).length;
+                              const isProposed = kickoff.proposal === slot;
+                              return (
+                                <button
+                                  key={day}
+                                  onClick={() => toggleAvailability(slot)}
+                                  className={`h-9 md:h-11 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all ${
+                                    isProposed ? 'ring-2 ring-[#3182f6] ring-offset-1' : ''
+                                  } ${
+                                    isMine
+                                      ? 'bg-[#3182f6] text-white shadow-md shadow-blue-200'
+                                      : count > 0
+                                        ? 'bg-blue-50 text-[#3182f6]'
+                                        : 'bg-gray-100 text-transparent hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {count > 0 ? count : '·'}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Proposal / agree section */}
+                    {kickoff.proposal ? (
+                      <div className="p-4 md:p-5 bg-blue-50 rounded-2xl md:rounded-[24px] border border-blue-100 space-y-3 md:space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-[#3182f6] rounded-lg flex items-center justify-center text-white shrink-0"><CalendarPlus size={16}/></div>
+                          <h4 className="font-bold text-sm md:text-base text-[#191f28]">제안된 킥오프 일정</h4>
+                        </div>
+                        <p className="text-xl md:text-2xl font-bold text-[#3182f6]">{kickoff.proposal.replace('-', ' ')}</p>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-xs md:text-sm font-medium text-gray-500">{Object.keys(kickoff.agreements || {}).length}/{team.members.length}명 동의</span>
+                          <div className="flex gap-1">
+                            {team.members.map(m => (
+                              <div key={m.id} title={m.name} className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold ${(kickoff.agreements || {})[m.id] ? 'bg-[#00c471] text-white' : 'bg-gray-200 text-gray-400'}`}>
+                                {m.name?.[0]}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        {!(kickoff.agreements || {})[currentMemberId] ? (
+                          <button onClick={agreeToProposal} className="w-full py-3 md:py-4 bg-[#3182f6] hover:bg-[#1b64da] text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-base transition-colors">
+                            동의하기
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-2 text-[#00c471] font-bold text-sm md:text-base">
+                            <CheckCircle2 size={18}/> 동의 완료
+                          </div>
+                        )}
+                        <button onClick={() => proposeSlot(null)} className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2">
+                          다른 시간으로 변경
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 md:space-y-4">
+                        <h4 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">추천 시간대 (많이 겹치는 순)</h4>
+                        {getBestSlots(kickoff.availability).slice(0, 4).length > 0 ? (
+                          getBestSlots(kickoff.availability).slice(0, 4).map(({ slot, count }) => (
+                            <button
+                              key={slot}
+                              onClick={() => proposeSlot(slot)}
+                              className="w-full p-3.5 md:p-5 bg-white border border-gray-200 hover:border-[#3182f6] hover:bg-blue-50 rounded-xl md:rounded-2xl flex justify-between items-center font-bold text-sm md:text-base transition-all"
+                            >
+                              <span>{slot.replace('-', ' ')}</span>
+                              <span className="text-xs md:text-sm text-[#3182f6] bg-blue-50 px-2.5 py-1 rounded-lg">{count}명 가능</span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="text-xs md:text-sm font-medium text-gray-400 text-center py-6">팀원들이 가능 시간을 선택하면 추천 시간이 표시됩니다.</p>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </BottomSheet>
+
             <div className="absolute top-3 md:top-8 w-[calc(100%-1.5rem)] md:w-[calc(100%-2rem)] max-w-sm md:max-w-md left-1/2 -translate-x-1/2 z-40">
               <div
                 onClick={() => setShowJourneySheet(true)}
@@ -1065,9 +1222,9 @@ export default function App() {
                   <div className="w-10 h-10 md:w-14 md:h-14 bg-transparent hover:bg-gray-50 rounded-full flex items-center justify-center text-[#4e5968] transition-colors"><Heart size={20} /></div>
                   <span className="text-[10px] md:text-xs font-bold text-[#4e5968] hidden md:block">Rules</span>
                </button>
-               <button onClick={copyInviteLink} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-transparent hover:bg-gray-50 rounded-full flex items-center justify-center text-[#4e5968] transition-colors"><Share2 size={20} /></div>
-                  <span className="text-[10px] md:text-xs font-bold text-[#4e5968] hidden md:block">Invite</span>
+               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-transparent hover:bg-gray-50 rounded-full flex items-center justify-center text-[#4e5968] transition-colors"><CalendarPlus size={20} /></div>
+                  <span className="text-[10px] md:text-xs font-bold text-[#4e5968] hidden md:block">Schedule</span>
                </button>
             </div>
           </div>
