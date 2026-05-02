@@ -978,6 +978,8 @@ export default function App() {
   const [encKey, setEncKey] = useState(null);   // CryptoKey — null = no encryption
   const encKeyRaw = useRef(null);               // raw base64 key for URL/sessionStorage
   const [pendingShareUrl, setPendingShareUrl] = useState(null); // invite URL waiting to be shared
+  const [showProjectStart, setShowProjectStart] = useState(false);
+  const prevKickoffAgreed = useRef(null);
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
@@ -1194,7 +1196,13 @@ export default function App() {
   const myAvailability = (kickoff.availability || {})[currentMemberId] || [];
   const isKickoffAgreed = !!(kickoff.proposal &&
     team.members.length > 0 &&
+    team.members.length >= (team.targetSize || 1) &&
     team.members.every(m => (kickoff.agreements || {})[m.id]));
+
+  const rulesViewedCount = team.members.filter(m => (kickoff.rulesViewed || {})[m.id]).length;
+  const isRulesViewed = team.members.length > 0 &&
+    team.members.length >= (team.targetSize || 1) &&
+    team.members.every(m => (kickoff.rulesViewed || {})[m.id]);
 
   const toggleAvailability = (slot) => {
     if (!currentMemberId) return;
@@ -1231,6 +1239,14 @@ export default function App() {
     dbUpdateKickoff(team.id, k);
   };
 
+  const markRulesViewed = () => {
+    if (!currentMemberId || (kickoff.rulesViewed || {})[currentMemberId]) return;
+    const k = { ...kickoff, rulesViewed: { ...(kickoff.rulesViewed || {}), [currentMemberId]: true } };
+    const t = { ...team, kickoff: k };
+    setTeam(t); saveTeamToLocal(t);
+    dbUpdateKickoff(team.id, k);
+  };
+
   const handleCheer = () => {
     const sceneMembers = getSceneMembers();
     if (isJumping || sceneMembers.length === 0) return;
@@ -1245,6 +1261,30 @@ export default function App() {
     setTimeout(() => setShowConfetti(false), 2200);
     setTimeout(() => { setIsJumping(false); setActiveCheerMessages({}); }, 2600);
   };
+
+  // Trigger project-start celebration when ALL members agree to kickoff
+  useEffect(() => {
+    if (prevKickoffAgreed.current === null) {
+      prevKickoffAgreed.current = isKickoffAgreed;
+      return;
+    }
+    if (isKickoffAgreed && !prevKickoffAgreed.current) {
+      playCheerSfx();
+      const sceneMembers = getSceneMembers();
+      const pool = CHEER_POOL(team.category || '');
+      const msgs = {};
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      sceneMembers.forEach((m, i) => { msgs[m.id] = shuffled[i % shuffled.length]; });
+      setActiveCheerMessages(msgs);
+      setIsJumping(true);
+      setShowConfetti(true);
+      setShowProjectStart(true);
+      setTimeout(() => setShowConfetti(false), 2200);
+      setTimeout(() => { setIsJumping(false); setActiveCheerMessages({}); }, 2600);
+      setTimeout(() => setShowProjectStart(false), 4000);
+    }
+    prevKickoffAgreed.current = isKickoffAgreed;
+  }, [isKickoffAgreed]);
 
   // Photo selection now opens an interactive crop modal instead of auto-cropping center.
   const handlePhotoUpload = (file) => {
@@ -2046,12 +2086,36 @@ export default function App() {
 
             <FinchWalkingScene
               members={getSceneMembers()}
-              onMemberClick={(m) => { if (!m._isPending) setSelectedMember(m); }}
+              onMemberClick={(m) => { if (!m._isPending) { markRulesViewed(); setSelectedMember(m); } }}
               isJumping={isJumping}
               cheerMessages={activeCheerMessages}
             />
 
             <Confetti active={showConfetti} />
+
+            {/* Project-start celebration overlay */}
+            {showProjectStart && (
+              <div className="fixed inset-0 z-[800] flex items-center justify-center pointer-events-none">
+                <style>{`
+                  @keyframes projectStartPop {
+                    0%   { opacity: 0; transform: scale(0.5) rotate(-5deg); }
+                    18%  { opacity: 1; transform: scale(1.12) rotate(2deg); }
+                    28%  { transform: scale(0.96) rotate(-1deg); }
+                    38%  { transform: scale(1.04) rotate(0deg); }
+                    48%  { transform: scale(1) rotate(0deg); }
+                    72%  { opacity: 1; transform: scale(1); }
+                    100% { opacity: 0; transform: scale(1.08); }
+                  }
+                `}</style>
+                <img
+                  src={ASSET('project-start.png')}
+                  alt="본격적인 프로젝트 시작!"
+                  draggable={false}
+                  className="select-none drop-shadow-2xl"
+                  style={{ width: 'min(85vw, 480px)', animation: 'projectStartPop 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+                />
+              </div>
+            )}
 
             <MemberDetailModal member={selectedMember} onClose={() => setSelectedMember(null)} />
 
@@ -2115,16 +2179,22 @@ export default function App() {
 
                  <div className="relative z-10 flex gap-3 md:gap-4">
                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full text-white flex items-center justify-center shrink-0 border-4 border-white shadow-md"
-                     style={isKickoffAgreed
-                       ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
-                       : { background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
-                     <Ico name="Heart" size={20}/>
+                     style={isRulesViewed
+                       ? { background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }
+                       : isKickoffAgreed
+                         ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
+                         : { background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
+                     {isRulesViewed ? <CheckCircle2 size={20}/> : <Ico name="Heart" size={20}/>}
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
                      <h4 className="font-bold text-base md:text-lg mb-1"
-                       style={{ color: isKickoffAgreed ? 'var(--gc-text)' : 'var(--gc-text-muted)' }}>그라운드 룰 숙지하기</h4>
-                     <button onClick={() => { setShowJourneySheet(false); setShowRulesSheet(true); }}
-                       className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
+                       style={{ color: isRulesViewed ? 'var(--gc-text-muted)' : isKickoffAgreed ? 'var(--gc-text)' : 'var(--gc-text-muted)', textDecoration: isRulesViewed ? 'line-through' : 'none' }}>
+                       그라운드 룰 숙지하기</h4>
+                     <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--gc-text-muted)' }}>
+                       {rulesViewedCount}/{team.members.length}명 숙지 완료
+                     </p>
+                     <button onClick={() => { markRulesViewed(); setShowJourneySheet(false); setShowRulesSheet(true); }}
+                       className="mt-0.5 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
                        style={isKickoffAgreed
                          ? { background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }
                          : { background: 'var(--gc-input-bg)', color: 'var(--gc-text-muted)', border: '1.5px solid var(--gc-border)' }}>
@@ -2133,13 +2203,17 @@ export default function App() {
                    </div>
                  </div>
 
-                 <div className={`relative z-10 flex gap-3 md:gap-4 ${isKickoffAgreed ? '' : 'opacity-40'}`}>
+                 <div className={`relative z-10 flex gap-3 md:gap-4 ${isKickoffAgreed && isRulesViewed ? '' : 'opacity-40'}`}>
                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shrink-0 border-4 border-white shadow-md"
-                     style={{ background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
-                     <Flag size={20}/>
+                     style={isKickoffAgreed && isRulesViewed
+                       ? { background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }
+                       : { background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
+                     {isKickoffAgreed && isRulesViewed ? <CheckCircle2 size={20}/> : <Flag size={20}/>}
                    </div>
                    <div className="pt-2.5 md:pt-3">
-                     <h4 className="font-bold text-base md:text-lg" style={{ color: 'var(--gc-text-muted)' }}>본격적인 프로젝트 시작!</h4>
+                     <h4 className="font-bold text-base md:text-lg"
+                       style={{ color: isKickoffAgreed && isRulesViewed ? 'var(--gc-text-muted)' : 'var(--gc-text-muted)', textDecoration: isKickoffAgreed && isRulesViewed ? 'line-through' : 'none' }}>
+                       본격적인 프로젝트 시작!</h4>
                    </div>
                  </div>
               </div>
@@ -2148,7 +2222,7 @@ export default function App() {
             <BottomSheet isOpen={showMembersSheet} onClose={() => setShowMembersSheet(false)} title="팀원 목록">
               <div className="space-y-3 md:space-y-4">
                  {team.members.map(member => (
-                   <div key={member.id} onClick={() => { setShowMembersSheet(false); setSelectedMember(member); }}
+                   <div key={member.id} onClick={() => { markRulesViewed(); setShowMembersSheet(false); setSelectedMember(member); }}
                      className="flex items-center gap-3 md:gap-4 p-3 md:p-4 cursor-pointer active:scale-95 transition-all gcard gcard-clickable"
                      style={{ padding: '12px 16px' }}>
                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-2xl shrink-0 overflow-hidden"
@@ -2370,7 +2444,7 @@ export default function App() {
                   </div>
                   <span className="font-bold text-[10px]" style={{ color: '#fff' }}>멤버</span>
                </button>
-               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90">
+               <button onClick={() => { markRulesViewed(); setShowRulesSheet(true); }} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '1.5px solid var(--gc-tan)', boxShadow: '0 3px 0 var(--gc-gold-floor)', padding: '6px' }}>
                     <Ico name="Heart" size={28} />
