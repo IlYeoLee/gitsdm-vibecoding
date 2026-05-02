@@ -498,8 +498,9 @@ const MEMBER_ROSTER = [
   { name: '한예지',      photo: 'members/한예지.png' },
 ];
 
-const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIME_SLOTS = ['오전', '오후', '저녁'];
+const TIME_SLOT_RANGES = { '오전': '08-11시', '오후': '14-17시', '저녁': '19-22시' };
 
 const getBestSlots = (availability) => {
   const counts = {};
@@ -507,6 +508,31 @@ const getBestSlots = (availability) => {
     (slots || []).forEach(slot => { counts[slot] = (counts[slot] || 0) + 1; });
   });
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([slot, count]) => ({ slot, count }));
+};
+
+// Returns 7 Date objects starting from Monday of the week at `offset` weeks from now
+const getWeekDates = (offset) => {
+  const now = new Date();
+  const dow = now.getDay(); // 0=Sun
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+};
+
+// Format a calendar slot key "YYYY-MM-DD|time" for display
+const formatSlot = (slot) => {
+  if (!slot) return '';
+  const parts = slot.split('|');
+  if (parts.length !== 2) return slot.replace('-', ' ');
+  const [dateStr, time] = parts;
+  const d = new Date(dateStr + 'T00:00:00');
+  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${dayNames[d.getDay()]}) ${time}`;
 };
 
 const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages }) => {
@@ -570,8 +596,8 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
   const charWidth  = naturalCharWidth * fitScale;
   const charHeight = charWidth * SPRITE_ASPECT;
   const charOffset = naturalSpacing * fitScale;
-  // Back row elevated enough that front-row speech bubbles (≈charHeight+36px) don't cover back-row faces
-  const rowShift = shouldSplit ? charHeight * 1.25 : 0;
+  // Back row elevated slightly above front row
+  const rowShift = shouldSplit ? charHeight * 0.65 : 0;
 
   return (
     <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
@@ -592,7 +618,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
 
       {/* Layer 3: Characters — 2-row layout for 5+/8+ members */}
       <div
-        className="absolute w-full pointer-events-auto flex items-end justify-center z-50"
+        className="absolute w-full pointer-events-none flex items-end justify-center z-20"
         style={{
           height: `${shouldSplit ? rowShift + charHeight * 1.6 + 48 : charHeight + 64}px`,
           bottom: isMobile ? '92px' : '130px',
@@ -635,7 +661,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
               <div
                 key={member.id}
                 className="absolute flex flex-col items-center cursor-pointer"
-                style={{ transform: `translateX(${indexOffset * charOffset}px)`, zIndex, bottom: `${bottomPos}px` }}
+                style={{ transform: `translateX(${indexOffset * charOffset}px)`, zIndex, bottom: `${bottomPos}px`, pointerEvents: 'auto' }}
               >
                 <div
                   className={`flex flex-col items-center hover:scale-110 transition-transform ${isJumping ? 'char-jumping' : ''}`}
@@ -646,7 +672,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
                   <div
                     className="absolute bubble-float animate-in fade-in zoom-in duration-300"
                     style={{
-                      bottom: `${charHeight + 6}px`,
+                      bottom: `${charHeight + 2}px`,
                       animationDelay: `${(globalIndex * 0.55) % 2.5}s`,
                       background: bubbleBg,
                       border: `1.5px solid ${bubbleBorderColor}`,
@@ -738,7 +764,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
 
         <div className="px-5 md:px-8 py-4 md:py-6 flex justify-between items-center shrink-0" style={{ borderBottom: '1.5px solid var(--gc-border)' }}>
            <h3 className="text-xl md:text-3xl font-bold" style={{ color: 'var(--gc-text)' }}>{title}</h3>
-           <button onClick={onClose} className="p-2 rounded-full transition-colors" style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><Ico name="X" size={18}/></button>
+           <button onClick={onClose} className="rounded-full flex items-center justify-center shrink-0 transition-colors" style={{ background: 'var(--gc-border)', color: 'var(--gc-text)', width: 36, height: 36 }}><Ico name="X" size={18}/></button>
         </div>
         <div className="p-5 md:p-8 overflow-y-auto scrollbar-hide flex-1 pb-20 md:pb-8">
            {children}
@@ -869,8 +895,8 @@ const MemberDetailModal = ({ member, onClose }) => {
         <div className="sticky top-0 w-full flex justify-center py-3 z-10 md:hidden"
           style={{ background: `linear-gradient(to bottom, var(--gc-surface), transparent)` }}><div className="gpanel-handle"></div></div>
 
-        <button onClick={onClose} className="absolute top-4 md:top-8 right-4 md:right-8 p-2.5 md:p-3 rounded-full z-20 transition-colors"
-          style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><Ico name="X" size={20} /></button>
+        <button onClick={onClose} className="absolute top-4 md:top-8 right-4 md:right-8 rounded-full z-20 flex items-center justify-center shrink-0 transition-colors"
+          style={{ background: 'var(--gc-border)', color: 'var(--gc-text)', width: 40, height: 40 }}><Ico name="X" size={20} /></button>
 
         <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-10">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
@@ -928,7 +954,7 @@ const MemberDetailModal = ({ member, onClose }) => {
                </div>
                <div className="grid grid-cols-3 gap-2 md:gap-3">
                   {[
-                    { ico: 'Sun',  label: '시작',  val: member.schedule?.start },
+                    { ico: 'Sun',  label: '시작시간',  val: member.schedule?.start },
                     { ico: 'Moon', label: '밤샘',  val: member.schedule?.night },
                     { ico: 'Home', label: '장소',  val: member.schedule?.place },
                   ].map(({ ico, label, val }) => (
@@ -978,6 +1004,7 @@ export default function App() {
   const [showRulesSheet, setShowRulesSheet] = useState(false);
   const [showJourneySheet, setShowJourneySheet] = useState(false);
   const [showKickoffSheet, setShowKickoffSheet] = useState(false);
+  const [calWeekOffset, setCalWeekOffset] = useState(0);
   const [currentMemberId, setCurrentMemberId] = useState(() => {
     try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID') || null; } catch { return null; }
   });
@@ -989,6 +1016,7 @@ export default function App() {
   const [pendingShareUrl, setPendingShareUrl] = useState(null); // invite URL waiting to be shared
   const [showProjectStart, setShowProjectStart] = useState(false);
   const prevKickoffAgreed = useRef(null);
+  const [showKakaoGuide, setShowKakaoGuide] = useState(false);
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
@@ -1032,6 +1060,20 @@ export default function App() {
     document.addEventListener('pointerdown', handler, { once: true });
     return () => document.removeEventListener('pointerdown', handler);
   }, [isMuted]);
+
+  // KakaoTalk in-app browser: redirect to external browser
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    if (!/KAKAOTALK/i.test(ua)) return;
+    if (/android/i.test(ua)) {
+      const url = window.location.href;
+      window.location.replace(
+        `intent://${url.replace(/https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`
+      );
+    } else {
+      setShowKakaoGuide(true);
+    }
+  }, []);
 
   // Restore encryption key from sessionStorage when team.id is known
   useEffect(() => {
@@ -1192,12 +1234,14 @@ export default function App() {
   const getSceneMembers = (teamData) => {
     const t = teamData || team;
     const roster = t.kickoff?.rosterMembers || [];
-    if (!roster.length) return t.members || [];
+    // Deduplicate team.members by name — last submitted entry wins
+    const membersByName = {};
+    for (const m of (t.members || [])) membersByName[m.name] = m;
+    if (!roster.length) return Object.values(membersByName);
     return roster.map(r => {
-      const registered = (t.members || []).find(m => m.name === r.name);
-      if (registered) return { ...registered, intro: registered.intro || '작성 중..' };
-      const pendingRole = MEMBER_ROLE_LOOKUP[r.name] || 'UX';
-      return { id: `pending-${r.name}`, name: r.name, role: pendingRole, photoUrl: ASSET(r.photo), intro: '아직 초대 전', _isPending: true };
+      const registered = membersByName[r.name];
+      if (registered) return { ...registered };
+      return { id: `pending-${r.name}`, name: r.name, role: MEMBER_ROLE_LOOKUP[r.name] || 'UX', photoUrl: ASSET(r.photo), intro: '작성 중', _isPending: true };
     });
   };
 
@@ -1234,15 +1278,15 @@ export default function App() {
   // --- Kickoff scheduling ---
   const kickoff = team.kickoff || { availability: {}, proposal: null, agreements: {} };
   const myAvailability = (kickoff.availability || {})[currentMemberId] || [];
+  const _rMembers = getSceneMembers().filter(m => !m._isPending);
   const isKickoffAgreed = !!(kickoff.proposal &&
-    team.members.length > 0 &&
-    team.members.length >= (team.targetSize || 1) &&
-    team.members.every(m => (kickoff.agreements || {})[m.id]));
+    _rMembers.length >= (team.targetSize || 1) &&
+    _rMembers.every(m => (kickoff.agreements || {})[m.id]));
 
-  const rulesViewedCount = team.members.filter(m => (kickoff.rulesViewed || {})[m.id]).length;
-  const isRulesViewed = team.members.length > 0 &&
-    team.members.length >= (team.targetSize || 1) &&
-    team.members.every(m => (kickoff.rulesViewed || {})[m.id]);
+  const rulesViewedCount = _rMembers.filter(m => (kickoff.rulesViewed || {})[m.id]).length;
+  const isRulesViewed = _rMembers.length > 0 &&
+    _rMembers.length >= (team.targetSize || 1) &&
+    _rMembers.every(m => (kickoff.rulesViewed || {})[m.id]);
 
   const toggleAvailability = (slot) => {
     if (!currentMemberId) return;
@@ -1600,7 +1644,7 @@ export default function App() {
               <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1" style={{ color: 'var(--gc-text-sub)' }}>나의 작업 리듬 선호도</label>
               <div className="space-y-6 md:space-y-8">
                  {[
-                   { k: 'start', label: '작업 시간대', opt: [
+                   { k: 'start', label: '선호하는 작업 시작시간', opt: [
                      { v: '오전', d: '08:00 – 11:00', i: 'Sun' },
                      { v: '오후', d: '14:00 – 17:00', i: 'Coffee' },
                      { v: '밤',   d: '19:00 – 22:00', i: 'Moon' }
@@ -1713,7 +1757,7 @@ export default function App() {
   };
 
   const targetMembers = team.targetSize || 4;
-  const currentMembers = team.members ? team.members.length : 0;
+  const currentMembers = _rMembers.length;
   const isAligned = currentMembers >= targetMembers;
 
   return (
@@ -1781,6 +1825,24 @@ export default function App() {
                 style={{ background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))` }}><Check size={10} strokeWidth={4}/></div>
               <span className="text-xs md:text-sm font-bold tracking-tight">복사 완료!</span>
            </div>
+        </div>
+      )}
+
+      {showKakaoGuide && (
+        <div className="fixed top-0 inset-x-0 z-[900] animate-in slide-in-from-top-4 duration-400">
+          <div className="mx-3 mt-3 p-4 rounded-2xl flex items-start gap-3 shadow-2xl"
+            style={{ background: '#FEE500', border: '2px solid #E6C600', boxShadow: '0 4px 0 #C8A800, 0 8px 24px rgba(0,0,0,0.2)' }}>
+            <span style={{ fontSize: 22, lineHeight: 1 }}>💬</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm" style={{ color: '#3C1E1E' }}>카카오톡 브라우저에서는 일부 기능이 제한될 수 있어요</p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: '#5C3A1E' }}>하단 <strong>···</strong> 메뉴 → <strong>Safari로 열기</strong> 를 눌러주세요</p>
+            </div>
+            <button onClick={() => setShowKakaoGuide(false)}
+              className="flex items-center justify-center rounded-full shrink-0 transition-colors"
+              style={{ width: 28, height: 28, background: 'rgba(0,0,0,0.12)', color: '#3C1E1E' }}>
+              <X size={14}/>
+            </button>
+          </div>
         </div>
       )}
 
@@ -2189,7 +2251,7 @@ export default function App() {
                    <div className="pt-1.5 md:pt-2 flex-1">
                      <h4 className="font-bold text-base md:text-lg mb-1"
                        style={{ color: isAligned ? 'var(--gc-text-muted)' : 'var(--gc-text)', textDecoration: isAligned ? 'line-through' : 'none' }}>
-                       팀원 합류 ({currentMembers}/{targetMembers})</h4>
+                       {currentMembers}/{targetMembers} 작성</h4>
                      {!isAligned && (
                        <button onClick={() => shareInviteLink()} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
                          style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }}>
@@ -2220,7 +2282,7 @@ export default function App() {
                        </button>
                      )}
                      {isKickoffAgreed && kickoff.proposal && (
-                       <p className="text-xs md:text-sm font-bold mt-1" style={{ color: 'var(--gc-green)' }}>{kickoff.proposal.replace('-', ' ')} 확정 ✓</p>
+                       <p className="text-xs md:text-sm font-bold mt-1" style={{ color: 'var(--gc-green)' }}>{formatSlot(kickoff.proposal)} 확정 ✓</p>
                      )}
                    </div>
                  </div>
@@ -2239,7 +2301,7 @@ export default function App() {
                        style={{ color: isRulesViewed ? 'var(--gc-text-muted)' : isKickoffAgreed ? 'var(--gc-text)' : 'var(--gc-text-muted)', textDecoration: isRulesViewed ? 'line-through' : 'none' }}>
                        그라운드 룰 숙지하기</h4>
                      <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--gc-text-muted)' }}>
-                       {rulesViewedCount}/{team.members.length}명 숙지 완료
+                       {rulesViewedCount}/{_rMembers.length}명 숙지 완료
                      </p>
                      <button onClick={() => { markRulesViewed(); setShowJourneySheet(false); setShowRulesSheet(true); }}
                        className="mt-0.5 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
@@ -2269,25 +2331,31 @@ export default function App() {
 
             <BottomSheet isOpen={showMembersSheet} onClose={() => setShowMembersSheet(false)} title="팀원 목록">
               <div className="space-y-3 md:space-y-4">
-                 {team.members.map(member => (
-                   <div key={member.id} onClick={() => { markRulesViewed(); setShowMembersSheet(false); setSelectedMember(member); }}
-                     className="flex items-center gap-3 md:gap-4 p-3 md:p-4 cursor-pointer active:scale-95 transition-all gcard gcard-clickable"
-                     style={{ padding: '12px 16px' }}>
-                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-2xl shrink-0 overflow-hidden"
-                        style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>
-                        {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0] ?? '?')}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 md:mb-1">
-                          <span className="font-bold text-base md:text-xl">{member.name}</span>
-                          <span className="text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full"
-                            style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}>{member.role}</span>
-                        </div>
-                        <p className="text-xs md:text-sm font-medium truncate" style={{ color: 'var(--gc-text-muted)' }}>"{member.intro}"</p>
-                      </div>
-                      <ChevronRight className="shrink-0" size={20} style={{ color: 'var(--gc-text-muted)' }}/>
-                   </div>
-                 ))}
+                 {getSceneMembers().map(member => {
+                   const isPending = !!member._isPending;
+                   return (
+                     <div key={member.id}
+                       onClick={isPending ? undefined : () => { markRulesViewed(); setShowMembersSheet(false); setSelectedMember(member); }}
+                       className={`flex items-center gap-3 md:gap-4 gcard transition-all ${isPending ? '' : 'gcard-clickable cursor-pointer active:scale-95'}`}
+                       style={{ padding: '12px 16px', opacity: isPending ? 0.55 : 1 }}>
+                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-2xl shrink-0 overflow-hidden"
+                         style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>
+                         {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0] ?? '?')}
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <div className="flex items-center gap-2 mb-0.5 md:mb-1">
+                           <span className="font-bold text-base md:text-xl">{member.name}</span>
+                           <span className="text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full"
+                             style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}>{member.role}</span>
+                         </div>
+                         <p className="text-xs md:text-sm font-medium truncate" style={{ color: 'var(--gc-text-muted)' }}>
+                           {isPending ? '작성 중' : member.intro ? `"${member.intro}"` : ''}
+                         </p>
+                       </div>
+                       {!isPending && <ChevronRight className="shrink-0" size={20} style={{ color: 'var(--gc-text-muted)' }}/>}
+                     </div>
+                   );
+                 })}
                  <button onClick={() => shareInviteLink()}
                    className="w-full p-4 md:p-6 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base transition-all"
                    style={{ border: '2px dashed var(--gc-tan)', color: 'var(--gc-text-sub)', background: 'var(--gc-input-bg)' }}>
@@ -2298,21 +2366,27 @@ export default function App() {
 
             <BottomSheet isOpen={showRulesSheet} onClose={() => setShowRulesSheet(false)} title="우리의 협업 약속">
                <div className="space-y-4 md:space-y-5">
-                 {team.members.map(member => (
-                   <div key={member.id} className="gcard space-y-3 md:space-y-4">
+                 {getSceneMembers().map(member => (
+                   <div key={member.id} className="gcard space-y-3 md:space-y-4" style={{ opacity: member._isPending ? 0.5 : 1 }}>
                      <div className="flex items-center gap-2 mb-1 md:mb-2">
                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
                          style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>{(member.name?.[0] ?? '?')}</div>
                        <span className="font-bold text-sm md:text-base">{member.name} 님의 약속</span>
                      </div>
-                     <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
-                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: '#E85454' }}><Ico name="Heart" size={12}/> 추구하는 가치</h4>
-                       <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.pursuits || '-'}</p>
-                     </div>
-                     <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}>
-                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Ban" size={12}/> 지양하는 방식</h4>
-                       <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.avoid || '-'}</p>
-                     </div>
+                     {member._isPending ? (
+                       <p className="text-xs md:text-sm font-medium text-center py-2" style={{ color: 'var(--gc-text-muted)' }}>아직 작성 전이에요</p>
+                     ) : (
+                       <>
+                         <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
+                           <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: '#E85454' }}><Ico name="Heart" size={12}/> 추구하는 가치</h4>
+                           <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.pursuits || '-'}</p>
+                         </div>
+                         <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}>
+                           <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Ban" size={12}/> 지양하는 방식</h4>
+                           <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.avoid || '-'}</p>
+                         </div>
+                       </>
+                     )}
                    </div>
                  ))}
                </div>
@@ -2322,31 +2396,54 @@ export default function App() {
               <div className="space-y-5 md:space-y-6">
                 {!currentMemberId ? (
                   <p className="text-center py-8 text-gray-400 font-medium text-sm">먼저 프로필을 등록해주세요.</p>
-                ) : (
+                ) : (() => {
+                  const weekDates = getWeekDates(calWeekOffset);
+                  const months = [...new Set(weekDates.map(d => `${d.getFullYear()}년 ${d.getMonth() + 1}월`))];
+                  return (
                   <>
-                    <p className="text-xs md:text-sm font-medium text-gray-500">내가 가능한 시간을 탭해서 선택하세요. 숫자는 겹치는 팀원 수입니다.</p>
+                    <p className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-muted)' }}>내가 가능한 시간을 탭해서 선택하세요. 숫자는 겹치는 팀원 수입니다.</p>
 
-                    {/* Availability grid */}
+                    {/* Week navigation header */}
+                    <div className="flex items-center justify-between">
+                      <button onClick={() => setCalWeekOffset(o => o - 1)}
+                        className="flex items-center justify-center rounded-full font-bold text-lg shrink-0 transition-colors"
+                        style={{ width: 34, height: 34, background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)', color: 'var(--gc-text-sub)' }}>‹</button>
+                      <span className="font-bold text-sm md:text-base" style={{ color: 'var(--gc-text)' }}>{months.join(' ~ ')}</span>
+                      <button onClick={() => setCalWeekOffset(o => o + 1)}
+                        className="flex items-center justify-center rounded-full font-bold text-lg shrink-0 transition-colors"
+                        style={{ width: 34, height: 34, background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)', color: 'var(--gc-text-sub)' }}>›</button>
+                    </div>
+
+                    {/* Calendar grid */}
                     <div className="overflow-x-auto -mx-1 px-1">
                       <div className="min-w-[300px]">
+                        {/* Day headers */}
                         <div className="grid grid-cols-8 gap-1 mb-2">
                           <div />
-                          {DAYS.map(d => (
-                            <div key={d} className="text-center text-[10px] md:text-xs font-bold text-gray-400">{d}</div>
-                          ))}
+                          {weekDates.map((d, i) => {
+                            const isWeekend = i >= 5;
+                            return (
+                              <div key={i} className="text-center">
+                                <div className="text-[10px] font-bold" style={{ color: isWeekend ? '#E85454' : 'var(--gc-text-muted)' }}>{DAY_LABELS[i]}</div>
+                                <div className="text-sm font-bold leading-tight" style={{ color: isWeekend ? '#E85454' : 'var(--gc-text)' }}>{d.getDate()}</div>
+                              </div>
+                            );
+                          })}
                         </div>
+                        {/* Time rows */}
                         {TIME_SLOTS.map(time => (
                           <div key={time} className="grid grid-cols-8 gap-1 mb-1">
-                            <div className="flex items-center justify-end pr-1.5 text-[9px] md:text-[10px] font-bold text-gray-400">{time}</div>
-                            {DAYS.map(day => {
-                              const slot = `${day}-${time}`;
+                            <div className="flex flex-col items-end justify-center pr-1.5 gap-0.5">
+                              <span className="text-[9px] md:text-[10px] font-bold" style={{ color: 'var(--gc-text-sub)' }}>{time}</span>
+                              <span className="text-[7px] md:text-[8px] font-medium" style={{ color: 'var(--gc-text-muted)', lineHeight: 1 }}>{TIME_SLOT_RANGES[time]}</span>
+                            </div>
+                            {weekDates.map((d, i) => {
+                              const slot = `${d.toLocaleDateString('sv-SE')}|${time}`;
                               const isMine = myAvailability.includes(slot);
                               const count = Object.values(kickoff.availability || {}).filter(arr => (arr || []).includes(slot)).length;
                               const isProposed = kickoff.proposal === slot;
                               return (
-                                <button
-                                  key={day}
-                                  onClick={() => toggleAvailability(slot)}
+                                <button key={i} onClick={() => toggleAvailability(slot)}
                                   className="h-9 md:h-11 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all"
                                   style={
                                     isMine
@@ -2355,9 +2452,7 @@ export default function App() {
                                         ? { background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', outline: isProposed ? `2.5px solid var(--gc-gold)` : 'none', outlineOffset: '1px' }
                                         : { background: 'var(--gc-input-bg)', color: 'transparent', border: '1px solid var(--gc-border)' }
                                   }
-                                >
-                                  {count > 0 ? count : '·'}
-                                </button>
+                                >{count > 0 ? count : '·'}</button>
                               );
                             })}
                           </div>
@@ -2365,7 +2460,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Proposal card — always shown if a slot is proposed */}
+                    {/* Proposal card */}
                     {kickoff.proposal && (
                       <div className="gcard gcard-active space-y-3 md:space-y-4">
                         <div className="flex items-center gap-2">
@@ -2373,22 +2468,20 @@ export default function App() {
                             style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}><Ico name="CalendarPlus" size={16}/></div>
                           <h4 className="font-bold text-sm md:text-base">제안된 킥오프 일정</h4>
                         </div>
-                        <p className="text-xl md:text-2xl font-bold" style={{ color: 'var(--gc-blue)' }}>{kickoff.proposal.replace('-', ' ')}</p>
+                        <p className="text-xl md:text-2xl font-bold" style={{ color: 'var(--gc-blue)' }}>{formatSlot(kickoff.proposal)}</p>
                         <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-sub)' }}>{Object.keys(kickoff.agreements || {}).length}/{team.members.length}명 동의</span>
+                          <span className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-sub)' }}>{Object.keys(kickoff.agreements || {}).length}/{_rMembers.length}명 동의</span>
                           <div className="flex gap-1">
-                            {team.members.map(m => (
+                            {getSceneMembers().map(m => (
                               <div key={m.id} title={m.name} className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                                style={{ background: (kickoff.agreements || {})[m.id] ? 'var(--gc-green)' : 'var(--gc-border)' }}>
+                                style={{ background: m._isPending ? 'var(--gc-border)' : (kickoff.agreements || {})[m.id] ? 'var(--gc-green)' : 'rgba(180,120,60,0.3)' }}>
                                 {m.name?.[0]}
                               </div>
                             ))}
                           </div>
                         </div>
                         {!(kickoff.agreements || {})[currentMemberId] ? (
-                          <button onClick={agreeToProposal} className="gbtn gbtn-primary w-full">
-                            동의하기
-                          </button>
+                          <button onClick={agreeToProposal} className="gbtn gbtn-primary w-full">동의하기</button>
                         ) : (
                           <button onClick={disagreeFromProposal} className="gbtn gbtn-secondary w-full">
                             <CheckCircle2 size={16} style={{ color: 'var(--gc-green)' }}/> 동의 취소하기
@@ -2397,20 +2490,17 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Recommended slots — always shown so other slots can be proposed */}
+                    {/* Recommended slots */}
                     <div className="space-y-3 md:space-y-4">
                       <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>
                         {kickoff.proposal ? '다른 시간 제안하기' : '추천 시간대 (많이 겹치는 순)'}
                       </h4>
                       {getBestSlots(kickoff.availability).slice(0, 4).length > 0 ? (
                         getBestSlots(kickoff.availability).slice(0, 4).map(({ slot, count }) => (
-                          <button
-                            key={slot}
-                            onClick={() => proposeSlot(slot)}
+                          <button key={slot} onClick={() => proposeSlot(slot)}
                             className="w-full gcard gcard-clickable flex justify-between items-center font-bold text-sm md:text-base"
-                            style={{ padding: '14px 18px', opacity: kickoff.proposal === slot ? 0.5 : 1 }}
-                          >
-                            <span>{slot.replace('-', ' ')}</span>
+                            style={{ padding: '14px 18px', opacity: kickoff.proposal === slot ? 0.5 : 1 }}>
+                            <span>{formatSlot(slot)}</span>
                             <span className="text-xs md:text-sm px-2.5 py-1 rounded-full"
                               style={{ color: 'var(--gc-blue)', background: 'rgba(74,144,226,0.12)' }}>{count}명 가능</span>
                           </button>
@@ -2420,7 +2510,8 @@ export default function App() {
                       )}
                     </div>
                   </>
-                )}
+                  );
+                })()}
               </div>
             </BottomSheet>
 
@@ -2436,7 +2527,7 @@ export default function App() {
                   </span>
                   <span className="font-bold text-[10px] md:text-[11px] px-2 py-0.5 md:py-1 rounded-full"
                     style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-border)' }}>
-                    {currentMembers} / {targetMembers} 합류
+                    {currentMembers} / {targetMembers} 작성
                   </span>
                 </div>
                 <div className="flex items-center gap-2.5 md:gap-3">
