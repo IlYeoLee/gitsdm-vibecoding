@@ -24,6 +24,19 @@ const getBgm = () => {
   return _bgm;
 };
 
+// SFX tap — plays on every CTA button press
+let _sfx = null;
+const playSfx = () => {
+  try {
+    if (!_sfx) {
+      _sfx = new Audio(ASSET('sfx-tap.mp4'));
+      _sfx.volume = 0.8;
+    }
+    _sfx.currentTime = 0;
+    _sfx.play().catch(() => {});
+  } catch {}
+};
+
 // PNG icons (game-style replacements for lucide-react where available)
 const ICO_PNGS = {
   Phone: 'icons/Phone 1.png',
@@ -170,7 +183,12 @@ const Card = ({ children, className = "", onClick }) => (
 );
 
 const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, type = "button" }) => (
-  <button type={type} onClick={onClick} className={`gbtn gbtn-${variant} ${className}`} disabled={disabled}>
+  <button
+    type={type}
+    onClick={(e) => { playSfx(); onClick?.(e); }}
+    className={`gbtn gbtn-${variant} ${className}`}
+    disabled={disabled}
+  >
     {children}
   </button>
 );
@@ -1514,11 +1532,11 @@ export default function App() {
             />
 
             <div className="absolute inset-0 z-[70]">
-              {/* Mute toggle — top-right */}
+              {/* Mute toggle — top-right, safe inset */}
               <button
-                onClick={() => setIsMuted(m => !m)}
-                className="absolute top-4 right-4 z-[80] gbtn gbtn-secondary"
-                style={{ padding: '8px 12px', fontSize: '13px', gap: '6px' }}
+                onClick={() => { playSfx(); setIsMuted(m => !m); }}
+                className="absolute z-[80] gbtn gbtn-secondary"
+                style={{ padding: '8px 12px', fontSize: '13px', gap: '6px', top: 'max(16px, env(safe-area-inset-top, 16px))', right: '20px' }}
               >
                 {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '13px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
@@ -2049,11 +2067,11 @@ export default function App() {
               </div>
             </BottomSheet>
 
-            {/* Mute toggle — top-right corner on dashboard */}
+            {/* Mute toggle — top-right corner on dashboard, safe inset */}
             <button
-              onClick={() => setIsMuted(m => !m)}
-              className="absolute top-3 right-3 md:top-6 md:right-6 z-50 gbtn gbtn-secondary"
-              style={{ padding: '7px 12px', fontSize: '12px', gap: '5px' }}
+              onClick={() => { playSfx(); setIsMuted(m => !m); }}
+              className="absolute z-50 gbtn gbtn-secondary"
+              style={{ padding: '7px 12px', fontSize: '12px', gap: '5px', top: 'max(12px, env(safe-area-inset-top, 12px))', right: '20px' }}
             >
               {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
               <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
