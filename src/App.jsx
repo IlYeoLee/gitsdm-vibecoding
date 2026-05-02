@@ -37,6 +37,19 @@ const playSfx = () => {
   } catch {}
 };
 
+// SFX cheer — plays when "우리 팀 응원하기" is triggered
+let _sfxCheer = null;
+const playCheerSfx = () => {
+  try {
+    if (!_sfxCheer) {
+      _sfxCheer = new Audio(ASSET('sfx-cheer.mp3'));
+      _sfxCheer.volume = 1.0;
+    }
+    _sfxCheer.currentTime = 0;
+    _sfxCheer.play().catch(() => {});
+  } catch {}
+};
+
 // PNG icons (game-style replacements for lucide-react where available)
 const ICO_PNGS = {
   Phone: 'icons/Phone 1.png',
@@ -1042,6 +1055,7 @@ export default function App() {
   const handleCheer = () => {
     const sceneMembers = getSceneMembers();
     if (isJumping || sceneMembers.length === 0) return;
+    playCheerSfx();
     const pool = CHEER_POOL(team.category || '');
     const msgs = {};
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
@@ -1535,11 +1549,11 @@ export default function App() {
               {/* Mute toggle — top-right, safe inset */}
               <button
                 onClick={() => { playSfx(); setIsMuted(m => !m); }}
-                className="absolute z-[80] gbtn gbtn-secondary"
-                style={{ padding: '8px 12px', fontSize: '13px', gap: '6px', top: 'max(16px, env(safe-area-inset-top, 16px))', right: '20px' }}
+                className="gbtn gbtn-secondary"
+                style={{ position: 'absolute', zIndex: 80, top: 'max(16px, env(safe-area-inset-top, 16px))', right: '20px', padding: '7px 12px', fontSize: '12px', gap: '5px' }}
               >
-                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '13px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
+                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
               </button>
               <style>{`
                 @keyframes subtitleLine {
@@ -2070,8 +2084,8 @@ export default function App() {
             {/* Mute toggle — top-right corner on dashboard, safe inset */}
             <button
               onClick={() => { playSfx(); setIsMuted(m => !m); }}
-              className="absolute z-50 gbtn gbtn-secondary"
-              style={{ padding: '7px 12px', fontSize: '12px', gap: '5px', top: 'max(12px, env(safe-area-inset-top, 12px))', right: '20px' }}
+              className="gbtn gbtn-secondary"
+              style={{ position: 'absolute', zIndex: 50, top: 'max(12px, env(safe-area-inset-top, 12px))', right: '20px', padding: '7px 12px', fontSize: '12px', gap: '5px' }}
             >
               {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
               <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
