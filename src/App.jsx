@@ -648,8 +648,8 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
 
             const cheerMsg = cheerMessages?.[member.id];
             const roleColor = getRoleColor(member.role);
-            const rawBubble = cheerMsg || `"${member.intro || '안녕!'}"`;
-            const bubbleText = rawBubble.length > 30 ? rawBubble.slice(0, 29) + '…' : rawBubble;
+            const rawBubble = cheerMsg || (member.intro || '안녕!');
+            const bubbleText = rawBubble.length > 20 ? rawBubble.slice(0, 19) + '…' : rawBubble;
             const bubbleBg   = cheerMsg ? roleColor : '#fff';
             const bubbleTextColor = cheerMsg ? '#fff' : '#4e5968';
             const bubbleBorderColor = cheerMsg ? roleColor : '#e5e7eb';
@@ -1001,6 +1001,7 @@ const MemberDetailModal = ({ member, onClose, currentMemberId, onEditProfile }) 
                  </div>
                </div>
             </div>
+          </div>
           {(member.researchTopics?.length > 0 || member.researchSubject) && (
             <div className="space-y-3 md:space-y-4">
                <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>MEP 연구 관심사</h4>
