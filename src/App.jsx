@@ -115,14 +115,51 @@ const Button = ({ children, onClick, variant = 'primary', className = "", disabl
 // Frame 2 is the squat moment so the face drops dramatically — these are NOT all the same.
 const SPRITE_FRAME_COUNT = 5;
 const SPRITE_ASPECT = 909 / 759; // h/w
-const FACE_DIA = 0.37; // Hough-detected 36.9% of sprite width
-const FACE_FRAMES = [
-  { cx: 486 / 759, cy: 426 / 909 }, // 1: standing stride
-  { cx: 498 / 759, cy: 546 / 909 }, // 2: squat (face drops)
-  { cx: 459 / 759, cy: 401 / 909 }, // 3: mid stride
-  { cx: 471 / 759, cy: 404 / 909 }, // 4: stride
-  { cx: 471 / 759, cy: 404 / 909 }, // 5: peak stride
-];
+
+// Per-role face-circle data: interior transparency detected via flood-fill (759×909 base)
+// dia = diameter as fraction of charWidth; cx/cy normalized to sprite w/h
+const ROLE_SPRITES = {
+  ID: {
+    dia: 0.295,
+    frames: [
+      { cx: 425/759, cy: 347/909 },
+      { cx: 434/759, cy: 447/909 },
+      { cx: 442/759, cy: 338/909 },
+      { cx: 445/759, cy: 348/909 },
+      { cx: 491/759, cy: 361/909 },
+    ],
+  },
+  PL: {
+    dia: 0.293,
+    frames: [
+      { cx: 392/759, cy: 380/909 },
+      { cx: 428/759, cy: 490/909 },
+      { cx: 396/759, cy: 373/909 },
+      { cx: 399/759, cy: 388/909 },
+      { cx: 396/759, cy: 394/909 },
+    ],
+  },
+  UX: {
+    dia: 0.345,
+    frames: [
+      { cx: 428/759, cy: 354/909 },
+      { cx: 424/759, cy: 455/909 },
+      { cx: 418/759, cy: 343/909 },
+      { cx: 442/759, cy: 352/909 },
+      { cx: 442/759, cy: 352/909 }, // frame 5 gap → reuse frame 4
+    ],
+  },
+  VD: {
+    dia: 0.353,
+    frames: [
+      { cx: 390/759, cy: 337/909 },
+      { cx: 432/759, cy: 383/909 },
+      { cx: 390/759, cy: 329/909 },
+      { cx: 398/759, cy: 337/909 },
+      { cx: 394/759, cy: 337/909 },
+    ],
+  },
+};
 
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIME_SLOTS = ['오전', '오후', '저녁'];
@@ -159,11 +196,13 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
     return () => clearInterval(id);
   }, []);
 
-  // Preload sprite frames so frame swaps don't flicker
+  // Preload all role sprites so frame swaps don't flicker
   useEffect(() => {
-    for (let i = 1; i <= SPRITE_FRAME_COUNT; i++) {
-      const img = new Image();
-      img.src = ASSET(`avatar/${i}.png`);
+    for (const role of Object.keys(ROLE_SPRITES)) {
+      for (let i = 1; i <= SPRITE_FRAME_COUNT; i++) {
+        const img = new Image();
+        img.src = ASSET(`avatar/${role}/${role}${i}.png`);
+      }
     }
   }, []);
 
@@ -221,16 +260,19 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
           const zIndex = 50 - index;
           const frame = ((tick + index) % SPRITE_FRAME_COUNT) + 1;
           const ringColor = getRoleColor(member.role);
+          const roleKey = ROLE_SPRITES[member.role] ? member.role : 'ID';
+          const spriteInfo = ROLE_SPRITES[roleKey];
+          const faceFrame = spriteInfo.frames[frame - 1];
+          const photoSize = charWidth * spriteInfo.dia;
+          const faceLeft = charWidth * faceFrame.cx - photoSize / 2;
+          const faceTop = charHeight * faceFrame.cy - photoSize / 2;
 
           return (
             <div
               key={member.id}
               onClick={() => onMemberClick(member)}
               className="absolute bottom-0 flex flex-col items-center cursor-pointer transition-transform hover:scale-110"
-              style={{
-                transform: `translateX(${indexOffset * charOffset}px)`,
-                zIndex
-              }}
+              style={{ transform: `translateX(${indexOffset * charOffset}px)`, zIndex }}
             >
               {/* Speech Bubble */}
               <div
@@ -244,46 +286,37 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-b border-r border-gray-100"></div>
               </div>
 
-              {/* Character (sprite + face photo overlay synchronized per frame) */}
+              {/* Character: role-specific sprite + face photo locked to the face-hole per frame */}
               <div
                 className="relative drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)]"
                 style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
               >
+                {/* Profile photo fills the face hole — rendered BEHIND the sprite so the ring rim covers the edge */}
+                <div
+                  className="absolute rounded-full overflow-hidden"
+                  style={{
+                    left: `${faceLeft}px`,
+                    top: `${faceTop}px`,
+                    width: `${photoSize}px`,
+                    height: `${photoSize}px`,
+                  }}
+                >
+                  {member.photoUrl ? (
+                    <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center font-bold text-white"
+                      style={{ backgroundColor: ringColor, fontSize: `${photoSize * 0.42}px` }}
+                    >{member.name?.[0] || '?'}</div>
+                  )}
+                </div>
+                {/* Sprite on top — the transparent hole reveals the photo beneath */}
                 <img
-                  src={ASSET(`avatar/${frame}.png`)}
+                  src={ASSET(`avatar/${roleKey}/${roleKey}${frame}.png`)}
                   alt=""
                   draggable={false}
-                  className="absolute inset-0 w-full h-full object-contain select-none"
+                  className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
                 />
-                {/* Face: photo positioned at the face circle center for the CURRENT frame
-                    so it tracks body bob/squat across the walk cycle */}
-                {(() => {
-                  const f = FACE_FRAMES[frame - 1];
-                  const photoSize = charWidth * FACE_DIA;
-                  const left = charWidth * f.cx - photoSize / 2;
-                  const top = charHeight * f.cy - photoSize / 2;
-                  return (
-                    <div
-                      className="absolute rounded-full overflow-hidden bg-white"
-                      style={{
-                        left: `${left}px`,
-                        top: `${top}px`,
-                        width: `${photoSize}px`,
-                        height: `${photoSize}px`,
-                        boxShadow: `inset 0 0 0 2px ${ringColor}66`
-                      }}
-                    >
-                      {member.photoUrl ? (
-                        <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center font-bold text-white"
-                          style={{ backgroundColor: ringColor, fontSize: `${photoSize * 0.45}px` }}
-                        >{member.name?.[0] || '?'}</div>
-                      )}
-                    </div>
-                  );
-                })()}
               </div>
             </div>
           );
