@@ -1140,9 +1140,12 @@ export default function App() {
       }
     });
 
-    const alreadyRegistered = (() => { try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID'); } catch { return null; } })();
+    const registeredTeamId = (() => { try { return localStorage.getItem('ALIGN_CURRENT_TEAM_ID'); } catch { return null; } })();
+    const alreadyRegistered = registeredTeamId === teamId
+      ? (() => { try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID'); } catch { return null; } })()
+      : null;
     const restoreDraftOrLanding = (tid) => {
-      if (alreadyRegistered) return; // already submitted — don't restore draft
+      if (alreadyRegistered) return; // already submitted for this team — skip landing
       try {
         const raw = localStorage.getItem(`ALIGN_DRAFT_${tid}`);
         if (raw) {
@@ -1235,6 +1238,7 @@ export default function App() {
     saveTeamToLocal(updatedTeam);
     setTeam(updatedTeam);
     try { localStorage.setItem('ALIGN_CURRENT_MEMBER_ID', newUser.id); } catch {}
+    try { localStorage.setItem('ALIGN_CURRENT_TEAM_ID', team.id); } catch {}
     try { localStorage.removeItem(`ALIGN_DRAFT_${team.id}`); } catch {}
     setCurrentMemberId(newUser.id);
     // Show invite banner only for the creator (device that holds the encryption key)
