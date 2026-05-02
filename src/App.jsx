@@ -254,33 +254,44 @@ const ROLE_SPRITES = {
 const MEMBER_ROLE_LOOKUP = {
   // UX
   '김채은': 'UX', '윤현경': 'UX', '이채연': 'UX', '장유진': 'UX',
-  '김승희': 'UX', '박정민 (UX)': 'UX', '이서희': 'UX', '장별': 'UX',
+  '정채영': 'UX', '김승희': 'UX', '박정민 (UX)': 'UX', '이서희': 'UX', '장별': 'UX',
   '전주현': 'UX', '한예지': 'UX', '백채영': 'UX', '서유빈': 'UX',
   '양준홍': 'UX', '이일여': 'UX', '이주은': 'UX', '정유진': 'UX',
   '조서현': 'UX', '권세진': 'UX', '서주원': 'UX', '서주원 ②': 'UX',
   '김정빈': 'UX', '임채은': 'UX', '최선우': 'UX', '임찬주': 'UX',
   '권솔': 'UX', '박우희': 'UX', '전다빈': 'UX', '윤영실': 'UX',
-  '이지우': 'UX', '김예영': 'UX', '이정현': 'UX',
+  '이지우': 'UX', '김예영': 'UX', '이정헌': 'UX', '이정현': 'UX',
   // ID
-  '이준영': 'ID', '주형준': 'ID', '나승환': 'ID', '김도완': 'ID',
+  '장인우': 'ID', '김민우': 'ID', '이준영': 'ID', '장은혜': 'ID',
+  '주형준': 'ID', '나승환': 'ID', '김도완': 'ID',
   '박도현': 'ID', '박정민 (ID)': 'ID', '송시헌': 'ID', '임준우': 'ID',
   '강동헌': 'ID', '김시우': 'ID', '박세연': 'ID', '서현빈': 'ID',
   '양현지': 'ID', '정민서': 'ID', '정민영': 'ID', '최완혁': 'ID',
   '고유하': 'ID', '김소진': 'ID', '김정현': 'ID', '박주원': 'ID',
-  '윤지원': 'ID', '김민정': 'ID', '이화인': 'ID',
+  '윤지원': 'ID', '김민정': 'ID', '이화인': 'ID', '서도윤': 'ID',
 };
 
 // Demo members shown on the landing screen preview — randomized per visit
 const DEMO_INTROS = ['반가워요! 👋', '잘 부탁해요! ✨', '같이 해봐요! 🧡', '화이팅! 🔥'];
-const DEMO_ROLES = ['PL', 'ID', 'UX', 'VD'];
 const getRandomDemoMembers = () => {
-  const shuffled = [...MEMBER_ROSTER].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 4).map((m, i) => ({
-    id: `demo-${i}`,
-    name: m.name,
-    role: DEMO_ROLES[i],
-    photoUrl: ASSET(m.photo),
-    intro: DEMO_INTROS[i],
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+  const idPool  = shuffle(MEMBER_ROSTER.filter(m => MEMBER_ROLE_LOOKUP[m.name] === 'ID'));
+  const uxPool  = shuffle(MEMBER_ROSTER.filter(m => MEMBER_ROLE_LOOKUP[m.name] === 'UX'));
+  const allPool = shuffle(MEMBER_ROSTER);
+  const used    = new Set();
+  const pick = (pool) => {
+    const m = pool.find(x => !used.has(x.name)) || pool[0];
+    used.add(m.name);
+    return m;
+  };
+  return [
+    { role: 'PL', m: pick(allPool) },
+    { role: 'ID', m: pick(idPool.length  ? idPool  : allPool) },
+    { role: 'UX', m: pick(uxPool.length  ? uxPool  : allPool) },
+    { role: 'VD', m: pick(uxPool.length  ? uxPool  : allPool) },
+  ].map(({ role, m }, i) => ({
+    id: `demo-${i}`, name: m.name, role,
+    photoUrl: ASSET(m.photo), intro: DEMO_INTROS[i],
   }));
 };
 
@@ -402,8 +413,8 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
   const row2Members = shouldSplit ? members.slice(Math.ceil(members.length / 2)) : [];
   const maxRowLen   = shouldSplit ? Math.max(row1Members.length, row2Members.length) : members.length;
 
-  const naturalCharWidth = isMobile ? 110 : 150;
-  const naturalSpacing   = isMobile ? 82  : 140;
+  const naturalCharWidth = isMobile ? 110 : 128;
+  const naturalSpacing   = isMobile ? 82  : 116;
   const usableWidth = viewportWidth * (isMobile ? 0.96 : 0.82);
   const minScale = isMobile ? 0.55 : 0.52;
   const requiredWidth = Math.max(1, maxRowLen) * naturalSpacing;
@@ -458,7 +469,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
         className="absolute w-full pointer-events-auto flex items-end justify-center z-50"
         style={{
           height: `${charHeight * (shouldSplit ? 1.82 : 1) + 72}px`,
-          bottom: isMobile ? '96px' : '160px',
+          bottom: isMobile ? '96px' : '88px',
         }}
       >
         {[
@@ -1073,7 +1084,7 @@ export default function App() {
       case 1: return (
         <div className="space-y-7 md:space-y-10 animate-in slide-in-from-right-4 duration-500 pb-28">
           <header>
-            <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">당신에 대해 알려주세요</h2>
+            <h2 className="mb-1.5 md:mb-2 tracking-tight" style={{ fontSize: '24px', fontFamily: "'Jua', sans-serif", fontWeight: 400 }}>당신에 대해 알려주세요.</h2>
             <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>협업 멤버들에게 공유될 정보를 구성합니다.</p>
           </header>
           <div className="space-y-6 md:space-y-8">
@@ -1234,7 +1245,7 @@ export default function App() {
       case 2: return (
         <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 pb-28">
           <header>
-            <h2 className="text-3xl md:text-5xl font-bold mb-2 md:mb-3">작업 성향과 리듬</h2>
+            <h2 className="mb-2 md:mb-3" style={{ fontSize: '24px', fontFamily: "'Jua', sans-serif", fontWeight: 400 }}>작업 성향과 리듬</h2>
             <p className="text-base md:text-xl font-medium" style={{ color: 'var(--gc-text-sub)' }}>팀원들이 당신을 어떻게 도와주면 좋을까요?</p>
           </header>
           <div className="space-y-7 md:space-y-10">
@@ -1311,7 +1322,7 @@ export default function App() {
       case 3: return (
         <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 pb-28">
            <header>
-             <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">최종 협업 약속</h2>
+             <h2 className="mb-1.5 md:mb-2 tracking-tight" style={{ fontSize: '24px', fontFamily: "'Jua', sans-serif", fontWeight: 400 }}>최종 협업 약속</h2>
              <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>기분 좋은 팀워크를 위해 꼭 지키고 싶은 점들입니다.</p>
            </header>
            <div className="space-y-6 md:space-y-8">
@@ -1349,8 +1360,21 @@ export default function App() {
                <textarea value={profileData.avoid} onChange={e => setProfileData({...profileData, avoid: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="예: 사전 공유 없는 불참이나 자정 이후의 급한 연락 등" />
              </div>
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1" style={{ color: 'var(--gc-text-sub)' }}>팀원들에게 한마디</label>
-               <input value={profileData.intro} onChange={e => setProfileData({...profileData, intro: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base transition-all" placeholder="안녕하세요! 한 학기 잘 지내봐요!" />
+               <div className="flex items-center justify-between ml-1 mr-1">
+                 <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-sub)' }}>팀원들에게 한마디</label>
+                 <span style={{ fontSize: '11px', fontFamily: 'Pretendard Variable, sans-serif', fontWeight: 500, color: profileData.intro.length > 30 ? '#E85454' : 'var(--gc-text-muted)' }}>{profileData.intro.length}/30</span>
+               </div>
+               <div style={profileData.intro.length > 30 ? { borderRadius: '14px', boxShadow: '0 0 0 3px rgba(232,84,84,0.35)' } : {}}>
+                 <input
+                   value={profileData.intro}
+                   onChange={e => setProfileData({...profileData, intro: e.target.value})}
+                   className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base transition-all"
+                   placeholder="잘해봅시다! 화이팅!"
+                 />
+               </div>
+               {profileData.intro.length > 30 && (
+                 <p style={{ fontSize: '11px', color: '#E85454', fontFamily: 'Pretendard Variable, sans-serif', marginTop: '4px', marginLeft: '4px' }}>30자 이내로 입력해주세요.</p>
+               )}
              </div>
            </div>
            <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
@@ -1464,8 +1488,21 @@ export default function App() {
             />
 
             <div className="absolute inset-0 z-[70]">
-              {/* Title + body — upper half */}
-              <div className="absolute inset-x-0 top-0 h-[46%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700 gap-3 md:gap-4">
+              <style>{`
+                @keyframes subtitleLine {
+                  0%   { opacity: 0; transform: translateY(10px); }
+                  14%  { opacity: 1; transform: translateY(0); }
+                  72%  { opacity: 1; transform: translateY(0); }
+                  88%  { opacity: 0; transform: translateY(-6px); }
+                  100% { opacity: 0; transform: translateY(10px); }
+                }
+                .sl { animation: subtitleLine 5.5s ease-in-out infinite; display: block; }
+                .sl1 { animation-delay: 0s; }
+                .sl2 { animation-delay: 0.38s; }
+                .sl3 { animation-delay: 0.76s; }
+              `}</style>
+              {/* Title + body — upper portion */}
+              <div className="absolute inset-x-0 top-0 h-[46%] md:h-[36%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700 gap-3 md:gap-4">
                 <img
                   src={ASSET('memboding-title.png')}
                   alt="멤보딩"
@@ -1473,16 +1510,18 @@ export default function App() {
                   style={{ width: 'min(280px, 72vw)' }}
                   draggable={false}
                 />
-                <div className="px-5 py-3 md:py-4 rounded-2xl text-sm md:text-base font-bold leading-relaxed max-w-[280px] md:max-w-sm"
+                <div className="px-5 py-3 md:py-4 rounded-2xl text-sm md:text-base leading-relaxed max-w-[280px] md:max-w-sm"
                   style={{
                     background: 'rgba(255,253,247,0.92)',
                     border: '2.5px solid var(--gc-gold)',
                     boxShadow: '0 4px 0 var(--gc-gold-dark), 0 8px 20px rgba(180,120,50,0.18)',
                     color: 'var(--gc-text)',
                     backdropFilter: 'blur(8px)',
+                    fontFamily: "'Jua', sans-serif",
                   }}>
-                  삼성디자인멤버십 팀 프로젝트의 시작.<br />
-                  어색한 자기소개는 줄이고,<br />바로 일할 수 있는 환경을 만드세요.
+                  <span className="sl sl1">팀 프로젝트, 바로 시작!</span>
+                  <span className="sl sl2">어색한 소개는 스킵하고,</span>
+                  <span className="sl sl3">함께 일할 준비부터 완료하세요.</span>
                 </div>
               </div>
 
