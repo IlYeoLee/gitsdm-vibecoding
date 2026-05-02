@@ -16,6 +16,8 @@ const ASSET = (p) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, '')}`;
 const VIEWS = {
   LANDING: 'landing',
   SETUP_TEAM: 'setup_team',
+  ROSTER_SELECT: 'roster_select',
+  INVITE_LANDING: 'invite_landing',
   PROFILE_FORM: 'profile_form',
   DASHBOARD: 'dashboard'
 };
@@ -639,7 +641,8 @@ const MemberDetailModal = ({ member, onClose }) => {
 // --- Main App ---
 export default function App() {
   const [view, setView] = useState(VIEWS.LANDING);
-  const [team, setTeam] = useState({ id: '', name: '', category: PROJECT_CATEGORIES[0], targetSize: 4, members: [] });
+  const [team, setTeam] = useState({ id: '', name: '', category: PROJECT_CATEGORIES[0], targetSize: 4, members: [], kickoff: {} });
+  const [selectedRoster, setSelectedRoster] = useState([]);
   const [step, setStep] = useState(1);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -676,17 +679,19 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const teamId = params.get('teamId');
     if (!teamId) return;
+    const alreadyRegistered = (() => { try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID'); } catch { return null; } })();
     dbGetTeam(teamId).then(remoteTeam => {
       if (remoteTeam) {
         setTeam(remoteTeam);
-        setView(VIEWS.DASHBOARD);
+        setView(alreadyRegistered ? VIEWS.DASHBOARD : VIEWS.INVITE_LANDING);
       } else {
         const localTeam = getTeamFromLocal(teamId);
         if (localTeam) {
           setTeam(localTeam);
-          setView(VIEWS.DASHBOARD);
+          setView(alreadyRegistered ? VIEWS.DASHBOARD : VIEWS.INVITE_LANDING);
         } else {
-          setTeam({ id: teamId, name: '초대받은 프로젝트', category: '파운데이션', targetSize: 4, members: [] });
+          setTeam({ id: teamId, name: '초대받은 프로젝트', category: '파운데이션', targetSize: 4, members: [], kickoff: {} });
+          setView(VIEWS.INVITE_LANDING);
         }
       }
     });
@@ -724,8 +729,8 @@ export default function App() {
       try { window.history.pushState({}, '', `?teamId=${teamId}`); } catch(e){}
 
       setTeam(newTeam);
-      setStep(1);
-      setView(VIEWS.PROFILE_FORM);
+      setSelectedRoster([]);
+      setView(VIEWS.ROSTER_SELECT);
     } catch (err) {
       console.error(err);
     }
@@ -740,6 +745,26 @@ export default function App() {
     try { localStorage.setItem('ALIGN_CURRENT_MEMBER_ID', newUser.id); } catch {}
     setCurrentMemberId(newUser.id);
     setView(VIEWS.DASHBOARD);
+  };
+
+  const handleRosterConfirm = async () => {
+    const newKickoff = { ...(team.kickoff || {}), rosterMembers: selectedRoster };
+    setTeam(prev => ({ ...prev, kickoff: newKickoff }));
+    saveTeamToLocal({ ...team, kickoff: newKickoff });
+    dbUpdateKickoff(team.id, newKickoff);
+    setStep(1);
+    setView(VIEWS.PROFILE_FORM);
+  };
+
+  const getSceneMembers = (teamData) => {
+    const t = teamData || team;
+    const roster = t.kickoff?.rosterMembers || [];
+    if (!roster.length) return t.members || [];
+    return roster.map(r => {
+      const registered = (t.members || []).find(m => m.name === r.name);
+      if (registered) return { ...registered, intro: registered.intro || '작성 중..' };
+      return { id: `pending-${r.name}`, name: r.name, role: 'UX', photoUrl: ASSET(r.photo), intro: '아직 초대 전', _isPending: true };
+    });
   };
 
   const copyInviteLink = () => {
@@ -1223,14 +1248,11 @@ export default function App() {
         </div>
       )}
 
-      {view !== VIEWS.DASHBOARD && view !== VIEWS.LANDING && (
-        <nav className="sticky top-0 z-50 gnav-bar px-4 md:px-6 py-3 md:py-4">
+      {view !== VIEWS.DASHBOARD && view !== VIEWS.LANDING && view !== VIEWS.INVITE_LANDING && (
+        <nav className="sticky top-0 z-50 gnav-bar px-4 md:px-6 py-2.5 md:py-3">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl flex items-center justify-center font-bold italic text-sm md:text-base text-white"
-                style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 2px 0 var(--gc-blue-floor)` }}>A</div>
-              <span className="font-bold text-xl md:text-2xl tracking-tighter" style={{ color: 'var(--gc-text)' }}>Align</span>
-            </div>
+            <img src={ASSET('memboding-title.png')} alt="멤보딩" draggable={false}
+              style={{ height: '36px', width: 'auto' }} />
             {view === VIEWS.PROFILE_FORM && (
               <div className="flex gap-1.5 md:gap-2">
                  {[1,2,3].map(s => <div key={s} className={`w-6 md:w-8 h-2 rounded-full transition-all ${step >= s ? 'gstep-dot-active' : 'gstep-dot-inactive'}`}/>)}
@@ -1243,7 +1265,6 @@ export default function App() {
       <main>
         {view === VIEWS.LANDING && (
           <div className="fixed inset-0 overflow-hidden">
-            {/* Layer 1: Live animated scene with 4 demo members */}
             <FinchWalkingScene
               members={DEMO_MEMBERS}
               onMemberClick={() => {}}
@@ -1251,34 +1272,30 @@ export default function App() {
               cheerMessages={{}}
             />
 
-            {/* Layer 2: Gradient dim — dark top for text, fades to clear at bottom */}
-            <div
-              className="absolute inset-0 z-[60] pointer-events-none"
-              style={{ background: 'linear-gradient(to bottom, rgba(10,14,26,0.72) 0%, rgba(10,14,26,0.50) 45%, rgba(10,14,26,0.15) 75%, rgba(10,14,26,0.00) 100%)' }}
-            />
-
-            {/* Layer 3: Content — title top half / button bottom */}
             <div className="absolute inset-0 z-[70]">
-
-              {/* Title + body — upper half, well above the walking characters */}
-              <div className="absolute inset-x-0 top-0 h-[46%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700">
+              {/* Title + body — upper half */}
+              <div className="absolute inset-x-0 top-0 h-[46%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700 gap-3 md:gap-4">
                 <img
-                  src={ASSET('logo-title.png')}
+                  src={ASSET('memboding-title.png')}
                   alt="멤보딩"
-                  className="mb-3 md:mb-4 drop-shadow-2xl select-none"
-                  style={{ width: 'min(320px, 80vw)' }}
+                  className="drop-shadow-2xl select-none"
+                  style={{ width: 'min(280px, 72vw)' }}
                   draggable={false}
                 />
-                <p
-                  className="text-white text-sm md:text-base font-bold leading-relaxed max-w-[280px] md:max-w-sm"
-                  style={{ textShadow: '0 2px 12px rgba(0,0,0,0.9)' }}
-                >
+                <div className="px-5 py-3 md:py-4 rounded-2xl text-sm md:text-base font-bold leading-relaxed max-w-[280px] md:max-w-sm"
+                  style={{
+                    background: 'rgba(255,253,247,0.92)',
+                    border: '2.5px solid var(--gc-gold)',
+                    boxShadow: '0 4px 0 var(--gc-gold-dark), 0 8px 20px rgba(180,120,50,0.18)',
+                    color: 'var(--gc-text)',
+                    backdropFilter: 'blur(8px)',
+                  }}>
                   삼성디자인멤버십 팀 프로젝트의 시작.<br />
                   어색한 자기소개는 줄이고,<br />바로 일할 수 있는 환경을 만드세요.
-                </p>
+                </div>
               </div>
 
-              {/* CTA button — pinned to bottom, below characters */}
+              {/* CTA button */}
               <div
                 className="absolute inset-x-0 bottom-0 flex justify-center px-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
                 style={{ paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom) + 20px))' }}
@@ -1290,7 +1307,6 @@ export default function App() {
                   지금 팀 생성하기 <ArrowRight size={20} />
                 </Button>
               </div>
-
             </div>
           </div>
         )}
@@ -1331,6 +1347,116 @@ export default function App() {
                   placeholder="팀 이름 또는 구체적인 목표를 입력하세요" value={team.name} onChange={e => setTeam({...team, name: e.target.value})} />
               </div>
               <Button onClick={handleCreateTeam} className="w-full py-5 md:py-6 text-base md:text-xl" disabled={!team.name}>초대 링크 생성하고 프로필 작성 <ArrowRight size={18}/></Button>
+            </div>
+          </div>
+        )}
+
+        {view === VIEWS.ROSTER_SELECT && (
+          <div className="max-w-2xl mx-auto py-8 md:py-16 px-5 md:px-6 animate-in slide-in-from-bottom-8 duration-700">
+            <div className="text-center mb-6 md:mb-10">
+              <h2 className="text-3xl md:text-5xl font-bold mb-2 tracking-tight" style={{ color: 'var(--gc-text)' }}>
+                팀원을 선택하세요
+              </h2>
+              <p className="text-sm md:text-base font-medium" style={{ color: 'var(--gc-text-sub)' }}>
+                {team.targetSize}명을 선택하면 초대가 시작됩니다
+              </p>
+              <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm"
+                style={{ background: selectedRoster.length >= team.targetSize ? 'rgba(91,184,92,0.15)' : 'rgba(74,144,226,0.12)',
+                         color: selectedRoster.length >= team.targetSize ? 'var(--gc-green)' : 'var(--gc-blue)',
+                         border: `1.5px solid ${selectedRoster.length >= team.targetSize ? 'var(--gc-green)' : 'rgba(74,144,226,0.3)'}` }}>
+                {selectedRoster.length} / {team.targetSize} 선택됨
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 md:gap-3 mb-8">
+              {MEMBER_ROSTER.map(m => {
+                const isSel = selectedRoster.some(r => r.photo === m.photo);
+                return (
+                  <button
+                    key={m.photo}
+                    type="button"
+                    onClick={() => {
+                      if (isSel) {
+                        setSelectedRoster(prev => prev.filter(r => r.photo !== m.photo));
+                      } else if (selectedRoster.length < team.targetSize) {
+                        setSelectedRoster(prev => [...prev, m]);
+                      }
+                    }}
+                    className="member-face-btn flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
+                    style={isSel
+                      ? { background: 'rgba(74,144,226,0.15)', border: '2px solid var(--gc-gold)', boxShadow: '0 3px 0 var(--gc-gold-dark)' }
+                      : { border: '2px solid transparent', opacity: !isSel && selectedRoster.length >= team.targetSize ? 0.4 : 1 }}
+                  >
+                    <div className="relative">
+                      <img src={ASSET(m.photo)} alt={m.name}
+                        className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover"
+                        style={{ border: `2.5px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }} />
+                      {isSel && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 2px 0 var(--gc-blue-floor)' }}>
+                          <Check size={10} strokeWidth={3} color="#fff"/>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[9px] md:text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--gc-text)' }}>{m.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Button
+              onClick={handleRosterConfirm}
+              className="w-full py-5 md:py-6 text-base md:text-xl"
+              disabled={selectedRoster.length < team.targetSize}
+            >
+              팀원 확정하고 내 프로필 작성 <ArrowRight size={18}/>
+            </Button>
+          </div>
+        )}
+
+        {view === VIEWS.INVITE_LANDING && (
+          <div className="fixed inset-0 overflow-hidden">
+            <FinchWalkingScene
+              members={getSceneMembers()}
+              onMemberClick={() => {}}
+              isJumping={false}
+              cheerMessages={{}}
+            />
+
+            <div className="absolute inset-0 z-[70]">
+              <div className="absolute inset-x-0 top-0 h-[46%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700 gap-3 md:gap-4">
+                <img
+                  src={ASSET('memboding-title.png')}
+                  alt="멤보딩"
+                  className="drop-shadow-2xl select-none"
+                  style={{ width: 'min(240px, 64vw)' }}
+                  draggable={false}
+                />
+                <div className="px-5 py-3 rounded-2xl text-sm md:text-base font-bold leading-relaxed max-w-[260px] md:max-w-sm"
+                  style={{
+                    background: 'rgba(255,253,247,0.92)',
+                    border: '2.5px solid var(--gc-gold)',
+                    boxShadow: '0 4px 0 var(--gc-gold-dark), 0 8px 20px rgba(180,120,50,0.18)',
+                    color: 'var(--gc-text)',
+                    backdropFilter: 'blur(8px)',
+                  }}>
+                  <span className="text-base md:text-lg font-bold block mb-1" style={{ color: 'var(--gc-gold-dark)' }}>{team.name || '팀 초대장'}</span>
+                  팀원들이 먼저 달리고 있어요!<br />
+                  프로필을 작성하고 합류하세요.
+                </div>
+              </div>
+
+              <div
+                className="absolute inset-x-0 bottom-0 flex justify-center px-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
+                style={{ paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom) + 20px))' }}
+              >
+                <Button
+                  onClick={() => { setStep(1); setView(VIEWS.PROFILE_FORM); }}
+                  className="text-base md:text-lg px-8 md:px-14 py-4 md:py-5 rounded-2xl md:rounded-[28px] shadow-2xl shadow-blue-500/50 w-full max-w-xs md:max-w-sm"
+                >
+                  🚀 방 들어가기
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -1382,8 +1508,8 @@ export default function App() {
           <div className="fixed inset-0 w-full h-full bg-[#8FCB81] overflow-hidden flex justify-center">
 
             <FinchWalkingScene
-              members={team.members}
-              onMemberClick={setSelectedMember}
+              members={getSceneMembers()}
+              onMemberClick={(m) => { if (!m._isPending) setSelectedMember(m); }}
               isJumping={isJumping}
               cheerMessages={activeCheerMessages}
             />
