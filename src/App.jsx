@@ -105,23 +105,14 @@ const getInviteUrl = (teamId) => {
 
 // --- UI Components ---
 const Card = ({ children, className = "", onClick }) => (
-  <div onClick={onClick} className={`bg-white border border-gray-100 rounded-3xl md:rounded-[28px] p-5 md:p-6 shadow-sm transition-all ${className}`}>{children}</div>
+  <div onClick={onClick} className={`gcard ${onClick ? 'gcard-clickable' : ''} ${className}`}>{children}</div>
 );
 
-const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, type = "button" }) => {
-  const baseStyles = "px-5 md:px-6 py-3.5 md:py-4 rounded-2xl md:rounded-[20px] font-bold transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 text-sm md:text-base";
-  const variants = {
-    primary: "bg-[#3182f6] text-white hover:bg-[#1b64da]",
-    secondary: "bg-[#f2f4f6] text-[#4e5968] hover:bg-[#e5e8eb]",
-    outline: "border border-[#e5e8eb] text-[#4e5968] hover:bg-gray-50",
-    ghost: "text-[#8b95a1] hover:bg-gray-100"
-  };
-  return (
-    <button type={type} onClick={onClick} className={`${baseStyles} ${variants[variant]} ${className}`} disabled={disabled}>
-      {children}
-    </button>
-  );
-};
+const Button = ({ children, onClick, variant = 'primary', className = "", disabled = false, type = "button" }) => (
+  <button type={type} onClick={onClick} className={`gbtn gbtn-${variant} ${className}`} disabled={disabled}>
+    {children}
+  </button>
+);
 
 // --- Confetti burst (pure CSS, no library) ---
 const CONFETTI_COLORS = ['#3182f6','#00c471','#ff8a00','#9b51e0','#FFD54F','#E91E63','#00BCD4','#FF7043'];
@@ -411,13 +402,14 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center pointer-events-auto p-0 md:p-6">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
-      <div className="relative w-full max-w-md md:max-w-2xl h-[85vh] md:h-auto md:max-h-[85vh] bg-[#f5f7fa] rounded-t-[32px] md:rounded-[40px] shadow-2xl animate-in slide-in-from-bottom md:zoom-in-95 flex flex-col transition-all">
-        <div className="w-full flex justify-center py-3 md:hidden"><div className="w-10 h-1.5 bg-gray-300 rounded-full"></div></div>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+      <div className="relative w-full max-w-md md:max-w-2xl h-[85vh] md:h-auto md:max-h-[85vh] gpanel-bg rounded-t-[32px] md:rounded-[32px] shadow-2xl animate-in slide-in-from-bottom md:zoom-in-95 flex flex-col transition-all"
+        style={{ border: '2px solid var(--gc-gold)', borderBottom: 'none' }}>
+        <div className="w-full flex justify-center py-3 md:hidden"><div className="gpanel-handle"></div></div>
 
-        <div className="px-5 md:px-8 py-4 md:py-6 flex justify-between items-center border-b border-gray-100">
-           <h3 className="text-xl md:text-3xl font-bold text-[#191f28]">{title}</h3>
-           <button onClick={onClose} className="p-2 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-600 transition-colors"><X size={18}/></button>
+        <div className="px-5 md:px-8 py-4 md:py-6 flex justify-between items-center" style={{ borderBottom: '1.5px solid var(--gc-border)' }}>
+           <h3 className="text-xl md:text-3xl font-bold" style={{ color: 'var(--gc-text)' }}>{title}</h3>
+           <button onClick={onClose} className="p-2 rounded-full transition-colors" style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><X size={18}/></button>
         </div>
         <div className="p-5 md:p-8 overflow-y-auto flex-1 pb-20 md:pb-8">
            {children}
@@ -431,11 +423,14 @@ const MemberDetailModal = ({ member, onClose }) => {
   if (!member) return null;
   return (
     <div className="fixed inset-0 z-[300] flex items-end md:items-center justify-center pointer-events-auto p-0 md:p-6">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
-      <div className="relative w-full max-w-md md:max-w-3xl h-[92vh] md:h-auto md:max-h-[90vh] bg-white rounded-t-[32px] md:rounded-[40px] shadow-2xl overflow-y-auto animate-in slide-in-from-bottom md:zoom-in-95 pb-8 md:pb-12 transition-all">
-        <div className="sticky top-0 w-full flex justify-center py-3 bg-gradient-to-b from-white via-white to-transparent z-10 md:hidden"><div className="w-10 h-1.5 bg-gray-300 rounded-full"></div></div>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+      <div className="relative w-full max-w-md md:max-w-3xl h-[92vh] md:h-auto md:max-h-[90vh] rounded-t-[32px] md:rounded-[32px] shadow-2xl overflow-y-auto animate-in slide-in-from-bottom md:zoom-in-95 pb-8 md:pb-12 transition-all"
+        style={{ background: 'var(--gc-surface)', border: '2px solid var(--gc-gold)', borderBottom: 'none' }}>
+        <div className="sticky top-0 w-full flex justify-center py-3 z-10 md:hidden"
+          style={{ background: `linear-gradient(to bottom, var(--gc-surface), transparent)` }}><div className="gpanel-handle"></div></div>
 
-        <button onClick={onClose} className="absolute top-4 md:top-8 right-4 md:right-8 p-2.5 md:p-3 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 z-20 transition-colors"><X size={20} /></button>
+        <button onClick={onClose} className="absolute top-4 md:top-8 right-4 md:right-8 p-2.5 md:p-3 rounded-full z-20 transition-colors"
+          style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><X size={20} /></button>
 
         <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-12">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
@@ -875,12 +870,20 @@ export default function App() {
             <section className="space-y-4 md:space-y-5">
               <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">작업 성향 키워드</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-                 {WORK_STYLE_TAGS.map(tag => (
+                 {WORK_STYLE_TAGS.map(tag => {
+                   const sel = profileData.workStyles.includes(tag);
+                   return (
                    <button key={tag} onClick={() => {
                      const exists = profileData.workStyles.includes(tag);
                      setProfileData({ ...profileData, workStyles: exists ? profileData.workStyles.filter(t => t !== tag) : [...profileData.workStyles, tag] });
-                   }} className={`p-3.5 md:p-5 rounded-2xl md:rounded-[22px] font-bold text-xs md:text-sm transition-all border-2 ${profileData.workStyles.includes(tag) ? 'bg-[#3182f6] border-transparent text-white shadow-lg shadow-blue-500/30' : 'bg-white border-gray-100 text-[#4e5968] hover:bg-gray-50'}`}>{tag}</button>
-                 ))}
+                   }} className="p-3.5 md:p-5 rounded-2xl font-bold text-xs md:text-sm transition-all"
+                     style={sel
+                       ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, color: '#fff', border: 'none', boxShadow: `0 3px 0 var(--gc-blue-floor)` }
+                       : { background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)', color: 'var(--gc-text-sub)' }}>
+                     {tag}
+                   </button>
+                   );
+                 })}
               </div>
               <div className="space-y-2.5 md:space-y-3 mt-4 md:mt-6">
                  {profileData.workStyles.map(tag => (
@@ -903,13 +906,23 @@ export default function App() {
                    <div key={section.k} className="space-y-3 md:space-y-4">
                       <div className="flex items-center gap-2 text-sm md:text-base font-bold text-[#191f28]">{section.label}</div>
                       <div className="grid grid-cols-2 gap-2.5 md:gap-4">
-                        {section.opt.map(opt => (
-                          <button key={opt.v} onClick={() => setProfileData({...profileData, schedule: {...profileData.schedule, [section.k]: opt.v}})} className={`p-4 md:p-6 rounded-3xl md:rounded-[32px] text-left transition-all border-2 ${profileData.schedule[section.k] === opt.v ? 'bg-[#3182f6]/5 border-[#3182f6] shadow-sm' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
-                             <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-3 ${profileData.schedule[section.k] === opt.v ? 'bg-[#3182f6] text-white' : 'bg-gray-100 text-gray-400'}`}>{React.cloneElement(opt.i, { size: 18 })}</div>
+                        {section.opt.map(opt => {
+                          const sel = profileData.schedule[section.k] === opt.v;
+                          return (
+                          <button key={opt.v} onClick={() => setProfileData({...profileData, schedule: {...profileData.schedule, [section.k]: opt.v}})}
+                            className="p-4 md:p-6 rounded-2xl text-left transition-all"
+                            style={sel
+                              ? { background: `linear-gradient(145deg, #FFFDF7, rgba(74,144,226,0.08))`, border: `2.5px solid var(--gc-blue)`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
+                              : { background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)' }}>
+                             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-3"
+                               style={sel ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, color: '#fff' } : { background: 'var(--gc-border)', color: 'var(--gc-text-sub)' }}>
+                               {React.cloneElement(opt.i, { size: 18 })}
+                             </div>
                              <div className="font-bold text-base md:text-xl">{opt.v}</div>
-                             <div className="text-[10px] md:text-xs font-medium text-gray-400 mt-0.5 md:mt-1">{opt.d}</div>
+                             <div className="text-[10px] md:text-xs font-medium mt-0.5 md:mt-1" style={{ color: 'var(--gc-text-muted)' }}>{opt.d}</div>
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                    </div>
                  ))}
@@ -938,7 +951,18 @@ export default function App() {
                      <p className="text-[11px] md:text-sm font-medium text-gray-400">이번 프로젝트의 개인적 연구 목표입니다.</p>
                    </div>
                  </div>
-                 <div className="flex flex-wrap gap-1.5 md:gap-2">{MEP_TOPICS.map(topic => (<button key={topic} onClick={() => { const nl = profileData.researchTopics.includes(topic) ? profileData.researchTopics.filter(t => t !== topic) : [...profileData.researchTopics, topic]; setProfileData({...profileData, researchTopics: nl}); }} className={`px-4 py-2 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-bold transition-all ${profileData.researchTopics.includes(topic) ? 'bg-[#3182f6] text-white shadow-md' : 'bg-[#f2f4f6] text-[#8b95a1]'}`}>{topic}</button>))}</div>
+                 <div className="flex flex-wrap gap-1.5 md:gap-2">{MEP_TOPICS.map(topic => {
+                   const sel = profileData.researchTopics.includes(topic);
+                   return (
+                   <button key={topic} onClick={() => { const nl = profileData.researchTopics.includes(topic) ? profileData.researchTopics.filter(t => t !== topic) : [...profileData.researchTopics, topic]; setProfileData({...profileData, researchTopics: nl}); }}
+                     className="px-4 py-2 md:px-5 md:py-2.5 rounded-full text-xs md:text-sm font-bold transition-all"
+                     style={sel
+                       ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, color: '#fff', boxShadow: `0 3px 0 var(--gc-blue-floor)` }
+                       : { background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-tan)', color: 'var(--gc-text-sub)' }}>
+                     {topic}
+                   </button>
+                   );
+                 })}</div>
                  <textarea value={profileData.researchSubject} onChange={e => setProfileData({...profileData, researchSubject: e.target.value})} className="w-full p-4 md:p-8 bg-[#f2f4f6] rounded-2xl md:rounded-[32px] outline-none font-medium text-sm md:text-xl min-h-[120px] md:min-h-[160px] resize-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="구체적인 연구 주제를 적어주세요." />
                </div>
              )}
@@ -970,7 +994,7 @@ export default function App() {
   const isAligned = currentMembers >= targetMembers;
 
   return (
-    <div className="min-h-screen bg-[#f5f7fa] font-sans selection:bg-[#3182f6]/20 text-[#191f28]">
+    <div className="min-h-screen font-sans selection:bg-[#E8A44A]/25" style={{ background: 'var(--gc-bg)', color: 'var(--gc-text)' }}>
 
       {/* Photo Crop Modal */}
       {cropImageSrc && (
@@ -1038,15 +1062,16 @@ export default function App() {
       )}
 
       {view !== VIEWS.DASHBOARD && view !== VIEWS.LANDING && (
-        <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 md:px-6 py-3 md:py-4">
+        <nav className="sticky top-0 z-50 gnav-bar px-4 md:px-6 py-3 md:py-4">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 md:w-8 md:h-8 bg-[#3182f6] rounded-lg md:rounded-xl flex items-center justify-center text-white font-bold italic text-sm md:text-base">A</div>
-              <span className="font-bold text-xl md:text-2xl tracking-tighter">Align</span>
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl flex items-center justify-center font-bold italic text-sm md:text-base text-white"
+                style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 2px 0 var(--gc-blue-floor)` }}>A</div>
+              <span className="font-bold text-xl md:text-2xl tracking-tighter" style={{ color: 'var(--gc-text)' }}>Align</span>
             </div>
             {view === VIEWS.PROFILE_FORM && (
               <div className="flex gap-1.5 md:gap-2">
-                 {[1,2,3].map(s => <div key={s} className={`w-6 md:w-8 h-1.5 rounded-full transition-colors ${step >= s ? 'bg-[#3182f6]' : 'bg-gray-100'}`}/>)}
+                 {[1,2,3].map(s => <div key={s} className={`w-6 md:w-8 h-2 rounded-full transition-all ${step >= s ? 'gstep-dot-active' : 'gstep-dot-inactive'}`}/>)}
               </div>
             )}
           </div>
@@ -1110,33 +1135,40 @@ export default function App() {
 
         {view === VIEWS.SETUP_TEAM && (
           <div className="max-w-xl mx-auto py-8 md:py-20 px-5 md:px-6 animate-in slide-in-from-bottom-8 duration-700">
-            <h2 className="text-3xl md:text-5xl font-bold mb-7 md:mb-12 tracking-tight text-center">프로젝트 시작</h2>
-            <div className="space-y-7 md:space-y-12">
-              <div className="space-y-3 md:space-y-5">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2">Category</label>
+            <h2 className="text-3xl md:text-5xl font-bold mb-7 md:mb-12 tracking-tight text-center" style={{ color: 'var(--gc-text)' }}>프로젝트 시작</h2>
+            <div className="space-y-7 md:space-y-10">
+              <div className="space-y-3 md:space-y-4">
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2" style={{ color: 'var(--gc-text-sub)' }}>Category</label>
                 <div className="relative">
-                  <select value={team.category} onChange={e => setTeam({...team, category: e.target.value})} className="w-full p-4 md:p-7 bg-[#f2f4f6] rounded-2xl md:rounded-[32px] outline-none text-base md:text-2xl font-bold appearance-none focus:ring-8 focus:ring-[#3182f6]/5 transition-all">
+                  <select value={team.category} onChange={e => setTeam({...team, category: e.target.value})}
+                    className="w-full p-4 md:p-5 rounded-2xl outline-none text-base md:text-xl font-bold appearance-none transition-all"
+                    style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)', color: 'var(--gc-text)', borderRadius: '18px' }}>
                     {PROJECT_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
-                  <ChevronDown className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
+                  <ChevronDown className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 pointer-events-none" size={22} style={{ color: 'var(--gc-text-sub)' }} />
                 </div>
               </div>
 
-              <div className="space-y-3 md:space-y-5">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2">Team Size</label>
+              <div className="space-y-3 md:space-y-4">
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2" style={{ color: 'var(--gc-text-sub)' }}>Team Size</label>
                 <div className="relative">
-                  <select value={team.targetSize || 4} onChange={e => setTeam({...team, targetSize: Number(e.target.value)})} className="w-full p-4 md:p-7 bg-[#f2f4f6] rounded-2xl md:rounded-[32px] outline-none text-base md:text-2xl font-bold appearance-none focus:ring-8 focus:ring-[#3182f6]/5 transition-all">
+                  <select value={team.targetSize || 4} onChange={e => setTeam({...team, targetSize: Number(e.target.value)})}
+                    className="w-full p-4 md:p-5 rounded-2xl outline-none text-base md:text-xl font-bold appearance-none transition-all"
+                    style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)', color: 'var(--gc-text)', borderRadius: '18px' }}>
                     {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => <option key={num} value={num}>{num}명</option>)}
                   </select>
-                  <ChevronDown className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
+                  <ChevronDown className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 pointer-events-none" size={22} style={{ color: 'var(--gc-text-sub)' }} />
                 </div>
               </div>
 
-              <div className="space-y-3 md:space-y-5">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2">Project Name</label>
-                <textarea className="w-full p-5 md:p-10 bg-[#f2f4f6] rounded-3xl md:rounded-[48px] outline-none text-base md:text-2xl font-medium min-h-[120px] md:min-h-[200px] resize-none focus:ring-8 focus:ring-[#3182f6]/5 transition-all border-none" placeholder="팀 이름 또는 구체적인 목표를 입력하세요" value={team.name} onChange={e => setTeam({...team, name: e.target.value})} />
+              <div className="space-y-3 md:space-y-4">
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2" style={{ color: 'var(--gc-text-sub)' }}>Project Name</label>
+                <textarea
+                  className="w-full p-5 md:p-7 outline-none text-base md:text-xl font-medium min-h-[120px] md:min-h-[160px] resize-none transition-all"
+                  style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)', borderRadius: '20px', color: 'var(--gc-text)' }}
+                  placeholder="팀 이름 또는 구체적인 목표를 입력하세요" value={team.name} onChange={e => setTeam({...team, name: e.target.value})} />
               </div>
-              <Button onClick={handleCreateTeam} className="w-full py-5 md:py-8 text-base md:text-2xl shadow-2xl shadow-blue-500/20" disabled={!team.name}>초대 링크 생성하고 프로필 작성 <ArrowRight size={18}/></Button>
+              <Button onClick={handleCreateTeam} className="w-full py-5 md:py-6 text-base md:text-xl" disabled={!team.name}>초대 링크 생성하고 프로필 작성 <ArrowRight size={18}/></Button>
             </div>
           </div>
         )}
@@ -1255,30 +1287,49 @@ export default function App() {
             <BottomSheet isOpen={showMembersSheet} onClose={() => setShowMembersSheet(false)} title="팀원 목록">
               <div className="space-y-3 md:space-y-4">
                  {team.members.map(member => (
-                   <div key={member.id} onClick={() => { setShowMembersSheet(false); setSelectedMember(member); }} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-white rounded-2xl md:rounded-[24px] shadow-sm border border-gray-100 cursor-pointer hover:bg-gray-50 active:scale-95 transition-all">
-                      <div className="w-12 h-12 md:w-16 md:h-16 bg-[#3182f6] rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-2xl shrink-0 overflow-hidden">
+                   <div key={member.id} onClick={() => { setShowMembersSheet(false); setSelectedMember(member); }}
+                     className="flex items-center gap-3 md:gap-4 p-3 md:p-4 cursor-pointer active:scale-95 transition-all gcard gcard-clickable"
+                     style={{ padding: '12px 16px' }}>
+                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-2xl shrink-0 overflow-hidden"
+                        style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>
                         {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : member.name[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 md:mb-1"><span className="font-bold text-base md:text-xl">{member.name}</span><span className="text-[10px] md:text-xs font-medium text-[#3182f6] bg-blue-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md md:rounded-lg">{member.role}</span></div>
-                        <p className="text-xs md:text-sm font-medium text-gray-400 truncate">"{member.intro}"</p>
+                        <div className="flex items-center gap-2 mb-0.5 md:mb-1">
+                          <span className="font-bold text-base md:text-xl">{member.name}</span>
+                          <span className="text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full"
+                            style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}>{member.role}</span>
+                        </div>
+                        <p className="text-xs md:text-sm font-medium truncate" style={{ color: 'var(--gc-text-muted)' }}>"{member.intro}"</p>
                       </div>
-                      <ChevronRight className="text-gray-300 shrink-0" size={20}/>
+                      <ChevronRight className="shrink-0" size={20} style={{ color: 'var(--gc-text-muted)' }}/>
                    </div>
                  ))}
-                 <button onClick={copyInviteLink} className="w-full p-4 md:p-6 border-2 border-dashed border-gray-300 rounded-2xl md:rounded-[24px] flex items-center justify-center gap-2 text-gray-500 font-bold text-sm md:text-base hover:bg-white transition-colors">
+                 <button onClick={copyInviteLink}
+                   className="w-full p-4 md:p-6 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base transition-all"
+                   style={{ border: '2px dashed var(--gc-tan)', color: 'var(--gc-text-sub)', background: 'var(--gc-input-bg)' }}>
                     <Plus size={18}/> 팀원 더 초대하기
                  </button>
               </div>
             </BottomSheet>
 
             <BottomSheet isOpen={showRulesSheet} onClose={() => setShowRulesSheet(false)} title="우리의 협업 약속">
-               <div className="space-y-5 md:space-y-6">
+               <div className="space-y-4 md:space-y-5">
                  {team.members.map(member => (
-                   <div key={member.id} className="p-5 md:p-6 bg-white rounded-2xl md:rounded-[28px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
-                     <div className="flex items-center gap-2 mb-1 md:mb-2"><div className="w-6 h-6 bg-[#3182f6] rounded-full flex items-center justify-center text-white text-[10px] font-bold">{member.name[0]}</div><span className="font-bold text-sm md:text-base">{member.name} 님의 약속</span></div>
-                     <div className="p-3.5 md:p-4 bg-red-50/50 rounded-xl md:rounded-2xl border border-red-100"><h4 className="text-[10px] md:text-xs font-bold text-red-400 mb-1 flex items-center gap-1"><Heart size={12}/> 추구하는 가치</h4><p className="text-xs md:text-base font-medium text-[#4e5968]">{member.pursuits || '-'}</p></div>
-                     <div className="p-3.5 md:p-4 bg-gray-50 rounded-xl md:rounded-2xl"><h4 className="text-[10px] md:text-xs font-bold text-gray-400 mb-1 flex items-center gap-1"><Ban size={12}/> 지양하는 방식</h4><p className="text-xs md:text-base font-medium text-[#4e5968]">{member.avoid || '-'}</p></div>
+                   <div key={member.id} className="gcard space-y-3 md:space-y-4">
+                     <div className="flex items-center gap-2 mb-1 md:mb-2">
+                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                         style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>{member.name[0]}</div>
+                       <span className="font-bold text-sm md:text-base">{member.name} 님의 약속</span>
+                     </div>
+                     <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
+                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: '#E85454' }}><Heart size={12}/> 추구하는 가치</h4>
+                       <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.pursuits || '-'}</p>
+                     </div>
+                     <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}>
+                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}><Ban size={12}/> 지양하는 방식</h4>
+                       <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.avoid || '-'}</p>
+                     </div>
                    </div>
                  ))}
                </div>
@@ -1313,15 +1364,14 @@ export default function App() {
                                 <button
                                   key={day}
                                   onClick={() => toggleAvailability(slot)}
-                                  className={`h-9 md:h-11 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all ${
-                                    isProposed ? 'ring-2 ring-[#3182f6] ring-offset-1' : ''
-                                  } ${
+                                  className="h-9 md:h-11 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all"
+                                  style={
                                     isMine
-                                      ? 'bg-[#3182f6] text-white shadow-md shadow-blue-200'
+                                      ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, color: '#fff', boxShadow: `0 2px 0 var(--gc-blue-floor)`, outline: isProposed ? `2.5px solid var(--gc-gold)` : 'none', outlineOffset: '1px' }
                                       : count > 0
-                                        ? 'bg-blue-50 text-[#3182f6]'
-                                        : 'bg-gray-100 text-transparent hover:bg-gray-200'
-                                  }`}
+                                        ? { background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', outline: isProposed ? `2.5px solid var(--gc-gold)` : 'none', outlineOffset: '1px' }
+                                        : { background: 'var(--gc-input-bg)', color: 'transparent', border: '1px solid var(--gc-border)' }
+                                  }
                                 >
                                   {count > 0 ? count : '·'}
                                 </button>
@@ -1334,51 +1384,55 @@ export default function App() {
 
                     {/* Proposal / agree section */}
                     {kickoff.proposal ? (
-                      <div className="p-4 md:p-5 bg-blue-50 rounded-2xl md:rounded-[24px] border border-blue-100 space-y-3 md:space-y-4">
+                      <div className="gcard space-y-3 md:space-y-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-[#3182f6] rounded-lg flex items-center justify-center text-white shrink-0"><CalendarPlus size={16}/></div>
-                          <h4 className="font-bold text-sm md:text-base text-[#191f28]">제안된 킥오프 일정</h4>
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0"
+                            style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}><CalendarPlus size={16}/></div>
+                          <h4 className="font-bold text-sm md:text-base">제안된 킥오프 일정</h4>
                         </div>
-                        <p className="text-xl md:text-2xl font-bold text-[#3182f6]">{kickoff.proposal.replace('-', ' ')}</p>
+                        <p className="text-xl md:text-2xl font-bold" style={{ color: 'var(--gc-blue)' }}>{kickoff.proposal.replace('-', ' ')}</p>
                         <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-xs md:text-sm font-medium text-gray-500">{Object.keys(kickoff.agreements || {}).length}/{team.members.length}명 동의</span>
+                          <span className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-sub)' }}>{Object.keys(kickoff.agreements || {}).length}/{team.members.length}명 동의</span>
                           <div className="flex gap-1">
                             {team.members.map(m => (
-                              <div key={m.id} title={m.name} className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold ${(kickoff.agreements || {})[m.id] ? 'bg-[#00c471] text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              <div key={m.id} title={m.name} className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                                style={{ background: (kickoff.agreements || {})[m.id] ? 'var(--gc-green)' : 'var(--gc-border)' }}>
                                 {m.name?.[0]}
                               </div>
                             ))}
                           </div>
                         </div>
                         {!(kickoff.agreements || {})[currentMemberId] ? (
-                          <button onClick={agreeToProposal} className="w-full py-3 md:py-4 bg-[#3182f6] hover:bg-[#1b64da] text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-base transition-colors">
+                          <button onClick={agreeToProposal} className="gbtn gbtn-primary w-full" style={{ borderRadius: '14px !important' }}>
                             동의하기
                           </button>
                         ) : (
-                          <div className="flex items-center gap-2 text-[#00c471] font-bold text-sm md:text-base">
+                          <div className="flex items-center gap-2 font-bold text-sm md:text-base" style={{ color: 'var(--gc-green)' }}>
                             <CheckCircle2 size={18}/> 동의 완료
                           </div>
                         )}
-                        <button onClick={() => proposeSlot(null)} className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2">
+                        <button onClick={() => proposeSlot(null)} className="text-xs font-bold underline underline-offset-2 transition-colors" style={{ color: 'var(--gc-text-muted)' }}>
                           다른 시간으로 변경
                         </button>
                       </div>
                     ) : (
                       <div className="space-y-3 md:space-y-4">
-                        <h4 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">추천 시간대 (많이 겹치는 순)</h4>
+                        <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>추천 시간대 (많이 겹치는 순)</h4>
                         {getBestSlots(kickoff.availability).slice(0, 4).length > 0 ? (
                           getBestSlots(kickoff.availability).slice(0, 4).map(({ slot, count }) => (
                             <button
                               key={slot}
                               onClick={() => proposeSlot(slot)}
-                              className="w-full p-3.5 md:p-5 bg-white border border-gray-200 hover:border-[#3182f6] hover:bg-blue-50 rounded-xl md:rounded-2xl flex justify-between items-center font-bold text-sm md:text-base transition-all"
+                              className="w-full p-3.5 md:p-5 gcard gcard-clickable flex justify-between items-center font-bold text-sm md:text-base"
+                              style={{ padding: '14px 18px' }}
                             >
                               <span>{slot.replace('-', ' ')}</span>
-                              <span className="text-xs md:text-sm text-[#3182f6] bg-blue-50 px-2.5 py-1 rounded-lg">{count}명 가능</span>
+                              <span className="text-xs md:text-sm px-2.5 py-1 rounded-full"
+                                style={{ color: 'var(--gc-blue)', background: 'rgba(74,144,226,0.12)' }}>{count}명 가능</span>
                             </button>
                           ))
                         ) : (
-                          <p className="text-xs md:text-sm font-medium text-gray-400 text-center py-6">팀원들이 가능 시간을 선택하면 추천 시간이 표시됩니다.</p>
+                          <p className="text-xs md:text-sm font-medium text-center py-6" style={{ color: 'var(--gc-text-muted)' }}>팀원들이 가능 시간을 선택하면 추천 시간이 표시됩니다.</p>
                         )}
                       </div>
                     )}
@@ -1390,24 +1444,30 @@ export default function App() {
             <div className="absolute top-3 md:top-8 w-[calc(100%-1.5rem)] md:w-[calc(100%-2rem)] max-w-sm md:max-w-md left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 md:gap-2.5">
               <div
                 onClick={() => setShowJourneySheet(true)}
-                className="w-full bg-white/80 backdrop-blur-2xl rounded-2xl md:rounded-[24px] p-3 md:p-3.5 shadow-xl border border-white/80 animate-in slide-in-from-top-4 duration-700 flex flex-col gap-2.5 md:gap-3 cursor-pointer hover:bg-white/90 hover:scale-[1.02] transition-all group"
+                className="w-full gwidget p-3 md:p-3.5 animate-in slide-in-from-top-4 duration-700 flex flex-col gap-2.5 md:gap-3 cursor-pointer hover:scale-[1.02] transition-all group"
               >
                 <div className="flex justify-between items-center px-1">
-                  <span className={`font-bold text-[11px] md:text-sm uppercase tracking-wider flex items-center gap-2 ${isAligned ? 'text-[#00c471]' : 'text-[#3182f6]'}`}>
+                  <span className="font-bold text-[11px] md:text-sm uppercase tracking-wider flex items-center gap-2"
+                    style={{ color: isAligned ? 'var(--gc-green)' : 'var(--gc-blue)' }}>
                     {isAligned ? 'Ready to Kick-off 🚀' : 'Team Building 🏃'}
                   </span>
-                  <span className="text-gray-600 font-bold text-[10px] md:text-[11px] bg-white/90 px-2 py-0.5 md:py-1 rounded-md md:rounded-lg shadow-sm">{currentMembers} / {targetMembers} 합류</span>
+                  <span className="font-bold text-[10px] md:text-[11px] px-2 py-0.5 md:py-1 rounded-full"
+                    style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-border)' }}>
+                    {currentMembers} / {targetMembers} 합류
+                  </span>
                 </div>
                 <div className="flex items-center gap-2.5 md:gap-3">
-                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-md border-2 border-white font-bold shrink-0 transition-colors ${isAligned ? 'bg-gradient-to-br from-[#00c471] to-[#00a35c] text-white' : 'bg-gradient-to-br from-[#FFD54F] to-[#FFCA28] text-yellow-700'}`}>
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-md border-2 border-white font-bold shrink-0 transition-colors"
+                    style={{ background: isAligned ? 'linear-gradient(135deg, #5BB85C, #3B7C3C)' : 'linear-gradient(135deg, #FFD54F, #FFCA28)', color: isAligned ? '#fff' : '#7A5C00' }}>
                      {isAligned ? <Flag size={16} fill="currentColor"/> : <Zap size={16} fill="currentColor"/>}
                   </div>
-                  <div className="flex-1 h-2.5 md:h-3 bg-black/10 rounded-full overflow-hidden shadow-inner">
-                     <div className="h-full bg-gradient-to-r from-[#4FC3F7] to-[#81C784] rounded-full transition-all duration-1000 relative" style={{width: `${Math.min((currentMembers / targetMembers) * 100, 100)}%`}}>
-                       <div className="absolute right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-white/50 rounded-full"></div>
-                     </div>
+                  <div className="flex-1 gprogress-track">
+                     <div className="gprogress-fill" style={{ width: `${Math.min((currentMembers / targetMembers) * 100, 100)}%` }} />
                   </div>
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-gray-400 group-hover:text-[#3182f6] transition-colors"><ChevronRight size={18}/></div>
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--gc-text-muted)' }}>
+                    <ChevronRight size={18}/>
+                  </div>
                 </div>
               </div>
 
@@ -1415,29 +1475,37 @@ export default function App() {
               <button
                 onClick={handleCheer}
                 disabled={isJumping || team.members.length === 0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-white/80 font-bold text-sm text-[#191f28] active:scale-95 transition-all hover:shadow-2xl hover:bg-white disabled:opacity-40 animate-in slide-in-from-top-4 duration-700"
+                className="gbtn gbtn-secondary animate-in slide-in-from-top-4 duration-700 disabled:opacity-40"
+                style={{ fontSize: '14px' }}
               >
                 <span className={`text-lg ${isJumping ? 'animate-spin' : ''}`}>🎉</span>
                 우리 팀 응원하기
               </button>
             </div>
 
-            <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 bg-white/95 backdrop-blur-xl flex items-center justify-around px-2 md:px-10 rounded-t-[32px] md:rounded-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-2xl z-50 border-t md:border border-white transition-all pb-[env(safe-area-inset-bottom)]">
+            <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 gnav-bottom flex items-center justify-around px-2 md:px-10 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
+              style={{ border: '2.5px solid var(--gc-gold)' }}>
                <button className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gray-100 rounded-full flex items-center justify-center text-[#3182f6]"><Home size={20} fill="currentColor"/></div>
-                  <span className="text-[10px] md:text-xs font-bold text-[#3182f6] hidden md:block">Home</span>
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', color: '#fff', boxShadow: `0 3px 0 var(--gc-blue-floor)` }}>
+                    <Home size={20} fill="currentColor"/>
+                  </div>
+                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-blue)' }}>Home</span>
                </button>
                <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-transparent hover:bg-gray-50 rounded-full flex items-center justify-center text-[#4e5968] transition-colors"><Users size={20} /></div>
-                  <span className="text-[10px] md:text-xs font-bold text-[#4e5968] hidden md:block">Members</span>
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--gc-text-sub)' }}><Users size={20} /></div>
+                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Members</span>
                </button>
                <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-transparent hover:bg-gray-50 rounded-full flex items-center justify-center text-[#4e5968] transition-colors"><Heart size={20} /></div>
-                  <span className="text-[10px] md:text-xs font-bold text-[#4e5968] hidden md:block">Rules</span>
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--gc-text-sub)' }}><Heart size={20} /></div>
+                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Rules</span>
                </button>
                <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-transparent hover:bg-gray-50 rounded-full flex items-center justify-center text-[#4e5968] transition-colors"><CalendarPlus size={20} /></div>
-                  <span className="text-[10px] md:text-xs font-bold text-[#4e5968] hidden md:block">Schedule</span>
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--gc-text-sub)' }}><CalendarPlus size={20} /></div>
+                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Schedule</span>
                </button>
             </div>
           </div>

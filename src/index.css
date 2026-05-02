@@ -1,33 +1,284 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
+/* ── Game Design System ─────────────────────────────────────────────── */
+:root {
+  --gc-bg:          #FFF5E4;
+  --gc-surface:     #FFFDF7;
+  --gc-input-bg:    #FFF9F0;
+  --gc-gold:        #E8A44A;
+  --gc-gold-dark:   #C07A20;
+  --gc-gold-floor:  #A86818;
+  --gc-tan:         #D4A96A;
+  --gc-border:      #E8D5B0;
+  --gc-blue:        #4A8FE0;
+  --gc-blue-top:    #6CB4FF;
+  --gc-blue-floor:  #1B5FA3;
+  --gc-green:       #5BB85C;
+  --gc-green-floor: #3B7C3C;
+  --gc-text:        #3D2B1F;
+  --gc-text-sub:    #8B7355;
+  --gc-text-muted:  #BBA880;
+}
+
+html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
 body {
+  background-color: var(--gc-bg);
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
-  font-weight: 500; /* Medium — default body weight */
+  font-weight: 500;
+  color: var(--gc-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Project policy: only Medium (500) and Bold (700) weights of Pretendard are used.
-   Defensive — clamp anything outside the policy to the nearest allowed weight. */
-strong, b, h1, h2, h3, h4, h5, h6 { font-weight: 700; }
+/* Bold elements → Jua (single weight 400, renders bold visually) */
+.font-bold, h1, h2, h3, h4, h5, h6, strong, b,
+label.font-bold, span.font-bold, div.font-bold, button.font-bold, p.font-bold {
+  font-family: 'Jua', 'Pretendard Variable', Pretendard, sans-serif !important;
+  font-weight: 400 !important;
+}
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* Medium stays Pretendard */
+.font-medium {
+  font-family: "Pretendard Variable", Pretendard, sans-serif;
+  font-weight: 500;
 }
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+/* ── Global form element game style ──────────────────────────────────── */
+input:not([type="range"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: var(--gc-input-bg) !important;
+  border: 2px solid var(--gc-tan) !important;
+  color: var(--gc-text) !important;
+  font-family: "Pretendard Variable", Pretendard, sans-serif !important;
+  font-weight: 500 !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
 }
+
+input:not([type="range"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gc-gold) !important;
+  box-shadow: 0 0 0 4px rgba(232, 164, 74, 0.18) !important;
+  outline: none !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--gc-text-muted) !important;
+  font-weight: 400 !important;
+}
+
+/* ── Game Button ─────────────────────────────────────────────────────── */
+.gbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 9999px !important;
+  font-family: 'Jua', 'Pretendard Variable', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.1s;
+  border: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* Gloss highlight overlay */
+.gbtn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 46%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.40), rgba(255,255,255,0));
+  border-radius: 9999px 9999px 60% 60%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gbtn > * { position: relative; z-index: 2; }
+
+.gbtn:active:not(:disabled) {
+  transform: translateY(3px) !important;
+  box-shadow: 0 1px 0 transparent !important;
+}
+
+.gbtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Primary: blue glossy */
+.gbtn-primary {
+  background: linear-gradient(to bottom, var(--gc-blue-top) 0%, var(--gc-blue) 100%);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--gc-blue-floor), 0 6px 18px rgba(58, 126, 204, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+}
+.gbtn-primary:hover:not(:disabled) { filter: brightness(1.07); }
+
+/* Secondary: warm cream/gold */
+.gbtn-secondary {
+  background: linear-gradient(to bottom, #FFFEF8 0%, #F5E5C4 100%);
+  color: var(--gc-text);
+  border: 2px solid var(--gc-tan) !important;
+  box-shadow: 0 4px 0 var(--gc-gold-floor), 0 6px 14px rgba(180, 120, 60, 0.20);
+}
+.gbtn-secondary:hover:not(:disabled) { filter: brightness(1.04); }
+
+/* Outline */
+.gbtn-outline {
+  background: rgba(255, 253, 247, 0.9);
+  color: var(--gc-text-sub);
+  border: 2px solid var(--gc-tan) !important;
+  box-shadow: 0 3px 0 var(--gc-tan);
+}
+.gbtn-outline:hover:not(:disabled) { background: #FFFDF7; }
+
+/* Ghost */
+.gbtn-ghost {
+  background: transparent;
+  color: var(--gc-text-sub);
+  border: none !important;
+  box-shadow: none;
+}
+.gbtn-ghost:hover:not(:disabled) {
+  background: rgba(212, 169, 106, 0.12);
+}
+
+/* ── Game Card ───────────────────────────────────────────────────────── */
+.gcard {
+  background: linear-gradient(145deg, #FFFDF7, #FFF4E0);
+  border: 2px solid var(--gc-gold);
+  border-radius: 22px;
+  padding: 20px 22px;
+  box-shadow: 0 4px 0 var(--gc-gold-dark), 0 8px 24px rgba(180, 120, 50, 0.10);
+  transition: transform 0.15s, box-shadow 0.15s;
+  color: var(--gc-text);
+}
+
+.gcard-clickable { cursor: pointer; }
+.gcard-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--gc-gold-dark), 0 14px 32px rgba(180, 120, 50, 0.14);
+}
+.gcard-clickable:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--gc-gold-dark), 0 4px 12px rgba(180, 120, 50, 0.08);
+}
+
+/* ── Game Panel (BottomSheet / Modals) ───────────────────────────────── */
+.gpanel-bg {
+  background: var(--gc-surface) !important;
+  border-top: 3px solid var(--gc-gold) !important;
+}
+
+.gpanel-handle {
+  width: 40px;
+  height: 6px;
+  background: var(--gc-tan);
+  border-radius: 9999px;
+  margin: 0 auto;
+}
+
+/* ── Game Navigation ─────────────────────────────────────────────────── */
+.gnav-bar {
+  background: rgba(255, 253, 247, 0.93) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 2px solid var(--gc-border) !important;
+}
+
+/* ── Game Progress Bar ───────────────────────────────────────────────── */
+.gprogress-track {
+  height: 12px;
+  background: rgba(180, 120, 50, 0.14);
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.gprogress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #FFD54F, #81C784);
+  border-radius: 9999px;
+  transition: width 1s ease;
+  position: relative;
+}
+
+.gprogress-fill::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+}
+
+/* ── Game Widget (Dashboard top card) ───────────────────────────────── */
+.gwidget {
+  background: rgba(255, 253, 247, 0.93) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid var(--gc-gold) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 0 var(--gc-gold-dark), 0 10px 28px rgba(0, 0, 0, 0.13);
+}
+
+/* ── Game Bottom Nav ─────────────────────────────────────────────────── */
+.gnav-bottom {
+  background: rgba(255, 253, 247, 0.96) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 2.5px solid var(--gc-gold) !important;
+  border-color: var(--gc-gold) !important;
+}
+
+/* ── Game Tag / Badge ────────────────────────────────────────────────── */
+.gtag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--gc-input-bg);
+  border: 1.5px solid var(--gc-tan);
+  border-radius: 9999px;
+  font-family: 'Jua', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 12px;
+  color: var(--gc-text-sub);
+}
+
+/* ── Game Step Dots ──────────────────────────────────────────────────── */
+.gstep-dot-active {
+  background: linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue));
+  box-shadow: 0 2px 6px rgba(74, 144, 226, 0.5);
+}
+
+.gstep-dot-inactive {
+  background: var(--gc-border);
+}
+
+/* ── Scrollbar hide ──────────────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
