@@ -376,9 +376,10 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
   }, []);
 
   useEffect(() => {
-    const onResize = () => setViewportWidth(window.innerWidth);
+    let t;
+    const onResize = () => { clearTimeout(t); t = setTimeout(() => setViewportWidth(window.innerWidth), 120); };
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    return () => { window.removeEventListener('resize', onResize); clearTimeout(t); };
   }, []);
 
   // Walk-cycle frame ticker — 160ms per frame ≈ 0.8s full cycle
@@ -407,48 +408,28 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
     }
   };
 
-  // 5+ members on mobile → 2 rows; desktop always 1 row (wide viewport fits all)
-  const shouldSplit = members.length >= 5 && isMobile;
+  // 2-row layout: 5+ on mobile, 8+ on desktop
+  const splitThreshold = isMobile ? 5 : 8;
+  const shouldSplit = members.length >= splitThreshold;
   const row1Members = shouldSplit ? members.slice(0, Math.ceil(members.length / 2)) : members;
   const row2Members = shouldSplit ? members.slice(Math.ceil(members.length / 2)) : [];
   const maxRowLen   = shouldSplit ? Math.max(row1Members.length, row2Members.length) : members.length;
 
-  const naturalCharWidth = isMobile ? 110 : 128;
-  const naturalSpacing   = isMobile ? 82  : 116;
-  const usableWidth = viewportWidth * (isMobile ? 0.96 : 0.82);
-  const minScale = isMobile ? 0.55 : 0.52;
+  const naturalCharWidth = isMobile ? 108 : 126;
+  const naturalSpacing   = isMobile ? 80  : 112;
+  // 0.88 on mobile gives ≥40px margin each side, preventing edge clipping
+  const usableWidth = viewportWidth * (isMobile ? 0.88 : 0.84) - naturalCharWidth;
+  const minScale = isMobile ? 0.50 : 0.48;
   const requiredWidth = Math.max(1, maxRowLen) * naturalSpacing;
   const fitScale = requiredWidth > usableWidth ? Math.max(minScale, usableWidth / requiredWidth) : 1;
   const charWidth  = naturalCharWidth * fitScale;
   const charHeight = charWidth * SPRITE_ASPECT;
   const charOffset = naturalSpacing * fitScale;
-  // Row vertical gap: back row sits charHeight*0.65 above front row baseline
-  const rowShift = shouldSplit ? charHeight * 0.68 : 0;
+  // Back row elevated enough that front-row speech bubbles (≈charHeight+36px) don't cover back-row faces
+  const rowShift = shouldSplit ? charHeight * 1.25 : 0;
 
   return (
     <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
-      <style>{`
-        .scene-bg-pan     { animation: sceneScroll 70s linear infinite; }
-        .scene-objects-pan{ animation: sceneScroll 40s linear infinite; }
-        @keyframes sceneScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        @keyframes charJump {
-          0%   { transform: translateY(0px)   scaleX(1)    scaleY(1);    }
-          12%  { transform: translateY(-42px) scaleX(0.92) scaleY(1.08); }
-          26%  { transform: translateY(0px)   scaleX(1.08) scaleY(0.94); }
-          40%  { transform: translateY(-26px) scaleX(0.95) scaleY(1.05); }
-          54%  { transform: translateY(0px)   scaleX(1.05) scaleY(0.96); }
-          67%  { transform: translateY(-14px) scaleX(0.97) scaleY(1.03); }
-          78%  { transform: translateY(0px)   scaleX(1.02) scaleY(0.99); }
-          88%  { transform: translateY(-6px)  scaleX(1)    scaleY(1);    }
-          100% { transform: translateY(0px)   scaleX(1)    scaleY(1);    }
-        }
-        .char-jumping { animation: charJump 0.95s ease-in-out both; transform-origin: bottom center; }
-        @keyframes bubbleFloat {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-6px); }
-        }
-        .bubble-float { animation: bubbleFloat 3s ease-in-out infinite; }
-      `}</style>
 
       {/* Layer 1: Office Interior Background — slow parallax */}
       <div className="absolute top-0 left-0 h-full flex scene-bg-pan z-0" style={{ width: 'max-content' }}>
@@ -464,12 +445,12 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
         ))}
       </div>
 
-      {/* Layer 3: Characters — 2-row layout for 5+ members */}
+      {/* Layer 3: Characters — 2-row layout for 5+/8+ members */}
       <div
         className="absolute w-full pointer-events-auto flex items-end justify-center z-50"
         style={{
-          height: `${charHeight * (shouldSplit ? 1.82 : 1) + 72}px`,
-          bottom: isMobile ? '96px' : '88px',
+          height: `${shouldSplit ? rowShift + charHeight * 1.6 + 48 : charHeight + 64}px`,
+          bottom: isMobile ? '92px' : '130px',
         }}
       >
         {[
@@ -491,8 +472,8 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
             const spriteInfo = ROLE_SPRITES[roleKey];
             const faceFrame = spriteInfo.frames[frame - 1];
             const photoSize = charWidth * spriteInfo.dia;
-            const faceLeft = charWidth * faceFrame.cx - photoSize / 2;
-            const faceTop = charHeight * faceFrame.cy - photoSize / 2;
+            const faceLeft = Math.max(0, Math.min(charWidth - photoSize, charWidth * faceFrame.cx - photoSize / 2));
+            const faceTop  = Math.max(0, Math.min(charHeight - photoSize, charHeight * faceFrame.cy - photoSize / 2));
 
             const cheerMsg = cheerMessages?.[member.id];
             const roleColor = getRoleColor(member.role);
@@ -659,7 +640,7 @@ const MemberDropdown = ({ value, onSelect, roster }) => {
       {open && (
         <div className="absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl overflow-y-auto scrollbar-hide"
           style={{ background: 'var(--gc-surface)', border: '2px solid var(--gc-gold)', boxShadow: '0 8px 0 var(--gc-gold-dark), 0 16px 40px rgba(180,120,50,0.18)', maxHeight: '288px', padding: '12px' }}>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-1.5">
             {memberList.map(m => {
               const isSel = m.name === value;
               return (
@@ -667,15 +648,15 @@ const MemberDropdown = ({ value, onSelect, roster }) => {
                   key={m.photo}
                   type="button"
                   onClick={() => { onSelect(m); setOpen(false); }}
-                  className="member-face-btn flex flex-col items-center gap-1 p-2 rounded-xl transition-all"
+                  className="member-face-btn flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all"
                   style={isSel
                     ? { background: 'rgba(74,144,226,0.15)', border: '2px solid var(--gc-gold)' }
                     : { border: '2px solid transparent' }}
                 >
-                  <img src={ASSET(m.photo)} alt={m.name}
-                    className="w-11 h-11 rounded-full object-cover"
-                    style={{ border: `2px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }} />
-                  <span className="text-[9px] font-bold text-center leading-tight" style={{ color: 'var(--gc-text)' }}>{m.name}</span>
+                  <div className="flex-shrink-0" style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }}>
+                    <img src={ASSET(m.photo)} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  </div>
+                  <span className="text-[8px] font-bold text-center leading-tight w-full" style={{ color: 'var(--gc-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
                 </button>
               );
             })}
@@ -702,8 +683,8 @@ const MemberCharacter = ({ member, size = 130 }) => {
   const frame = (tick % SPRITE_FRAME_COUNT) + 1;
   const faceFrame = spriteInfo.frames[frame - 1];
   const photoSize = charWidth * spriteInfo.dia;
-  const faceLeft = charWidth * faceFrame.cx - photoSize / 2;
-  const faceTop = charHeight * faceFrame.cy - photoSize / 2;
+  const faceLeft = Math.max(0, Math.min(charWidth - photoSize, charWidth * faceFrame.cx - photoSize / 2));
+  const faceTop  = Math.max(0, Math.min(charHeight - photoSize, charHeight * faceFrame.cy - photoSize / 2));
   return (
     <div style={{ width: charWidth, height: charHeight, position: 'relative', flexShrink: 0 }}
       className="drop-shadow-[0_8px_14px_rgba(0,0,0,0.18)]">
@@ -1518,6 +1499,10 @@ export default function App() {
                     color: 'var(--gc-text)',
                     backdropFilter: 'blur(8px)',
                     fontFamily: "'Jua', sans-serif",
+                    minHeight: '5.4em',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                   }}>
                   <span className="sl sl1">팀 프로젝트, 바로 시작!</span>
                   <span className="sl sl2">어색한 소개는 스킵하고,</span>
@@ -1542,9 +1527,9 @@ export default function App() {
         )}
 
         {view === VIEWS.SETUP_TEAM && (
-          <div className="max-w-xl mx-auto py-8 md:py-20 px-5 md:px-6 animate-in slide-in-from-bottom-8 duration-700">
-            <h2 className="text-3xl md:text-5xl font-bold mb-7 md:mb-12 tracking-tight text-center" style={{ color: 'var(--gc-text)' }}>프로젝트 시작</h2>
-            <div className="space-y-7 md:space-y-10">
+          <div className="max-w-xl mx-auto py-8 md:py-16 px-5 md:px-6 pb-28 animate-in slide-in-from-bottom-8 duration-700">
+            <h2 className="mb-7 md:mb-10 tracking-tight text-center" style={{ fontSize: '24px', fontFamily: "'Jua', sans-serif", fontWeight: 400, color: 'var(--gc-text)' }}>프로젝트 시작</h2>
+            <div className="space-y-6 md:space-y-8">
               <div className="space-y-3 md:space-y-4">
                 <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-2" style={{ color: 'var(--gc-text-sub)' }}>Category</label>
                 <div className="relative">
@@ -1576,7 +1561,13 @@ export default function App() {
                   style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)', borderRadius: '20px', color: 'var(--gc-text)' }}
                   placeholder="팀 이름 또는 구체적인 목표를 입력하세요" value={team.name} onChange={e => setTeam({...team, name: e.target.value})} />
               </div>
-              <Button onClick={handleCreateTeam} className="w-full py-5 md:py-6 text-base md:text-xl" disabled={!team.name}>초대 링크 생성하고 프로필 작성 <ArrowRight size={18}/></Button>
+            </div>
+            <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
+              <div className="max-w-xl mx-auto">
+                <Button onClick={handleCreateTeam} className="w-full py-5 md:py-6 text-base md:text-xl" disabled={!team.name}>
+                  <Ico name="Link" size={18}/> 초대 링크 생성하고 프로필 작성 <ArrowRight size={18}/>
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -1618,9 +1609,9 @@ export default function App() {
                       : { border: '2px solid transparent', opacity: !isSel && selectedRoster.length >= team.targetSize ? 0.4 : 1 }}
                   >
                     <div className="relative">
-                      <img src={ASSET(m.photo)} alt={m.name}
-                        className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover"
-                        style={{ border: `2.5px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }} />
+                      <div className="flex-shrink-0" style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: `2.5px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }}>
+                        <img src={ASSET(m.photo)} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      </div>
                       {isSel && (
                         <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
                           style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 2px 0 var(--gc-blue-floor)' }}>
@@ -2041,8 +2032,8 @@ export default function App() {
               </button>
             </div>
 
-            <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 gnav-bottom flex items-center justify-around px-4 md:px-12 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
-              style={{ border: '2.5px solid var(--gc-gold)' }}>
+            <div className="absolute bottom-0 md:bottom-6 w-full max-w-md md:max-w-2xl lg:max-w-4xl flex items-center justify-around px-6 md:px-16 z-50 transition-all py-3 md:py-4"
+              style={{ paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom) + 8px))' }}>
                <button className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 3px 0 var(--gc-blue-floor)', padding: '6px' }}>

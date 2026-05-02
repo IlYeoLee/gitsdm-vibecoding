@@ -290,6 +290,31 @@ input::placeholder, textarea::placeholder {
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Walking Scene animations (extracted to prevent restart on re-render) ── */
+.scene-bg-pan      { animation: sceneScroll 70s linear infinite; }
+.scene-objects-pan { animation: sceneScroll 40s linear infinite; }
+@keyframes sceneScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes charJump {
+  0%   { transform: translateY(0px)   scaleX(1)    scaleY(1);    }
+  12%  { transform: translateY(-42px) scaleX(0.92) scaleY(1.08); }
+  26%  { transform: translateY(0px)   scaleX(1.08) scaleY(0.94); }
+  40%  { transform: translateY(-26px) scaleX(0.95) scaleY(1.05); }
+  54%  { transform: translateY(0px)   scaleX(1.05) scaleY(0.96); }
+  67%  { transform: translateY(-14px) scaleX(0.97) scaleY(1.03); }
+  78%  { transform: translateY(0px)   scaleX(1.02) scaleY(0.99); }
+  88%  { transform: translateY(-6px)  scaleX(1)    scaleY(1);    }
+  100% { transform: translateY(0px)   scaleX(1)    scaleY(1);    }
+}
+.char-jumping { animation: charJump 0.95s ease-in-out both; transform-origin: bottom center; }
+@keyframes bubbleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+.bubble-float { animation: bubbleFloat 3s ease-in-out infinite; }
+
 /* ── pixi-game-ui inspired: shimmer sweep on cards ──────────────────── */
 @keyframes shimmer {
   0%   { transform: translateX(-110%) skewX(-18deg); }
