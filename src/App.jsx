@@ -894,22 +894,10 @@ export default function App() {
   useEffect(() => { window.scrollTo(0, 0); }, [view]);
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
 
-  // BGM control
+  // BGM: persist muted state only — actual play/pause happens in the click handler
   useEffect(() => {
-    const bgm = getBgm();
-    if (!isMuted) {
-      bgm.play().catch(() => {});
-    } else {
-      bgm.pause();
-    }
     try { localStorage.setItem('ALIGN_MUTED', String(isMuted)); } catch {}
   }, [isMuted]);
-
-  useEffect(() => {
-    if ((view === VIEWS.LANDING || view === VIEWS.DASHBOARD) && !isMuted) {
-      getBgm().play().catch(() => {});
-    }
-  }, [view]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1548,7 +1536,7 @@ export default function App() {
             <div className="absolute inset-0 z-[70]">
               {/* Mute toggle — top-right, safe inset */}
               <button
-                onClick={() => { playSfx(); setIsMuted(m => !m); }}
+                onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) getBgm().play().catch(()=>{}); else getBgm().pause(); }}
                 className="gbtn gbtn-secondary"
                 style={{ position: 'absolute', zIndex: 80, top: 'max(16px, env(safe-area-inset-top, 16px))', right: '20px', padding: '7px 12px', fontSize: '12px', gap: '5px' }}
               >
@@ -2017,9 +2005,9 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Proposal / agree section */}
-                    {kickoff.proposal ? (
-                      <div className="gcard space-y-3 md:space-y-4">
+                    {/* Proposal card — always shown if a slot is proposed */}
+                    {kickoff.proposal && (
+                      <div className="gcard gcard-active space-y-3 md:space-y-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0"
                             style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}><Ico name="CalendarPlus" size={16}/></div>
@@ -2038,44 +2026,39 @@ export default function App() {
                           </div>
                         </div>
                         {!(kickoff.agreements || {})[currentMemberId] ? (
-                          <button onClick={agreeToProposal} className="gbtn gbtn-primary w-full" style={{ borderRadius: '14px !important' }}>
+                          <button onClick={agreeToProposal} className="gbtn gbtn-primary w-full">
                             동의하기
                           </button>
                         ) : (
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <div className="flex items-center gap-2 font-bold text-sm md:text-base" style={{ color: 'var(--gc-green)' }}>
-                              <CheckCircle2 size={18}/> 동의 완료
-                            </div>
-                            <button onClick={disagreeFromProposal} className="gbtn gbtn-secondary text-xs md:text-sm" style={{ padding: '6px 14px' }}>
-                              동의 취소
-                            </button>
-                          </div>
-                        )}
-                        <button onClick={() => proposeSlot(null)} className="text-xs font-bold underline underline-offset-2 transition-colors" style={{ color: 'var(--gc-text-muted)' }}>
-                          다른 시간으로 변경
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 md:space-y-4">
-                        <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>추천 시간대 (많이 겹치는 순)</h4>
-                        {getBestSlots(kickoff.availability).slice(0, 4).length > 0 ? (
-                          getBestSlots(kickoff.availability).slice(0, 4).map(({ slot, count }) => (
-                            <button
-                              key={slot}
-                              onClick={() => proposeSlot(slot)}
-                              className="w-full p-3.5 md:p-5 gcard gcard-clickable flex justify-between items-center font-bold text-sm md:text-base"
-                              style={{ padding: '14px 18px' }}
-                            >
-                              <span>{slot.replace('-', ' ')}</span>
-                              <span className="text-xs md:text-sm px-2.5 py-1 rounded-full"
-                                style={{ color: 'var(--gc-blue)', background: 'rgba(74,144,226,0.12)' }}>{count}명 가능</span>
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-xs md:text-sm font-medium text-center py-6" style={{ color: 'var(--gc-text-muted)' }}>팀원들이 가능 시간을 선택하면 추천 시간이 표시됩니다.</p>
+                          <button onClick={disagreeFromProposal} className="gbtn gbtn-secondary w-full">
+                            <CheckCircle2 size={16} style={{ color: 'var(--gc-green)' }}/> 동의 취소하기
+                          </button>
                         )}
                       </div>
                     )}
+
+                    {/* Recommended slots — always shown so other slots can be proposed */}
+                    <div className="space-y-3 md:space-y-4">
+                      <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>
+                        {kickoff.proposal ? '다른 시간 제안하기' : '추천 시간대 (많이 겹치는 순)'}
+                      </h4>
+                      {getBestSlots(kickoff.availability).slice(0, 4).length > 0 ? (
+                        getBestSlots(kickoff.availability).slice(0, 4).map(({ slot, count }) => (
+                          <button
+                            key={slot}
+                            onClick={() => proposeSlot(slot)}
+                            className="w-full gcard gcard-clickable flex justify-between items-center font-bold text-sm md:text-base"
+                            style={{ padding: '14px 18px', opacity: kickoff.proposal === slot ? 0.5 : 1 }}
+                          >
+                            <span>{slot.replace('-', ' ')}</span>
+                            <span className="text-xs md:text-sm px-2.5 py-1 rounded-full"
+                              style={{ color: 'var(--gc-blue)', background: 'rgba(74,144,226,0.12)' }}>{count}명 가능</span>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-xs md:text-sm font-medium text-center py-6" style={{ color: 'var(--gc-text-muted)' }}>팀원들이 가능 시간을 선택하면 추천 시간이 표시됩니다.</p>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -2083,7 +2066,7 @@ export default function App() {
 
             {/* Mute toggle — top-right corner on dashboard, safe inset */}
             <button
-              onClick={() => { playSfx(); setIsMuted(m => !m); }}
+              onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) getBgm().play().catch(()=>{}); else getBgm().pause(); }}
               className="gbtn gbtn-secondary"
               style={{ position: 'absolute', zIndex: 50, top: 'max(12px, env(safe-area-inset-top, 12px))', right: '20px', padding: '7px 12px', fontSize: '12px', gap: '5px' }}
             >
