@@ -106,12 +106,19 @@ const Button = ({ children, onClick, variant = 'primary', className = "", disabl
 };
 
 // --- Full Screen Finch Style Scene ---
-// Avatar sprite — 5 frames at /avatar/{1..5}.png, 759x909 each. Face circle ≈ left 39%, top 28%, dia 33% of sprite width.
+// Avatar sprite — 5 frames at /avatar/{1..5}.png, 759x909 each.
+// Face circle CENTER per frame (measured from PNG, normalized to image width/height).
+// Frame 2 is the squat moment so the face drops dramatically — these are NOT all the same.
 const SPRITE_FRAME_COUNT = 5;
 const SPRITE_ASPECT = 909 / 759; // h/w
-const FACE_LEFT = 0.39;
-const FACE_TOP = 0.28;
-const FACE_DIA = 0.34;
+const FACE_DIA = 0.32; // photo diameter as fraction of charWidth
+const FACE_FRAMES = [
+  { cx: 470 / 759, cy: 415 / 909 }, // 1: standing stride
+  { cx: 476 / 759, cy: 530 / 909 }, // 2: squat (face drops)
+  { cx: 448 / 759, cy: 396 / 909 }, // 3: mid stride
+  { cx: 460 / 759, cy: 399 / 909 }, // 4: stride
+  { cx: 460 / 759, cy: 399 / 909 }, // 5: peak stride
+];
 
 const FinchWalkingScene = ({ members, onMemberClick }) => {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false);
@@ -189,10 +196,10 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
         ))}
       </div>
 
-      {/* Layer 3: Characters — anchored on the carpet, in front of furniture */}
+      {/* Layer 3: Characters — clear of tab nav (mobile 80px, desktop 144px from bottom) */}
       <div
-        className="absolute bottom-[5%] md:bottom-[7%] w-full pointer-events-auto flex items-end justify-center z-50"
-        style={{ height: `${charHeight + 70}px` }}
+        className="absolute w-full pointer-events-auto flex items-end justify-center z-50"
+        style={{ height: `${charHeight + 70}px`, bottom: isMobile ? '100px' : '170px' }}
       >
         {members.map((member, index) => {
           const indexOffset = index - (members.length - 1) / 2;
@@ -222,7 +229,7 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-b border-r border-gray-100"></div>
               </div>
 
-              {/* Character (sprite + face photo overlay) */}
+              {/* Character (sprite + face photo overlay synchronized per frame) */}
               <div
                 className="relative drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)]"
                 style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
@@ -233,26 +240,35 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
                   draggable={false}
                   className="absolute inset-0 w-full h-full object-contain select-none"
                 />
-                {/* Face circle: profile photo (or role-colored placeholder) */}
-                <div
-                  className="absolute rounded-full overflow-hidden bg-white"
-                  style={{
-                    left: `${charWidth * FACE_LEFT}px`,
-                    top: `${charHeight * FACE_TOP}px`,
-                    width: `${charWidth * FACE_DIA}px`,
-                    height: `${charWidth * FACE_DIA}px`,
-                    boxShadow: `inset 0 0 0 2px ${ringColor}66`
-                  }}
-                >
-                  {member.photoUrl ? (
-                    <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
-                  ) : (
+                {/* Face: photo positioned at the face circle center for the CURRENT frame
+                    so it tracks body bob/squat across the walk cycle */}
+                {(() => {
+                  const f = FACE_FRAMES[frame - 1];
+                  const photoSize = charWidth * FACE_DIA;
+                  const left = charWidth * f.cx - photoSize / 2;
+                  const top = charHeight * f.cy - photoSize / 2;
+                  return (
                     <div
-                      className="w-full h-full flex items-center justify-center font-black text-white"
-                      style={{ backgroundColor: ringColor, fontSize: `${charWidth * FACE_DIA * 0.45}px` }}
-                    >{member.name?.[0] || '?'}</div>
-                  )}
-                </div>
+                      className="absolute rounded-full overflow-hidden bg-white"
+                      style={{
+                        left: `${left}px`,
+                        top: `${top}px`,
+                        width: `${photoSize}px`,
+                        height: `${photoSize}px`,
+                        boxShadow: `inset 0 0 0 2px ${ringColor}66`
+                      }}
+                    >
+                      {member.photoUrl ? (
+                        <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
+                      ) : (
+                        <div
+                          className="w-full h-full flex items-center justify-center font-black text-white"
+                          style={{ backgroundColor: ringColor, fontSize: `${photoSize * 0.45}px` }}
+                        >{member.name?.[0] || '?'}</div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           );
@@ -946,15 +962,6 @@ export default function App() {
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-gray-400 group-hover:text-[#3182f6] transition-colors"><ChevronRight size={18}/></div>
                 </div>
               </div>
-            </div>
-
-            <div className="absolute bottom-[100px] md:bottom-[130px] w-full flex flex-col items-center z-40 pointer-events-none animate-in slide-in-from-bottom-8 duration-700 delay-300 px-4">
-               <h3 className="text-white font-black text-sm md:text-lg text-shadow-sm mb-3 md:mb-4 text-center tracking-tight">
-                  {isAligned ? '팀원들이 모두 모였어요! 여정을 확인해볼까요?' : '우리의 아지트가 점점 완성되고 있어요!'}
-               </h3>
-               <button onClick={() => setShowJourneySheet(true)} className={`pointer-events-auto px-5 md:px-6 py-2.5 md:py-3 backdrop-blur-md rounded-full text-white font-black text-xs md:text-sm transition-colors border shadow-lg flex items-center gap-2 ${isAligned ? 'bg-[#3182f6]/80 border-[#3182f6] hover:bg-[#3182f6]' : 'bg-black/30 border-white/20 hover:bg-black/40'}`}>
-                 <MapPinned size={14}/> 다음 할 일(Quest) 보기
-               </button>
             </div>
 
             <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 bg-white/95 backdrop-blur-xl flex items-center justify-around px-2 md:px-10 rounded-t-[32px] md:rounded-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-2xl z-50 border-t md:border border-white transition-all pb-[env(safe-area-inset-bottom)]">
