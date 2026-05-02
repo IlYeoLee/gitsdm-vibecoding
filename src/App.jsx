@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { getTeam as dbGetTeam, createTeam as dbCreateTeam, addMember as dbAddMember, updateKickoff as dbUpdateKickoff, subscribeTeam } from './lib/teamDb';
 import Cropper from 'react-easy-crop';
 import {
   Users, LayoutDashboard, Map, Plus, ArrowRight, Clock, Zap, ChevronRight, User,
@@ -294,6 +295,11 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
           100% { transform: translateY(0px)   scaleX(1)    scaleY(1);    }
         }
         .char-jumping { animation: charJump 0.95s ease-in-out both; transform-origin: bottom center; }
+        @keyframes bubbleFloat {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-6px); }
+        }
+        .bubble-float { animation: bubbleFloat 3s ease-in-out infinite; }
       `}</style>
 
       {/* Layer 1: Office Interior Background — slow parallax */}
@@ -348,8 +354,8 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
               >
                 {/* Speech Bubble */}
                 <div
-                  className={`absolute ${bubbleBg} ${bubbleBorder} border px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl shadow-md animate-in fade-in zoom-in duration-300 whitespace-nowrap text-center transition-all`}
-                  style={{ bottom: `${charHeight + 8}px` }}
+                  className={`absolute ${bubbleBg} ${bubbleBorder} border px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl shadow-md animate-in fade-in zoom-in duration-300 whitespace-nowrap text-center transition-all bubble-float`}
+                  style={{ bottom: `${charHeight + 8}px`, animationDelay: `${(index * 0.55) % 2.5}s` }}
                 >
                   <div
                     className={`text-[10px] md:text-sm font-bold ${bubbleText2} truncate`}
@@ -543,16 +549,32 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const teamId = params.get('teamId');
-    if (teamId) {
-      const localTeam = getTeamFromLocal(teamId);
-      if (localTeam) {
-        setTeam(localTeam);
+    if (!teamId) return;
+    dbGetTeam(teamId).then(remoteTeam => {
+      if (remoteTeam) {
+        setTeam(remoteTeam);
         setView(VIEWS.DASHBOARD);
       } else {
-        setTeam({ id: teamId, name: '초대받은 프로젝트', category: '파운데이션', targetSize: 4, members: [] });
+        const localTeam = getTeamFromLocal(teamId);
+        if (localTeam) {
+          setTeam(localTeam);
+          setView(VIEWS.DASHBOARD);
+        } else {
+          setTeam({ id: teamId, name: '초대받은 프로젝트', category: '파운데이션', targetSize: 4, members: [] });
+        }
       }
-    }
+    });
   }, []);
+
+  // Real-time Supabase subscription while on dashboard
+  useEffect(() => {
+    if (view !== VIEWS.DASHBOARD || !team.id) return;
+    const unsub = subscribeTeam(team.id, {
+      onMembersChange: (members) => setTeam(prev => ({ ...prev, members })),
+      onKickoffChange: (kickoff) => setTeam(prev => ({ ...prev, kickoff })),
+    });
+    return unsub;
+  }, [view, team.id]);
 
   const handleCreateTeam = () => {
     try {
@@ -566,6 +588,7 @@ export default function App() {
         createdAt: Date.now()
       };
       saveTeamToLocal(newTeam);
+      dbCreateTeam(newTeam);
 
       const inviteUrl = getInviteUrl(teamId);
       copyToClipboard(inviteUrl);
@@ -587,6 +610,7 @@ export default function App() {
     const updatedTeam = { ...team, members: [...team.members, newUser] };
     saveTeamToLocal(updatedTeam);
     setTeam(updatedTeam);
+    dbAddMember(team.id, newUser);
     try { localStorage.setItem('ALIGN_CURRENT_MEMBER_ID', newUser.id); } catch {}
     setCurrentMemberId(newUser.id);
     setView(VIEWS.DASHBOARD);
@@ -613,12 +637,14 @@ export default function App() {
     const k = { ...kickoff, availability: { ...(kickoff.availability || {}), [currentMemberId]: updated } };
     const t = { ...team, kickoff: k };
     setTeam(t); saveTeamToLocal(t);
+    dbUpdateKickoff(team.id, k);
   };
 
   const proposeSlot = (slot) => {
     const k = { ...kickoff, proposal: slot, agreements: {} };
     const t = { ...team, kickoff: k };
     setTeam(t); saveTeamToLocal(t);
+    dbUpdateKickoff(team.id, k);
   };
 
   const agreeToProposal = () => {
@@ -626,6 +652,7 @@ export default function App() {
     const k = { ...kickoff, agreements: { ...(kickoff.agreements || {}), [currentMemberId]: true } };
     const t = { ...team, kickoff: k };
     setTeam(t); saveTeamToLocal(t);
+    dbUpdateKickoff(team.id, k);
   };
 
   const handleCheer = () => {
@@ -1307,7 +1334,7 @@ export default function App() {
               </div>
             </BottomSheet>
 
-            <div className="absolute top-3 md:top-8 w-[calc(100%-1.5rem)] md:w-[calc(100%-2rem)] max-w-sm md:max-w-md left-1/2 -translate-x-1/2 z-40">
+            <div className="absolute top-3 md:top-8 w-[calc(100%-1.5rem)] md:w-[calc(100%-2rem)] max-w-sm md:max-w-md left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 md:gap-2.5">
               <div
                 onClick={() => setShowJourneySheet(true)}
                 className="w-full bg-white/80 backdrop-blur-2xl rounded-2xl md:rounded-[24px] p-3 md:p-3.5 shadow-xl border border-white/80 animate-in slide-in-from-top-4 duration-700 flex flex-col gap-2.5 md:gap-3 cursor-pointer hover:bg-white/90 hover:scale-[1.02] transition-all group"
@@ -1330,18 +1357,17 @@ export default function App() {
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-gray-400 group-hover:text-[#3182f6] transition-colors"><ChevronRight size={18}/></div>
                 </div>
               </div>
-            </div>
 
-            {/* Cheer FAB — floats just above nav bar, centered */}
-            <button
-              onClick={handleCheer}
-              disabled={isJumping || team.members.length === 0}
-              className="absolute left-1/2 -translate-x-1/2 z-[55] flex items-center gap-2 px-5 py-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-white/80 font-bold text-sm text-[#191f28] active:scale-95 transition-all hover:shadow-2xl hover:bg-white disabled:opacity-40"
-              style={{ bottom: 'calc(env(safe-area-inset-bottom) + 88px)' }}
-            >
-              <span className={`text-lg ${isJumping ? 'animate-spin' : ''}`}>🎉</span>
-              우리 팀 응원하기
-            </button>
+              {/* Cheer button — just below progress bar */}
+              <button
+                onClick={handleCheer}
+                disabled={isJumping || team.members.length === 0}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-white/80 font-bold text-sm text-[#191f28] active:scale-95 transition-all hover:shadow-2xl hover:bg-white disabled:opacity-40 animate-in slide-in-from-top-4 duration-700"
+              >
+                <span className={`text-lg ${isJumping ? 'animate-spin' : ''}`}>🎉</span>
+                우리 팀 응원하기
+              </button>
+            </div>
 
             <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 bg-white/95 backdrop-blur-xl flex items-center justify-around px-2 md:px-10 rounded-t-[32px] md:rounded-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-2xl z-50 border-t md:border border-white transition-all pb-[env(safe-area-inset-bottom)]">
                <button className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-100 transition-opacity">
