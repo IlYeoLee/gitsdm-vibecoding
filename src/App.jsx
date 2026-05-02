@@ -35,6 +35,17 @@ const ICO_PNGS = {
   Share2: 'icons/Share2 1.png',
   Map: 'icons/Map 1.png',
   Link: 'icons/Link 1.png',
+  Bed: 'icons/bed.png',
+  Building2: 'icons/building.png',
+  Calendar: 'icons/calender.png',
+  CalendarPlus: 'icons/calender.png',
+  Coffee: 'icons/cup.png',
+  Ban: 'icons/hate.png',
+  Heart: 'icons/heart.png',
+  Note: 'icons/note.png',
+  Party: 'icons/party.png',
+  Flag: 'icons/party.png',
+  Home: 'icons/building.png',
 };
 const Ico = ({ name, size = 20, className = '', style: s = {} }) => {
   const src = ICO_PNGS[name];
@@ -482,6 +493,25 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
                   />
                 </div>
               </div>
+              {/* Name label below character */}
+              <div style={{
+                fontSize: '11px',
+                fontFamily: "'Jua', sans-serif",
+                color: 'rgba(61,43,31,0.85)',
+                textAlign: 'center',
+                marginTop: '2px',
+                lineHeight: 1.3,
+                maxWidth: `${charWidth + 16}px`,
+                textShadow: '0 1px 3px rgba(255,255,255,0.9)',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}>
+                {members.length <= 5
+                  ? `${member.role} ${member.generation || ''} ${member.name}`.trim()
+                  : member.name}
+              </div>
             </div>
           );
         })}
@@ -512,7 +542,8 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-const MemberDropdown = ({ value, onSelect }) => {
+const MemberDropdown = ({ value, onSelect, roster }) => {
+  const memberList = (roster && roster.length > 0) ? roster : MEMBER_ROSTER;
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -522,7 +553,7 @@ const MemberDropdown = ({ value, onSelect }) => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const selected = MEMBER_ROSTER.find(m => m.name === value);
+  const selected = memberList.find(m => m.name === value);
 
   return (
     <div ref={ref} className="relative">
@@ -549,7 +580,7 @@ const MemberDropdown = ({ value, onSelect }) => {
         <div className="absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl overflow-y-auto scrollbar-hide"
           style={{ background: 'var(--gc-surface)', border: '2px solid var(--gc-gold)', boxShadow: '0 8px 0 var(--gc-gold-dark), 0 16px 40px rgba(180,120,50,0.18)', maxHeight: '288px', padding: '12px' }}>
           <div className="grid grid-cols-5 gap-2">
-            {MEMBER_ROSTER.map(m => {
+            {memberList.map(m => {
               const isSel = m.name === value;
               return (
                 <button
@@ -648,7 +679,7 @@ const MemberDetailModal = ({ member, onClose }) => {
                <div className="grid grid-cols-3 gap-2 md:gap-3">
                   <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Sun" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.start}</span></div>
                   <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Moon" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.night}</span></div>
-                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Home size={16} className="mx-auto mb-1.5 md:mb-2" style={{ color: 'var(--gc-green)' }}/><span className="text-xs md:text-sm font-bold">{member.schedule.place}</span></div>
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Home" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.place}</span></div>
                </div>
             </div>
 
@@ -656,11 +687,11 @@ const MemberDetailModal = ({ member, onClose }) => {
                <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>협업 약속</h4>
                <div className="space-y-2 md:space-y-3">
                  <div className="p-4 md:p-5 rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
-                   <h5 className="text-[10px] md:text-[11px] font-bold mb-1.5 md:mb-2 flex items-center gap-1.5" style={{ color: '#E85454' }}><Heart size={12}/> 추구하는 가치</h5>
+                   <h5 className="text-[10px] md:text-[11px] font-bold mb-1.5 md:mb-2 flex items-center gap-1.5" style={{ color: '#E85454' }}><Ico name="Heart" size={12}/> 추구하는 가치</h5>
                    <p className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text)' }}>{member.pursuits || '-'}</p>
                  </div>
                  <div className="p-4 md:p-5 rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}>
-                   <h5 className="text-[10px] md:text-[11px] font-bold mb-1.5 md:mb-2 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ban size={12}/> 지양하는 방식</h5>
+                   <h5 className="text-[10px] md:text-[11px] font-bold mb-1.5 md:mb-2 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Ban" size={12}/> 지양하는 방식</h5>
                    <p className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text)' }}>{member.avoid || '-'}</p>
                  </div>
                </div>
@@ -701,11 +732,11 @@ export default function App() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   const [profileData, setProfileData] = useState({
-    name: '', role: 'UX', generation: '34기', phone: '', snsLink: '',
+    name: '', role: '', generation: '', phone: '', snsLink: '',
     photoUrl: '',
     portfolioLinks: [], workItems: [], workStyles: [], styleReasons: {},
     researchTopics: [], researchSubject: '',
-    schedule: { start: '오전', night: '비선호', place: '출퇴근' },
+    schedule: { start: '', night: '', place: '' },
     pursuits: '', avoid: '', intro: ''
   });
 
@@ -841,12 +872,12 @@ export default function App() {
   };
 
   const handleCheer = () => {
-    if (isJumping || team.members.length === 0) return;
+    const sceneMembers = getSceneMembers();
+    if (isJumping || sceneMembers.length === 0) return;
     const pool = CHEER_POOL(team.category || '');
     const msgs = {};
-    // Each member gets a unique message (shuffle-assign)
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    team.members.forEach((m, i) => { msgs[m.id] = shuffled[i % shuffled.length]; });
+    sceneMembers.forEach((m, i) => { msgs[m.id] = shuffled[i % shuffled.length]; });
     setActiveCheerMessages(msgs);
     setIsJumping(true);
     setShowConfetti(true);
@@ -927,7 +958,7 @@ export default function App() {
   const renderStep = () => {
     switch(step) {
       case 1: return (
-        <div className="space-y-7 md:space-y-10 animate-in slide-in-from-right-4 duration-500 pb-6 md:pb-10">
+        <div className="space-y-7 md:space-y-10 animate-in slide-in-from-right-4 duration-500 pb-28">
           <header>
             <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">당신에 대해 알려주세요</h2>
             <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>협업 멤버들에게 공유될 정보를 구성합니다.</p>
@@ -936,9 +967,10 @@ export default function App() {
             {/* 1. 이름 드롭다운 + 기수 + 역할 */}
             <div className="space-y-3 md:space-y-4">
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>이름</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>이름 <span style={{ color: '#E85454' }}>✦</span></label>
                 <MemberDropdown
                   value={profileData.name}
+                  roster={team.kickoff?.rosterMembers || []}
                   onSelect={async (m) => {
                     setProfileData(prev => ({ ...prev, name: m.name }));
                     try {
@@ -969,18 +1001,20 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>기수</label>
+                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>기수 <span style={{ color: '#E85454' }}>✦</span></label>
                   <div className="relative">
                     <select value={profileData.generation} onChange={e => setProfileData({...profileData, generation: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
+                      <option value="">기수 선택 *</option>
                       {GENERATIONS.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
                     <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
                   </div>
                 </div>
                 <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>역할</label>
+                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>역할 <span style={{ color: '#E85454' }}>✦</span></label>
                   <div className="relative">
                     <select value={profileData.role} onChange={e => setProfileData({...profileData, role: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
+                      <option value="">역할 선택 *</option>
                       {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                     <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
@@ -992,7 +1026,7 @@ export default function App() {
             {/* 2. 프로필 사진 업로드 */}
             <div className="space-y-2.5 md:space-y-3">
               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}>
-                <Camera size={12}/> 프로필 사진 <span className="normal-case font-medium tracking-normal" style={{ color: 'var(--gc-text-muted)' }}>— 이름 선택 시 자동 채워져요</span>
+                <Camera size={12}/> 프로필 사진 <span style={{ color: '#E85454' }}>✦</span> <span className="normal-case font-medium tracking-normal" style={{ color: 'var(--gc-text-muted)' }}>— 이름 선택 시 자동 채워져요</span>
               </label>
               <input type="file" accept="image/*" ref={photoInputRef} onChange={e => { handlePhotoUpload(e.target.files?.[0]); e.target.value = ''; }} className="hidden" />
               <div className="flex items-center gap-4 md:gap-5 p-4 md:p-5 rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)' }}>
@@ -1077,18 +1111,22 @@ export default function App() {
               </div>
             </div>
           </div>
-          <Button onClick={() => setStep(2)} className="w-full py-4 md:py-5 text-base md:text-xl" disabled={!profileData.name || profileData.workItems.length === 0}>다음으로</Button>
+          <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
+            <div className="max-w-xl mx-auto">
+              <Button onClick={() => setStep(2)} className="w-full py-4 md:py-5 text-base md:text-xl" disabled={!profileData.name || !profileData.generation || !profileData.role || !profileData.photoUrl}>다음으로</Button>
+            </div>
+          </div>
         </div>
       );
       case 2: return (
-        <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500">
+        <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 pb-28">
           <header>
             <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">작업 성향과 리듬</h2>
             <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>팀원들이 당신을 어떻게 도와주면 좋을까요?</p>
           </header>
           <div className="space-y-7 md:space-y-10">
             <section className="space-y-4 md:space-y-5">
-              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>작업 성향 키워드</label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>작업 성향 키워드 <span style={{ color: '#E85454' }}>✦</span></label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                  {WORK_STYLE_TAGS.map(tag => {
                    const sel = profileData.workStyles.includes(tag);
@@ -1149,14 +1187,16 @@ export default function App() {
               </div>
             </section>
           </div>
-          <div className="flex gap-2.5 md:gap-3 pt-4 md:pt-6">
-            <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">이전</Button>
-            <Button onClick={() => setStep(3)} className="flex-[2]">다음으로</Button>
-          </div>
+          <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
+              <div className="max-w-xl mx-auto flex gap-3">
+                <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">이전</Button>
+                <Button onClick={() => setStep(3)} disabled={profileData.workStyles.length === 0} className="flex-[2]">다음으로</Button>
+              </div>
+            </div>
         </div>
       );
       case 3: return (
-        <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 pb-12 md:pb-20">
+        <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 pb-28">
            <header>
              <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">최종 협업 약속</h2>
              <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>기분 좋은 팀워크를 위해 꼭 지키고 싶은 점들입니다.</p>
@@ -1188,11 +1228,11 @@ export default function App() {
                </div>
              )}
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Heart size={14} style={{ color: '#E85454' }}/> 추구하는 협업 가치</label>
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Heart" size={14}/> 추구하는 협업 가치</label>
                <textarea value={profileData.pursuits} onChange={e => setProfileData({...profileData, pursuits: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="예: 속도보다 논리적인 완결성을 중요하게 생각합니다." />
              </div>
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ban size={14} style={{ color: 'var(--gc-text-muted)' }}/> 지양하는 협업 방식 (Don't)</label>
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Ban" size={14}/> 지양하는 협업 방식 (Don't)</label>
                <textarea value={profileData.avoid} onChange={e => setProfileData({...profileData, avoid: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="예: 사전 공유 없는 불참이나 자정 이후의 급한 연락 등" />
              </div>
              <div className="space-y-3 md:space-y-4">
@@ -1200,10 +1240,12 @@ export default function App() {
                <input value={profileData.intro} onChange={e => setProfileData({...profileData, intro: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base transition-all" placeholder="안녕하세요! 한 학기 잘 지내봐요!" />
              </div>
            </div>
-           <div className="flex gap-2.5 md:gap-3 pt-6 md:pt-10">
-             <Button variant="secondary" onClick={() => setStep(2)} className="flex-1">이전</Button>
-             <Button onClick={handleProfileSubmit} className="flex-[2] py-4 md:py-5 text-base md:text-xl">팀 아지트로 합류하기 <ArrowRight size={18}/></Button>
-           </div>
+           <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
+               <div className="max-w-xl mx-auto flex gap-3">
+                 <Button variant="secondary" onClick={() => setStep(2)} className="flex-1">이전</Button>
+                 <Button onClick={handleProfileSubmit} className="flex-[2]">완료하고 합류하기 🎉</Button>
+               </div>
+             </div>
         </div>
       );
       default: return null;
@@ -1286,6 +1328,8 @@ export default function App() {
         <nav className="sticky top-0 z-50 gnav-bar px-4 md:px-6 py-2.5 md:py-3">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
             <img src={ASSET('memboding-title.png')} alt="멤보딩" draggable={false}
+              onClick={() => setView(VIEWS.LANDING)}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
               style={{ height: '36px', width: 'auto' }} />
             {view === VIEWS.PROFILE_FORM && (
               <div className="flex gap-1.5 md:gap-2">
@@ -1591,7 +1635,7 @@ export default function App() {
                        : isAligned
                          ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
                          : { background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
-                     {isKickoffAgreed ? <CheckCircle2 size={20}/> : <CalendarPlus size={20}/>}
+                     {isKickoffAgreed ? <CheckCircle2 size={20}/> : <Ico name="CalendarPlus" size={20}/>}
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
                      <h4 className="font-bold text-base md:text-lg mb-1"
@@ -1601,7 +1645,7 @@ export default function App() {
                        <button onClick={() => { setShowJourneySheet(false); setShowKickoffSheet(true); }}
                          className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
                          style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }}>
-                         <CalendarPlus size={14}/> 가능 시간 선택하기
+                         <Ico name="CalendarPlus" size={14}/> 가능 시간 선택하기
                        </button>
                      )}
                      {isKickoffAgreed && kickoff.proposal && (
@@ -1615,7 +1659,7 @@ export default function App() {
                      style={isKickoffAgreed
                        ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
                        : { background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
-                     <Heart size={20}/>
+                     <Ico name="Heart" size={20}/>
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
                      <h4 className="font-bold text-base md:text-lg mb-1"
@@ -1681,11 +1725,11 @@ export default function App() {
                        <span className="font-bold text-sm md:text-base">{member.name} 님의 약속</span>
                      </div>
                      <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
-                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: '#E85454' }}><Heart size={12}/> 추구하는 가치</h4>
+                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: '#E85454' }}><Ico name="Heart" size={12}/> 추구하는 가치</h4>
                        <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.pursuits || '-'}</p>
                      </div>
                      <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}>
-                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}><Ban size={12}/> 지양하는 방식</h4>
+                       <h4 className="text-[10px] md:text-xs font-bold mb-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Ban" size={12}/> 지양하는 방식</h4>
                        <p className="text-xs md:text-base font-medium" style={{ color: 'var(--gc-text)' }}>{member.avoid || '-'}</p>
                      </div>
                    </div>
@@ -1745,7 +1789,7 @@ export default function App() {
                       <div className="gcard space-y-3 md:space-y-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0"
-                            style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}><CalendarPlus size={16}/></div>
+                            style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}><Ico name="CalendarPlus" size={16}/></div>
                           <h4 className="font-bold text-sm md:text-base">제안된 킥오프 일정</h4>
                         </div>
                         <p className="text-xl md:text-2xl font-bold" style={{ color: 'var(--gc-blue)' }}>{kickoff.proposal.replace('-', ' ')}</p>
@@ -1817,7 +1861,7 @@ export default function App() {
                 <div className="flex items-center gap-2.5 md:gap-3">
                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-md border-2 border-white font-bold shrink-0 transition-colors"
                     style={{ background: isAligned ? 'linear-gradient(135deg, #5BB85C, #3B7C3C)' : 'linear-gradient(135deg, #FFD54F, #FFCA28)', color: isAligned ? '#fff' : '#7A5C00' }}>
-                     {isAligned ? <Flag size={16} fill="currentColor"/> : <Ico name="Zap" size={16}/>}
+                     {isAligned ? <Ico name="Flag" size={20} /> : <Ico name="Zap" size={20} />}
                   </div>
                   <div className="flex-1 gprogress-track">
                      <div className="gprogress-fill" style={{ width: `${Math.min((currentMembers / targetMembers) * 100, 100)}%` }} />
@@ -1832,7 +1876,7 @@ export default function App() {
               {/* Cheer button — just below progress bar */}
               <button
                 onClick={handleCheer}
-                disabled={isJumping || team.members.length === 0}
+                disabled={isJumping || getSceneMembers().length === 0}
                 className="gbtn gbtn-secondary animate-in slide-in-from-top-4 duration-700 disabled:opacity-40"
                 style={{ fontSize: '14px' }}
               >
@@ -1844,25 +1888,25 @@ export default function App() {
             <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 gnav-bottom flex items-center justify-around px-2 md:px-10 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
               style={{ border: '2.5px solid var(--gc-gold)' }}>
                <button className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center"
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center"
                     style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', color: '#fff', boxShadow: `0 3px 0 var(--gc-blue-floor)` }}>
-                    <Home size={20} fill="currentColor"/>
+                    <Ico name="Home" size={28} />
                   </div>
                   <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-blue)' }}>Home</span>
                </button>
                <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors"
-                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="Users" size={20} /></div>
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="Users" size={28} /></div>
                   <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Members</span>
                </button>
                <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors"
-                    style={{ color: 'var(--gc-text-sub)' }}><Heart size={20} /></div>
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="Heart" size={28} /></div>
                   <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Rules</span>
                </button>
                <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors"
-                    style={{ color: 'var(--gc-text-sub)' }}><CalendarPlus size={20} /></div>
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="CalendarPlus" size={28} /></div>
                   <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Schedule</span>
                </button>
             </div>
