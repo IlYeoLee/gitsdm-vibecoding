@@ -748,7 +748,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-const MemberDropdown = ({ value, onSelect, roster }) => {
+const MemberDropdown = ({ value, onSelect, roster, takenNames = [] }) => {
   const memberList = (roster && roster.length > 0) ? roster : MEMBER_ROSTER;
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -788,20 +788,29 @@ const MemberDropdown = ({ value, onSelect, roster }) => {
           <div className="grid grid-cols-5 gap-1.5">
             {memberList.map(m => {
               const isSel = m.name === value;
+              const isTaken = takenNames.includes(m.name);
               return (
                 <button
                   key={m.photo}
                   type="button"
-                  onClick={() => { onSelect(m); setOpen(false); }}
-                  className="member-face-btn flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all"
+                  disabled={isTaken}
+                  onClick={() => { if (!isTaken) { onSelect(m); setOpen(false); } }}
+                  className="member-face-btn flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all relative"
                   style={isSel
                     ? { background: 'rgba(74,144,226,0.15)', border: '2px solid var(--gc-gold)' }
-                    : { border: '2px solid transparent' }}
+                    : isTaken
+                      ? { border: '2px solid transparent', opacity: 0.38, cursor: 'not-allowed' }
+                      : { border: '2px solid transparent' }}
                 >
-                  <div className="flex-shrink-0" style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }}>
+                  <div className="flex-shrink-0 relative" style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }}>
                     <img src={ASSET(m.photo)} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    {isTaken && (
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
+                        <Check size={16} strokeWidth={3} color="#fff"/>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-[8px] font-bold text-center leading-tight w-full" style={{ color: 'var(--gc-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
+                  <span className="text-[8px] font-bold text-center leading-tight w-full" style={{ color: isTaken ? 'var(--gc-text-muted)' : 'var(--gc-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
                 </button>
               );
             })}
@@ -1372,6 +1381,7 @@ export default function App() {
                 <MemberDropdown
                   value={profileData.name}
                   roster={team.kickoff?.rosterMembers || []}
+                  takenNames={team.members.filter(m => m.id !== currentMemberId).map(m => m.name)}
                   onSelect={async (m) => {
                     setProfileData(prev => ({ ...prev, name: m.name }));
                     try {
