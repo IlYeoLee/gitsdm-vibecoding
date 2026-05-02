@@ -2039,28 +2039,28 @@ export default function App() {
                     style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 3px 0 var(--gc-blue-floor)', padding: '6px' }}>
                     <Ico name="Home" size={28} />
                   </div>
-                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-blue)' }}>홈</span>
+                  <span className="font-bold text-[10px]" style={{ color: '#fff' }}>홈</span>
                </button>
-               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90 opacity-55 hover:opacity-100">
+               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '1.5px solid var(--gc-tan)', boxShadow: '0 3px 0 var(--gc-gold-floor)', padding: '6px' }}>
                     <Ico name="Users" size={28} />
                   </div>
-                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-text-sub)' }}>멤버</span>
+                  <span className="font-bold text-[10px]" style={{ color: '#fff' }}>멤버</span>
                </button>
-               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90 opacity-55 hover:opacity-100">
+               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '1.5px solid var(--gc-tan)', boxShadow: '0 3px 0 var(--gc-gold-floor)', padding: '6px' }}>
                     <Ico name="Heart" size={28} />
                   </div>
-                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-text-sub)' }}>약속</span>
+                  <span className="font-bold text-[10px]" style={{ color: '#fff' }}>약속</span>
                </button>
-               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90 opacity-55 hover:opacity-100">
+               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '1.5px solid var(--gc-tan)', boxShadow: '0 3px 0 var(--gc-gold-floor)', padding: '6px' }}>
                     <Ico name="CalendarPlus" size={28} />
                   </div>
-                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-text-sub)' }}>일정</span>
+                  <span className="font-bold text-[10px]" style={{ color: '#fff' }}>일정</span>
                </button>
             </div>
           </div>
