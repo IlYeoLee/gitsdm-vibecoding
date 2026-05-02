@@ -1082,7 +1082,7 @@ export default function App() {
                   첫날의 얼라인을<br />실전으로
                 </h1>
                 <p
-                  className="text-[#9ca3af] text-sm md:text-base font-medium leading-relaxed max-w-[280px] md:max-w-sm"
+                  className="text-[#d1d5db] text-sm md:text-base font-medium leading-relaxed max-w-[280px] md:max-w-sm"
                   style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
                 >
                   삼성디자인멤버십 팀 프로젝트의 시작.<br />
