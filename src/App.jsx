@@ -1599,7 +1599,7 @@ export default function App() {
         )}
 
         {view === VIEWS.SETUP_TEAM && (
-          <div className="max-w-xl mx-auto py-8 md:py-16 px-5 md:px-6 pb-28 animate-in slide-in-from-bottom-8 duration-700">
+          <div className="max-w-xl mx-auto py-8 md:py-16 px-5 md:px-6 pb-40 md:pb-44 animate-in slide-in-from-bottom-8 duration-700">
             <h2 className="mb-7 md:mb-10 tracking-tight text-center" style={{ fontSize: '24px', fontFamily: "'Jua', sans-serif", fontWeight: 400, color: 'var(--gc-text)' }}>프로젝트 시작</h2>
             <div className="space-y-6 md:space-y-8">
               <div className="space-y-3 md:space-y-4">
