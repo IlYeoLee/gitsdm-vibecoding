@@ -1067,7 +1067,7 @@ export default function App() {
             {/* Layer 2: Gradient dim — dark top for text, fades to clear at bottom */}
             <div
               className="absolute inset-0 z-[60] pointer-events-none"
-              style={{ background: 'linear-gradient(to bottom, rgba(10,14,26,0.45) 0%, rgba(10,14,26,0.20) 40%, rgba(10,14,26,0.00) 70%)' }}
+              style={{ background: 'linear-gradient(to bottom, rgba(10,14,26,0.72) 0%, rgba(10,14,26,0.50) 45%, rgba(10,14,26,0.15) 75%, rgba(10,14,26,0.00) 100%)' }}
             />
 
             {/* Layer 3: Content — title top half / button bottom */}
@@ -1083,8 +1083,8 @@ export default function App() {
                   draggable={false}
                 />
                 <p
-                  className="text-[#d1d5db] text-sm md:text-base font-medium leading-relaxed max-w-[280px] md:max-w-sm"
-                  style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+                  className="text-white text-sm md:text-base font-bold leading-relaxed max-w-[280px] md:max-w-sm"
+                  style={{ textShadow: '0 2px 12px rgba(0,0,0,0.9)' }}
                 >
                   삼성디자인멤버십 팀 프로젝트의 시작.<br />
                   어색한 자기소개는 줄이고,<br />바로 일할 수 있는 환경을 만드세요.
