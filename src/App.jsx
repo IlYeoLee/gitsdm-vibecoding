@@ -1008,6 +1008,12 @@ export default function App() {
     pursuits: '', avoid: '', intro: ''
   });
 
+  // Auto-save profile draft to localStorage while filling out the form
+  useEffect(() => {
+    if (view !== VIEWS.PROFILE_FORM || !team.id) return;
+    try { localStorage.setItem(`ALIGN_DRAFT_${team.id}`, JSON.stringify({ profileData, step })); } catch {}
+  }, [profileData, step, view, team.id]);
+
   // Scroll to top and reset transient view state on navigation
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -1064,24 +1070,41 @@ export default function App() {
     });
 
     const alreadyRegistered = (() => { try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID'); } catch { return null; } })();
+    const restoreDraftOrLanding = (tid) => {
+      if (alreadyRegistered) return; // already submitted — don't restore draft
+      try {
+        const raw = localStorage.getItem(`ALIGN_DRAFT_${tid}`);
+        if (raw) {
+          const draft = JSON.parse(raw);
+          if (draft?.profileData) {
+            setProfileData(draft.profileData);
+            setStep(draft.step || 1);
+            setView(VIEWS.PROFILE_FORM);
+            return;
+          }
+        }
+      } catch {}
+      setView(VIEWS.INVITE_LANDING);
+    };
+
     Promise.all([dbGetTeam(teamId), ckPromise]).then(async ([remoteTeam, ck]) => {
       if (remoteTeam) {
         if (ck) remoteTeam.members = await Promise.all(remoteTeam.members.map(m => decryptMember(ck, m)));
         setTeam(remoteTeam);
-        setView(alreadyRegistered ? VIEWS.DASHBOARD : VIEWS.INVITE_LANDING);
+        if (alreadyRegistered) setView(VIEWS.DASHBOARD); else restoreDraftOrLanding(teamId);
       } else {
         const localTeam = getTeamFromLocal(teamId);
         if (localTeam) {
           setTeam(localTeam);
-          setView(alreadyRegistered ? VIEWS.DASHBOARD : VIEWS.INVITE_LANDING);
+          if (alreadyRegistered) setView(VIEWS.DASHBOARD); else restoreDraftOrLanding(teamId);
         } else {
           setTeam({ id: teamId, name: '초대받은 프로젝트', category: '파운데이션', targetSize: 4, members: [], kickoff: {} });
-          setView(VIEWS.INVITE_LANDING);
+          restoreDraftOrLanding(teamId);
         }
       }
     }).catch(() => {
       setTeam({ id: teamId, name: '초대받은 프로젝트', category: '파운데이션', targetSize: 4, members: [], kickoff: {} });
-      setView(VIEWS.INVITE_LANDING);
+      restoreDraftOrLanding(teamId);
     });
   }, []);
 
@@ -1142,17 +1165,19 @@ export default function App() {
     }
   };
 
-  const handleProfileSubmit = async () => {
+  const handleProfileSubmit = () => {
     const newUser = { ...profileData, id: crypto.randomUUID() };
-    // Local state keeps plaintext; Supabase receives encrypted version
     const updatedTeam = { ...team, members: [...team.members, newUser] };
     saveTeamToLocal(updatedTeam);
     setTeam(updatedTeam);
-    const encrypted = await encryptMember(encKey, newUser);
-    dbAddMember(team.id, encrypted);
     try { localStorage.setItem('ALIGN_CURRENT_MEMBER_ID', newUser.id); } catch {}
+    try { localStorage.removeItem(`ALIGN_DRAFT_${team.id}`); } catch {}
     setCurrentMemberId(newUser.id);
     setView(VIEWS.DASHBOARD);
+    // Encrypt and persist to DB in background — does not block navigation
+    encryptMember(encKey, newUser)
+      .then(encrypted => dbAddMember(team.id, encrypted))
+      .catch(() => dbAddMember(team.id, newUser));
   };
 
   const handleRosterConfirm = async () => {
@@ -2045,7 +2070,13 @@ export default function App() {
                 style={{ paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom) + 20px))' }}
               >
                 <Button
-                  onClick={() => { setStep(1); setView(VIEWS.PROFILE_FORM); }}
+                  onClick={() => {
+                    try {
+                      const raw = localStorage.getItem(`ALIGN_DRAFT_${team.id}`);
+                      if (raw) { const d = JSON.parse(raw); if (d?.profileData) { setProfileData(d.profileData); setStep(d.step || 1); setView(VIEWS.PROFILE_FORM); return; } }
+                    } catch {}
+                    setStep(1); setView(VIEWS.PROFILE_FORM);
+                  }}
                   className="text-base md:text-lg px-8 md:px-14 py-4 md:py-5 rounded-2xl md:rounded-[28px] shadow-2xl shadow-blue-500/50 w-full max-w-xs md:max-w-sm"
                 >
                   🚀 방 들어가기
@@ -2059,7 +2090,7 @@ export default function App() {
           <div className="max-w-7xl mx-auto py-6 md:py-12 px-4 md:px-8 flex flex-col lg:flex-row gap-8 md:gap-16">
             <div className="flex-1">{renderStep()}</div>
             <div className="hidden lg:block w-[380px]">
-              <div className="sticky top-32 space-y-6">
+              <div className="sticky top-[88px] space-y-4 overflow-y-auto scrollbar-hide" style={{ maxHeight: 'calc(100vh - 108px)' }}>
                 <div className="flex items-center gap-3 ml-2">
                    <Ico name="Sparkles" size={20}/>
                    <span className="text-sm font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-sub)' }}>Real-time Card View</span>
