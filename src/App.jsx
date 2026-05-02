@@ -68,6 +68,57 @@ const pauseBgm = () => {
   requestAnimationFrame(tick);
 };
 
+// ── AES-GCM 256 client-side encryption ───────────────────────────────────────
+// Key lives only in the invite URL hash (#k=...) — never reaches the server.
+// Supabase stores encrypted blobs only; even the admin can't read plaintext.
+const _b64u = (buf) =>
+  btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+const _unb64u = (s) => {
+  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+};
+const importEncKey = (raw) =>
+  crypto.subtle.importKey('raw', _unb64u(raw), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+
+const encryptVal = async (ck, val) => {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv }, ck,
+    new TextEncoder().encode(JSON.stringify(val)));
+  return `ENC.${_b64u(iv)}.${_b64u(ct)}`;
+};
+const decryptVal = async (ck, s) => {
+  const [, ivB64, ctB64] = s.split('.');
+  const plain = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: _unb64u(ivB64) }, ck, _unb64u(ctB64));
+  return JSON.parse(new TextDecoder().decode(plain));
+};
+
+const ENC_FIELDS = [
+  'phone', 'snsLink', 'photoUrl', 'portfolioLinks', 'workItems',
+  'workStyles', 'styleReasons', 'researchTopics', 'researchSubject',
+  'schedule', 'pursuits', 'avoid', 'intro',
+];
+const encryptMember = async (ck, m) => {
+  if (!ck) return m;
+  const out = { ...m };
+  await Promise.all(ENC_FIELDS.map(async f => {
+    if (out[f] !== undefined) out[f] = await encryptVal(ck, out[f]);
+  }));
+  return out;
+};
+const decryptMember = async (ck, m) => {
+  if (!ck) return m;
+  const out = { ...m };
+  await Promise.all(ENC_FIELDS.map(async f => {
+    if (typeof out[f] === 'string' && out[f].startsWith('ENC.')) {
+      try { out[f] = await decryptVal(ck, out[f]); } catch {}
+    }
+  }));
+  return out;
+};
+
 // SFX tap — plays on every CTA button press
 let _sfx = null;
 const playSfx = () => {
@@ -915,6 +966,8 @@ export default function App() {
   const [isJumping, setIsJumping] = useState(false);
   const [activeCheerMessages, setActiveCheerMessages] = useState({});
   const [showConfetti, setShowConfetti] = useState(false);
+  const [encKey, setEncKey] = useState(null);   // CryptoKey — null = no encryption
+  const encKeyRaw = useRef(null);               // raw base64 key for URL/sessionStorage
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
@@ -949,13 +1002,46 @@ export default function App() {
     return () => document.removeEventListener('pointerdown', handler);
   }, [isMuted]);
 
+  // Restore encryption key from sessionStorage when team.id is known
   useEffect(() => {
+    if (!team.id || encKey) return;
+    try {
+      const stored = sessionStorage.getItem(`ALIGN_ENC_KEY_${team.id}`);
+      if (stored) {
+        encKeyRaw.current = stored;
+        importEncKey(stored).then(setEncKey).catch(() => {});
+      }
+    } catch {}
+  }, [team.id]);
+
+  useEffect(() => {
+    // Extract encryption key from URL hash (#k=...) — never sent to server
+    const hash = window.location.hash;
+    let ckPromise = Promise.resolve(null);
+    if (hash) {
+      const hp = new URLSearchParams(hash.slice(1));
+      const k = hp.get('k');
+      if (k) {
+        encKeyRaw.current = k;
+        ckPromise = importEncKey(k).then(ck => { setEncKey(ck); return ck; }).catch(() => null);
+      }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const teamId = params.get('teamId');
     if (!teamId) return;
+
+    // Store key in sessionStorage keyed by teamId for page-reload resilience
+    ckPromise.then(ck => {
+      if (ck && encKeyRaw.current) {
+        try { sessionStorage.setItem(`ALIGN_ENC_KEY_${teamId}`, encKeyRaw.current); } catch {}
+      }
+    });
+
     const alreadyRegistered = (() => { try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID'); } catch { return null; } })();
-    dbGetTeam(teamId).then(remoteTeam => {
+    Promise.all([dbGetTeam(teamId), ckPromise]).then(async ([remoteTeam, ck]) => {
       if (remoteTeam) {
+        if (ck) remoteTeam.members = await Promise.all(remoteTeam.members.map(m => decryptMember(ck, m)));
         setTeam(remoteTeam);
         setView(alreadyRegistered ? VIEWS.DASHBOARD : VIEWS.INVITE_LANDING);
       } else {
@@ -975,15 +1061,33 @@ export default function App() {
   useEffect(() => {
     if (view !== VIEWS.DASHBOARD || !team.id) return;
     const unsub = subscribeTeam(team.id, {
-      onMembersChange: (members) => setTeam(prev => ({ ...prev, members })),
+      onMembersChange: async (members) => {
+        const ck = encKey || await (async () => {
+          try {
+            const s = sessionStorage.getItem(`ALIGN_ENC_KEY_${team.id}`);
+            return s ? importEncKey(s) : null;
+          } catch { return null; }
+        })();
+        const decrypted = ck ? await Promise.all(members.map(m => decryptMember(ck, m))) : members;
+        setTeam(prev => ({ ...prev, members: decrypted }));
+      },
       onKickoffChange: (kickoff) => setTeam(prev => ({ ...prev, kickoff })),
     });
     return unsub;
-  }, [view, team.id]);
+  }, [view, team.id, encKey]);
 
-  const handleCreateTeam = () => {
+  const handleCreateTeam = async () => {
     try {
       const teamId = crypto.randomUUID();
+
+      // Generate AES-256 key; embed in invite URL hash (never sent to server)
+      const rawBytes = crypto.getRandomValues(new Uint8Array(32));
+      const rawB64   = _b64u(rawBytes);
+      const ck       = await importEncKey(rawB64);
+      setEncKey(ck);
+      encKeyRaw.current = rawB64;
+      try { sessionStorage.setItem(`ALIGN_ENC_KEY_${teamId}`, rawB64); } catch {}
+
       const newTeam = {
         id: teamId,
         name: team.name,
@@ -995,11 +1099,11 @@ export default function App() {
       saveTeamToLocal(newTeam);
       dbCreateTeam(newTeam);
 
-      const inviteUrl = getInviteUrl(teamId);
+      // Key goes in URL hash — browsers never send # to the server
+      const inviteUrl = `${getInviteUrl(teamId)}#k=${rawB64}`;
       copyToClipboard(inviteUrl);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 3000);
-
 
       setTeam(newTeam);
       setSelectedRoster([]);
@@ -1009,12 +1113,14 @@ export default function App() {
     }
   };
 
-  const handleProfileSubmit = () => {
+  const handleProfileSubmit = async () => {
     const newUser = { ...profileData, id: crypto.randomUUID() };
+    // Local state keeps plaintext; Supabase receives encrypted version
     const updatedTeam = { ...team, members: [...team.members, newUser] };
     saveTeamToLocal(updatedTeam);
     setTeam(updatedTeam);
-    dbAddMember(team.id, newUser);
+    const encrypted = await encryptMember(encKey, newUser);
+    dbAddMember(team.id, encrypted);
     try { localStorage.setItem('ALIGN_CURRENT_MEMBER_ID', newUser.id); } catch {}
     setCurrentMemberId(newUser.id);
     setView(VIEWS.DASHBOARD);
@@ -1042,8 +1148,11 @@ export default function App() {
   };
 
   const copyInviteLink = () => {
-    const inviteUrl = getInviteUrl(team.id);
-    copyToClipboard(inviteUrl);
+    const raw = encKeyRaw.current || (() => {
+      try { return sessionStorage.getItem(`ALIGN_ENC_KEY_${team.id}`); } catch { return null; }
+    })();
+    const base = getInviteUrl(team.id);
+    copyToClipboard(raw ? `${base}#k=${raw}` : base);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
