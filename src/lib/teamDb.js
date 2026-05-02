@@ -16,7 +16,7 @@ const toMember = (row) => ({
   styleReasons: row.style_reasons || {},
   researchTopics: row.research_topics || [],
   researchSubject: row.research_subject || '',
-  schedule: row.schedule || { start: '오전', night: '비선호', place: '출퇴근' },
+  schedule: row.schedule || { start: '', night: '', place: '' },
   pursuits: row.pursuits || '',
   avoid: row.avoid || '',
   intro: row.intro || '',

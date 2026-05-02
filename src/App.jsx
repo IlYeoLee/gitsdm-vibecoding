@@ -621,7 +621,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
         className="absolute w-full pointer-events-none flex items-end justify-center z-20"
         style={{
           height: `${shouldSplit ? rowShift + charHeight * 1.6 + 48 : charHeight + 64}px`,
-          bottom: isMobile ? '78px' : '130px',
+          bottom: isMobile ? '112px' : '130px',
         }}
       >
         {[
@@ -679,9 +679,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
                       borderRadius: '9px',
                       padding: '3px 8px',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.10)',
-                      maxWidth: `${charWidth + 20}px`,
-                      wordBreak: 'keep-all',
-                      overflowWrap: 'break-word',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     <div style={{ fontSize: '11px', fontFamily: "'Jua', sans-serif", color: bubbleTextColor, letterSpacing: '-0.02em', lineHeight: 1.4 }}>
@@ -724,7 +722,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
                 {/* Name pill badge — only in single-row layout */}
                 {!shouldSplit && (
                   <div style={{
-                    marginTop: '3px',
+                    marginTop: '0px',
                     padding: '2px 9px',
                     background: 'rgba(255,253,247,0.92)',
                     border: '1.5px solid rgba(212,169,106,0.7)',
@@ -885,7 +883,7 @@ const MemberCharacter = ({ member, size = 130 }) => {
   );
 };
 
-const MemberDetailModal = ({ member, onClose }) => {
+const MemberDetailModal = ({ member, onClose, currentMemberId, onEditProfile }) => {
   if (!member) return null;
   return (
     <div className="fixed inset-0 z-[300] flex items-end md:items-center justify-center pointer-events-auto p-0 md:p-6">
@@ -895,8 +893,17 @@ const MemberDetailModal = ({ member, onClose }) => {
         <div className="sticky top-0 w-full flex justify-center py-3 z-10 md:hidden"
           style={{ background: `linear-gradient(to bottom, var(--gc-surface), transparent)` }}><div className="gpanel-handle"></div></div>
 
-        <button onClick={onClose} className="absolute top-4 md:top-8 right-4 md:right-8 rounded-full z-20 flex items-center justify-center shrink-0 transition-colors"
-          style={{ background: 'var(--gc-border)', color: 'var(--gc-text)', width: 40, height: 40 }}><Ico name="X" size={20} /></button>
+        <div className="absolute top-4 md:top-8 right-4 md:right-8 z-20 flex items-center gap-2">
+          {currentMemberId && member.id === currentMemberId && onEditProfile && (
+            <button onClick={() => { onClose(); onEditProfile(member); }}
+              className="gbtn gbtn-secondary shrink-0"
+              style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '9999px' }}>
+              <Ico name="Pencil" size={13}/> 수정
+            </button>
+          )}
+          <button onClick={onClose} className="rounded-full flex items-center justify-center shrink-0 transition-colors"
+            style={{ background: 'var(--gc-border)', color: 'var(--gc-text)', width: 40, height: 40 }}><Ico name="X" size={20} /></button>
+        </div>
 
         <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-10">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
@@ -935,23 +942,37 @@ const MemberDetailModal = ({ member, onClose }) => {
 
           <div className="space-y-3 md:space-y-4">
              <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>대표 작업물</h4>
-             <div className="flex gap-3 md:gap-4 overflow-x-auto snap-x scrollbar-hide pb-2 -mx-5 px-5 md:mx-0 md:px-0">
-               {member.workItems.map((item, i) => (
-                 <div key={i} className="flex-shrink-0 w-[220px] md:w-[320px] gcard overflow-hidden snap-start" style={{ padding: 0 }}>
-                    <img src={item.url} className="w-full h-36 md:h-52 object-cover" />
-                    <div className="p-4 md:p-6 text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-sub)' }}>{item.description || '설명 없음'}</div>
-                 </div>
-               ))}
-             </div>
+             {member.workItems?.length > 0 ? (
+               <div className="flex gap-3 md:gap-4 overflow-x-auto snap-x scrollbar-hide pb-2 -mx-5 px-5 md:mx-0 md:px-0">
+                 {member.workItems.map((item, i) => (
+                   <div key={i} className="flex-shrink-0 w-[220px] md:w-[320px] gcard overflow-hidden snap-start" style={{ padding: 0 }}>
+                      <img src={item.url} className="w-full h-36 md:h-52 object-cover" />
+                      <div className="p-4 md:p-6 text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-sub)' }}>{item.description || '설명 없음'}</div>
+                   </div>
+                 ))}
+               </div>
+             ) : (
+               <p className="text-sm font-medium" style={{ color: 'var(--gc-text-muted)' }}>없음</p>
+             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div className="space-y-3 md:space-y-4">
                <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>작업 성향 & 리듬</h4>
-               <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
+               <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3">
                   {member.workStyles.map(s => <span key={s} className="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold"
                     style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-tan)', color: 'var(--gc-text-sub)' }}>#{s}</span>)}
                </div>
+               {Object.keys(member.styleReasons || {}).filter(k => member.styleReasons[k]).length > 0 && (
+                 <div className="space-y-1.5 mb-3">
+                   {Object.entries(member.styleReasons || {}).filter(([, v]) => v).map(([tag, reason]) => (
+                     <div key={tag} className="flex gap-2 items-start text-xs md:text-sm">
+                       <span className="font-bold shrink-0" style={{ color: 'var(--gc-blue)', minWidth: '70px' }}>#{tag}</span>
+                       <span className="font-medium" style={{ color: 'var(--gc-text-sub)' }}>{reason}</span>
+                     </div>
+                   ))}
+                 </div>
+               )}
                <div className="grid grid-cols-3 gap-2 md:gap-3">
                   {[
                     { ico: 'Sun',  label: '시작시간',  val: member.schedule?.start },
@@ -980,7 +1001,26 @@ const MemberDetailModal = ({ member, onClose }) => {
                  </div>
                </div>
             </div>
-          </div>
+          {(member.researchTopics?.length > 0 || member.researchSubject) && (
+            <div className="space-y-3 md:space-y-4">
+               <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>MEP 연구 관심사</h4>
+               {member.researchTopics?.length > 0 && (
+                 <div className="flex flex-wrap gap-1.5 md:gap-2">
+                   {member.researchTopics.map(t => (
+                     <span key={t} className="px-3 py-1.5 rounded-full text-xs md:text-sm font-bold"
+                       style={{ background: 'rgba(74,144,226,0.10)', border: '1.5px solid rgba(74,144,226,0.25)', color: 'var(--gc-blue)' }}>
+                       {t}
+                     </span>
+                   ))}
+                 </div>
+               )}
+               {member.researchSubject && (
+                 <p className="text-xs md:text-sm font-medium p-4 rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)', color: 'var(--gc-text)' }}>
+                   {member.researchSubject}
+                 </p>
+               )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1016,7 +1056,6 @@ export default function App() {
   const [pendingShareUrl, setPendingShareUrl] = useState(null); // invite URL waiting to be shared
   const [showProjectStart, setShowProjectStart] = useState(false);
   const prevKickoffAgreed = useRef(null);
-  const [showKakaoGuide, setShowKakaoGuide] = useState(false);
   const [showInviteBanner, setShowInviteBanner] = useState(false);
   const [bgmStarted, setBgmStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(() => {
@@ -1063,19 +1102,6 @@ export default function App() {
     return () => document.removeEventListener('pointerdown', handler);
   }, [isMuted]);
 
-  // KakaoTalk in-app browser: redirect to external browser
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    if (!/KAKAOTALK/i.test(ua)) return;
-    if (/android/i.test(ua)) {
-      const url = window.location.href;
-      window.location.replace(
-        `intent://${url.replace(/https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`
-      );
-    } else {
-      setShowKakaoGuide(true);
-    }
-  }, []);
 
   // Restore encryption key from sessionStorage when team.id is known
   useEffect(() => {
@@ -1192,7 +1218,7 @@ export default function App() {
         createdAt: Date.now()
       };
       saveTeamToLocal(newTeam);
-      dbCreateTeam(newTeam);
+      await dbCreateTeam(newTeam);
 
       setTeam(newTeam);
       setSelectedRoster([]);
@@ -1677,7 +1703,7 @@ export default function App() {
           <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
               <div className="max-w-xl mx-auto flex gap-3">
                 <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">이전</Button>
-                <Button onClick={() => setStep(3)} disabled={profileData.workStyles.length === 0} className="flex-[2]">다음으로</Button>
+                <Button onClick={() => setStep(3)} disabled={profileData.workStyles.length === 0 || !profileData.schedule.start || !profileData.schedule.night || !profileData.schedule.place} className="flex-[2]">다음으로</Button>
               </div>
             </div>
         </div>
@@ -1824,26 +1850,9 @@ export default function App() {
         </div>
       )}
 
-      {showKakaoGuide && (
-        <div className="fixed top-0 inset-x-0 z-[900] animate-in slide-in-from-top-4 duration-400">
-          <div className="mx-3 mt-3 p-4 rounded-2xl flex items-start gap-3 shadow-2xl"
-            style={{ background: '#FEE500', border: '2px solid #E6C600', boxShadow: '0 4px 0 #C8A800, 0 8px 24px rgba(0,0,0,0.2)' }}>
-            <span style={{ fontSize: 22, lineHeight: 1 }}>💬</span>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm" style={{ color: '#3C1E1E' }}>카카오톡 브라우저에서는 일부 기능이 제한될 수 있어요</p>
-              <p className="text-xs font-medium mt-0.5" style={{ color: '#5C3A1E' }}>하단 <strong>···</strong> 메뉴 → <strong>Safari로 열기</strong> 를 눌러주세요</p>
-            </div>
-            <button onClick={() => setShowKakaoGuide(false)}
-              className="flex items-center justify-center rounded-full shrink-0 transition-colors"
-              style={{ width: 28, height: 28, background: 'rgba(0,0,0,0.12)', color: '#3C1E1E' }}>
-              <X size={14}/>
-            </button>
-          </div>
-        </div>
-      )}
 
       {view !== VIEWS.DASHBOARD && view !== VIEWS.LANDING && view !== VIEWS.INVITE_LANDING && (
-        <nav className="sticky top-0 z-50 gnav-bar px-[60px] py-2.5 md:py-3">
+        <nav className="sticky top-0 z-50 gnav-bar px-4 md:px-[60px] py-2.5 md:py-3">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
             <img src={ASSET('memboding-title.png')} alt="멤보딩" draggable={false}
               onClick={() => setView(VIEWS.LANDING)}
@@ -2208,7 +2217,25 @@ export default function App() {
               </div>
             )}
 
-            <MemberDetailModal member={selectedMember} onClose={() => setSelectedMember(null)} />
+            <MemberDetailModal
+              member={selectedMember}
+              onClose={() => setSelectedMember(null)}
+              currentMemberId={currentMemberId}
+              onEditProfile={(m) => {
+                setSelectedMember(null);
+                setProfileData({
+                  name: m.name, role: m.role || '', generation: m.generation || '',
+                  phone: m.phone || '', snsLink: m.snsLink || '', photoUrl: m.photoUrl || '',
+                  portfolioLinks: m.portfolioLinks || [], workItems: m.workItems || [],
+                  workStyles: m.workStyles || [], styleReasons: m.styleReasons || {},
+                  researchTopics: m.researchTopics || [], researchSubject: m.researchSubject || '',
+                  schedule: m.schedule || { start: '', night: '', place: '' },
+                  pursuits: m.pursuits || '', avoid: m.avoid || '', intro: m.intro || '',
+                });
+                setStep(1);
+                setView(VIEWS.PROFILE_FORM);
+              }}
+            />
 
             <BottomSheet isOpen={showJourneySheet} onClose={() => setShowJourneySheet(false)} title="우리의 여정 (Quest)">
               <div className="space-y-5 md:space-y-6 relative">
