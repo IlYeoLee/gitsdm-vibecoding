@@ -432,36 +432,38 @@ const MemberDetailModal = ({ member, onClose }) => {
         <button onClick={onClose} className="absolute top-4 md:top-8 right-4 md:right-8 p-2.5 md:p-3 rounded-full z-20 transition-colors"
           style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><X size={20} /></button>
 
-        <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-12">
+        <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-10">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
-            <div className="w-20 h-20 md:w-32 md:h-32 rounded-3xl md:rounded-[40px] flex items-center justify-center text-white text-3xl md:text-5xl font-bold shadow-lg overflow-hidden bg-gradient-to-br from-[#3182f6] to-[#00c471] shrink-0">
-              {member.photoUrl ? (
-                <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" />
-              ) : (
-                <span>{member.name[0]}</span>
-              )}
+            <div className="w-20 h-20 md:w-32 md:h-32 rounded-3xl md:rounded-[40px] flex items-center justify-center text-white text-3xl md:text-5xl font-bold shadow-lg overflow-hidden shrink-0"
+              style={{ background: `linear-gradient(135deg, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 6px 0 var(--gc-blue-floor)` }}>
+              {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : <span>{member.name[0]}</span>}
             </div>
             <div className="flex-1 w-full">
               <div className="flex items-center gap-2 md:gap-3 mb-1.5 md:mb-2 flex-wrap">
                 <h2 className="text-3xl md:text-5xl font-bold tracking-tight">{member.name}</h2>
-                <span className="px-2.5 py-1 md:px-3 md:py-1.5 bg-blue-50 text-[#3182f6] rounded-lg md:rounded-xl text-xs md:text-sm font-bold">{member.role}</span>
+                <span className="px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-xs md:text-sm font-bold"
+                  style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}>{member.role}</span>
               </div>
-              <p className="text-sm md:text-lg font-medium text-gray-400 mb-3 md:mb-4">{member.generation}</p>
-
+              <p className="text-sm md:text-lg font-medium mb-3 md:mb-4" style={{ color: 'var(--gc-text-muted)' }}>{member.generation}</p>
               <div className="flex flex-wrap gap-2 md:gap-3">
-                 {member.phone && <a href={`tel:${member.phone}`} className="px-3 md:px-4 py-2 md:py-2.5 bg-gray-50 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 font-medium text-xs md:text-sm text-[#4e5968] hover:bg-gray-100 transition-colors"><Phone size={14}/> 전화</a>}
-                 {member.snsLink && <a href={member.snsLink.startsWith('http') ? member.snsLink : `https://${member.snsLink}`} target="_blank" rel="noreferrer" className="px-3 md:px-4 py-2 md:py-2.5 bg-pink-50 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 font-medium text-xs md:text-sm text-[#e1306c] hover:bg-pink-100 transition-colors"><Instagram size={14}/> SNS</a>}
+                 {member.phone && <a href={`tel:${member.phone}`} className="px-3 md:px-4 py-2 md:py-2.5 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 font-medium text-xs md:text-sm transition-colors"
+                   style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-tan)' }}><Phone size={14}/> 전화</a>}
+                 {member.snsLink && <a href={member.snsLink.startsWith('http') ? member.snsLink : `https://${member.snsLink}`} target="_blank" rel="noreferrer"
+                   className="px-3 md:px-4 py-2 md:py-2.5 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 font-medium text-xs md:text-sm transition-colors"
+                   style={{ background: 'rgba(225,48,108,0.08)', color: '#e1306c', border: '1.5px solid rgba(225,48,108,0.2)' }}><Instagram size={14}/> SNS</a>}
               </div>
             </div>
           </div>
 
           {member.portfolioLinks?.length > 0 && (
             <div className="space-y-2 md:space-y-3">
-              <h4 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">포트폴리오</h4>
+              <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>포트폴리오</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                 {member.portfolioLinks.map((link, i) => (
-                  <a key={i} href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium text-[#4e5968] hover:bg-gray-100 transition-colors">
-                    <LinkIcon size={14} className="text-[#3182f6] shrink-0"/><span className="truncate">{link}</span>
+                  <a key={i} href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noreferrer"
+                    className="flex items-center gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium transition-colors"
+                    style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-tan)' }}>
+                    <LinkIcon size={14} style={{ color: 'var(--gc-blue)' }} className="shrink-0"/><span className="truncate">{link}</span>
                   </a>
                 ))}
               </div>
@@ -469,12 +471,12 @@ const MemberDetailModal = ({ member, onClose }) => {
           )}
 
           <div className="space-y-3 md:space-y-4">
-             <h4 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">대표 작업물</h4>
+             <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>대표 작업물</h4>
              <div className="flex gap-3 md:gap-4 overflow-x-auto snap-x scrollbar-hide pb-2 -mx-5 px-5 md:mx-0 md:px-0">
                {member.workItems.map((item, i) => (
-                 <div key={i} className="flex-shrink-0 w-[220px] md:w-[320px] bg-gray-50 rounded-2xl md:rounded-[28px] overflow-hidden snap-start shadow-sm border border-gray-100">
+                 <div key={i} className="flex-shrink-0 w-[220px] md:w-[320px] gcard overflow-hidden snap-start" style={{ padding: 0 }}>
                     <img src={item.url} className="w-full h-36 md:h-52 object-cover" />
-                    <div className="p-4 md:p-6 text-xs md:text-sm font-medium text-[#4e5968]">{item.description || '설명 없음'}</div>
+                    <div className="p-4 md:p-6 text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-sub)' }}>{item.description || '설명 없음'}</div>
                  </div>
                ))}
              </div>
@@ -482,27 +484,28 @@ const MemberDetailModal = ({ member, onClose }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div className="space-y-3 md:space-y-4">
-               <h4 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">작업 성향 & 리듬</h4>
+               <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>작업 성향 & 리듬</h4>
                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
-                  {member.workStyles.map(s => <span key={s} className="px-3 py-1.5 md:px-4 md:py-2 bg-gray-100 rounded-lg md:rounded-xl text-xs md:text-sm font-bold text-[#4e5968]">#{s}</span>)}
+                  {member.workStyles.map(s => <span key={s} className="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold"
+                    style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-tan)', color: 'var(--gc-text-sub)' }}>#{s}</span>)}
                </div>
                <div className="grid grid-cols-3 gap-2 md:gap-3">
-                  <div className="p-3 md:p-4 bg-gray-50 rounded-xl md:rounded-2xl text-center"><Sun size={16} className="mx-auto mb-1.5 md:mb-2 text-orange-400"/><span className="text-xs md:text-sm font-bold">{member.schedule.start}</span></div>
-                  <div className="p-3 md:p-4 bg-gray-50 rounded-xl md:rounded-2xl text-center"><Moon size={16} className="mx-auto mb-1.5 md:mb-2 text-blue-500"/><span className="text-xs md:text-sm font-bold">{member.schedule.night}</span></div>
-                  <div className="p-3 md:p-4 bg-gray-50 rounded-xl md:rounded-2xl text-center"><Home size={16} className="mx-auto mb-1.5 md:mb-2 text-green-500"/><span className="text-xs md:text-sm font-bold">{member.schedule.place}</span></div>
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Sun size={16} className="mx-auto mb-1.5 md:mb-2" style={{ color: '#F59E0B' }}/><span className="text-xs md:text-sm font-bold">{member.schedule.start}</span></div>
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Moon size={16} className="mx-auto mb-1.5 md:mb-2" style={{ color: 'var(--gc-blue)' }}/><span className="text-xs md:text-sm font-bold">{member.schedule.night}</span></div>
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Home size={16} className="mx-auto mb-1.5 md:mb-2" style={{ color: 'var(--gc-green)' }}/><span className="text-xs md:text-sm font-bold">{member.schedule.place}</span></div>
                </div>
             </div>
 
             <div className="space-y-3 md:space-y-4">
-               <h4 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">협업 약속</h4>
+               <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>협업 약속</h4>
                <div className="space-y-2 md:space-y-3">
-                 <div className="p-4 md:p-5 bg-red-50/50 rounded-2xl md:rounded-[24px] border border-red-100">
-                   <h5 className="text-[10px] md:text-[11px] font-bold text-red-400 mb-1.5 md:mb-2 flex items-center gap-1.5"><Heart size={12}/> 추구하는 가치</h5>
-                   <p className="text-xs md:text-sm font-medium text-[#4e5968]">{member.pursuits || '-'}</p>
+                 <div className="p-4 md:p-5 rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
+                   <h5 className="text-[10px] md:text-[11px] font-bold mb-1.5 md:mb-2 flex items-center gap-1.5" style={{ color: '#E85454' }}><Heart size={12}/> 추구하는 가치</h5>
+                   <p className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text)' }}>{member.pursuits || '-'}</p>
                  </div>
-                 <div className="p-4 md:p-5 bg-gray-50 rounded-2xl md:rounded-[24px] border border-gray-100">
-                   <h5 className="text-[10px] md:text-[11px] font-bold text-gray-400 mb-1.5 md:mb-2 flex items-center gap-1.5"><Ban size={12}/> 지양하는 방식</h5>
-                   <p className="text-xs md:text-sm font-medium text-[#4e5968]">{member.avoid || '-'}</p>
+                 <div className="p-4 md:p-5 rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}>
+                   <h5 className="text-[10px] md:text-[11px] font-bold mb-1.5 md:mb-2 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ban size={12}/> 지양하는 방식</h5>
+                   <p className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text)' }}>{member.avoid || '-'}</p>
                  </div>
                </div>
             </div>
@@ -751,35 +754,37 @@ export default function App() {
             <p className="text-[#8b95a1] text-sm md:text-lg font-medium">협업 멤버들에게 공유될 정보를 구성합니다.</p>
           </header>
           <div className="space-y-6 md:space-y-8">
-            {/* Profile Photo Upload — overlay on walking character */}
+            {/* Profile Photo Upload */}
             <div className="space-y-2.5 md:space-y-3">
-              <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                <Camera size={12}/> 프로필 사진 <span className="text-gray-300 normal-case font-medium tracking-normal">— 본인 얼굴 권장 (캐릭터 얼굴로 사용됩니다)</span>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}>
+                <Camera size={12}/> 프로필 사진 <span className="normal-case font-medium tracking-normal" style={{ color: 'var(--gc-text-muted)' }}>— 본인 얼굴 권장</span>
               </label>
               <input type="file" accept="image/*" ref={photoInputRef} onChange={e => { handlePhotoUpload(e.target.files?.[0]); e.target.value = ''; }} className="hidden" />
-              <div className="flex items-center gap-4 md:gap-5 p-4 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px]">
-                <button onClick={() => photoInputRef.current?.click()} className="relative w-20 h-20 md:w-24 md:h-24 rounded-full bg-white overflow-hidden border-2 border-dashed border-gray-300 hover:border-[#3182f6] hover:bg-blue-50 transition-all shrink-0 flex items-center justify-center group">
+              <div className="flex items-center gap-4 md:gap-5 p-4 md:p-5 rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)' }}>
+                <button onClick={() => photoInputRef.current?.click()}
+                  className="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-dashed transition-all shrink-0 flex items-center justify-center group"
+                  style={{ background: 'var(--gc-surface)', borderColor: 'var(--gc-tan)' }}>
                   {profileData.photoUrl ? (
                     <img src={profileData.photoUrl} alt="프로필 사진" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="flex flex-col items-center gap-0.5 text-gray-300 group-hover:text-[#3182f6] transition-colors">
+                    <div className="flex flex-col items-center gap-0.5 transition-colors" style={{ color: 'var(--gc-text-muted)' }}>
                       <Camera size={24}/>
                       <span className="text-[9px] font-bold uppercase tracking-wider">Upload</span>
                     </div>
                   )}
                 </button>
                 <div className="flex-1 min-w-0 space-y-2">
-                  <p className="text-xs md:text-sm font-medium text-[#4e5968] leading-snug">
-                    {profileData.photoUrl
-                      ? '얼굴이 캐릭터의 동그란 얼굴 영역에 올라가요.'
-                      : '얼굴이 가운데에 오도록 정사각형 사진을 올려주세요.'}
+                  <p className="text-xs md:text-sm font-medium leading-snug" style={{ color: 'var(--gc-text-sub)' }}>
+                    {profileData.photoUrl ? '얼굴이 캐릭터의 동그란 얼굴 영역에 올라가요.' : '얼굴이 가운데에 오도록 정사각형 사진을 올려주세요.'}
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    <button onClick={() => photoInputRef.current?.click()} className="px-3 py-1.5 md:px-4 md:py-2 bg-[#3182f6] text-white rounded-lg md:rounded-xl font-bold text-[11px] md:text-xs">
+                    <button onClick={() => photoInputRef.current?.click()}
+                      className="gbtn gbtn-primary text-[11px] md:text-xs" style={{ padding: '6px 14px' }}>
                       {profileData.photoUrl ? '변경' : '사진 선택'}
                     </button>
                     {profileData.photoUrl && (
-                      <button onClick={() => setProfileData({...profileData, photoUrl: ''})} className="px-3 py-1.5 md:px-4 md:py-2 bg-white text-gray-500 rounded-lg md:rounded-xl font-bold text-[11px] md:text-xs border border-gray-200 hover:bg-gray-50">
+                      <button onClick={() => setProfileData({...profileData, photoUrl: ''})}
+                        className="gbtn gbtn-secondary text-[11px] md:text-xs" style={{ padding: '6px 14px' }}>
                         삭제
                       </button>
                     )}
@@ -790,85 +795,90 @@ export default function App() {
 
              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">이름</label>
-                <input value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} className="w-full p-3.5 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px] font-medium text-sm md:text-base outline-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="성함" />
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>이름</label>
+                <input value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="성함" />
               </div>
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">기수</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>기수</label>
                 <div className="relative">
-                  <select value={profileData.generation} onChange={e => setProfileData({...profileData, generation: e.target.value})} className="w-full p-3.5 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px] font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
+                  <select value={profileData.generation} onChange={e => setProfileData({...profileData, generation: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
                     {GENERATIONS.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
-                  <ChevronDown className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                  <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
                 </div>
               </div>
               <div className="space-y-1.5 md:space-y-2 col-span-2 md:col-span-1">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">역할</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>역할</label>
                 <div className="relative">
-                  <select value={profileData.role} onChange={e => setProfileData({...profileData, role: e.target.value})} className="w-full p-3.5 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px] font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
+                  <select value={profileData.role} onChange={e => setProfileData({...profileData, role: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
                     {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
-                  <ChevronDown className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                  <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-1.5"><Phone size={12}/> 연락처</label>
-                <input value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} className="w-full p-3.5 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px] font-medium text-sm md:text-base outline-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="010-0000-0000" />
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Phone size={12}/> 연락처</label>
+                <input value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="010-0000-0000" />
               </div>
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-1.5"><Instagram size={12}/> SNS 링크</label>
-                <input value={profileData.snsLink} onChange={e => setProfileData({...profileData, snsLink: e.target.value})} className="w-full p-3.5 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px] font-medium text-sm md:text-base outline-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="instagram.com/id" />
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Instagram size={12}/> SNS 링크</label>
+                <input value={profileData.snsLink} onChange={e => setProfileData({...profileData, snsLink: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="instagram.com/id" />
               </div>
             </div>
 
             <div className="space-y-2 md:space-y-3">
-              <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-1.5"><LinkIcon size={12}/> 포트폴리오 링크</label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><LinkIcon size={12}/> 포트폴리오 링크</label>
               {profileData.portfolioLinks.map((link, i) => (
                 <div key={i} className="flex gap-2 animate-in slide-in-from-top-1">
                    <input value={link} onChange={e => {
                      const nl = [...profileData.portfolioLinks]; nl[i] = e.target.value; setProfileData({...profileData, portfolioLinks: nl});
-                   }} className="flex-1 p-3.5 md:p-5 bg-[#f2f4f6] rounded-2xl md:rounded-[22px] font-medium text-sm md:text-base outline-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="https://..." />
-                   <button onClick={() => setProfileData(p => ({...p, portfolioLinks: p.portfolioLinks.filter((_, idx) => idx !== i)}))} className="p-3.5 md:p-5 bg-red-50 text-red-500 rounded-xl md:rounded-2xl shrink-0"><Trash2 size={18}/></button>
+                   }} className="flex-1 p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="https://..." />
+                   <button onClick={() => setProfileData(p => ({...p, portfolioLinks: p.portfolioLinks.filter((_, idx) => idx !== i)}))}
+                     className="p-3.5 md:p-4 rounded-xl shrink-0 transition-colors"
+                     style={{ background: 'rgba(232,84,84,0.1)', color: '#E85454' }}><Trash2 size={18}/></button>
                 </div>
               ))}
               <Button variant="outline" className="w-full py-3 md:py-4 text-xs md:text-sm" onClick={() => setProfileData(p => ({...p, portfolioLinks: [...p.portfolioLinks, '']}))}><Plus size={14}/> 링크 추가하기</Button>
             </div>
 
             <div className="space-y-3 md:space-y-4">
-              <label className="text-[10px] md:text-xs font-bold text-gray-400 block uppercase tracking-widest ml-1">대표 작업물 ({profileData.workItems.length})</label>
+              <label className="text-[10px] md:text-xs font-bold block uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>대표 작업물 ({profileData.workItems.length})</label>
               <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3 md:pb-4 snap-x -mx-4 px-4 md:mx-0 md:px-0">
                  {profileData.workItems.map((item, i) => (
-                   <div key={i} className="flex-shrink-0 w-[220px] md:w-[260px] p-3 md:p-4 bg-white rounded-3xl md:rounded-[32px] border border-gray-100 shadow-sm snap-start relative group">
+                   <div key={i} className="flex-shrink-0 w-[220px] md:w-[260px] p-3 md:p-4 gcard snap-start relative group" style={{ padding: '12px 14px' }}>
                       <img src={item.url} className="h-28 md:h-36 w-full object-cover rounded-xl md:rounded-2xl mb-3 md:mb-4" />
-                      <button onClick={() => setProfileData(p => ({...p, workItems: p.workItems.filter((_, idx) => idx !== i)}))} className="absolute top-5 right-5 md:top-6 md:right-6 p-1.5 md:p-2 bg-black/50 text-white rounded-full transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100"><X size={12}/></button>
+                      <button onClick={() => setProfileData(p => ({...p, workItems: p.workItems.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 p-1.5 md:p-2 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"><X size={12}/></button>
                       <textarea value={item.description} onChange={e => {
                         const ni = [...profileData.workItems]; ni[i].description = e.target.value; setProfileData({...profileData, workItems: ni});
-                      }} className="w-full p-2.5 md:p-3 bg-[#f2f4f6] rounded-xl md:rounded-2xl text-xs font-medium h-16 md:h-20 outline-none resize-none focus:border-[#3182f6]/20 transition-all border-2 border-transparent" placeholder="작업물에 대한 설명" />
+                      }} className="w-full p-2.5 md:p-3 rounded-xl text-xs font-medium h-16 md:h-20 outline-none resize-none transition-all" placeholder="작업물에 대한 설명" />
                    </div>
                  ))}
                  <input type="file" ref={fileInputRef} onChange={e => handleFiles(e.target.files)} multiple accept="image/*" className="hidden" />
-                 <div onClick={() => fileInputRef.current?.click()} className="flex-shrink-0 w-[220px] md:w-[260px] h-[200px] md:h-[250px] rounded-3xl md:rounded-[32px] border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-2 md:gap-3 cursor-pointer hover:border-[#3182f6] hover:bg-white transition-all">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-gray-300 shadow-sm"><Upload size={20}/></div>
-                    <span className="text-[11px] md:text-xs font-bold text-gray-400">이미지 파일 추가</span>
+                 <div onClick={() => fileInputRef.current?.click()}
+                   className="flex-shrink-0 w-[220px] md:w-[260px] h-[200px] md:h-[250px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 md:gap-3 cursor-pointer transition-all"
+                   style={{ borderColor: 'var(--gc-tan)', background: 'var(--gc-input-bg)' }}>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center shadow-sm"
+                      style={{ background: 'var(--gc-surface)', color: 'var(--gc-text-muted)' }}><Upload size={20}/></div>
+                    <span className="text-[11px] md:text-xs font-bold" style={{ color: 'var(--gc-text-muted)' }}>이미지 파일 추가</span>
                  </div>
               </div>
             </div>
           </div>
-          <Button onClick={() => setStep(2)} className="w-full py-4 md:py-6 text-base md:text-xl shadow-lg shadow-blue-500/20" disabled={!profileData.name || profileData.workItems.length === 0}>다음으로</Button>
+          <Button onClick={() => setStep(2)} className="w-full py-4 md:py-5 text-base md:text-xl" disabled={!profileData.name || profileData.workItems.length === 0}>다음으로</Button>
         </div>
       );
       case 2: return (
         <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500">
           <header>
             <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">작업 성향과 리듬</h2>
-            <p className="text-[#8b95a1] text-sm md:text-lg font-medium">팀원들이 당신을 어떻게 도와주면 좋을까요?</p>
+            <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>팀원들이 당신을 어떻게 도와주면 좋을까요?</p>
           </header>
           <div className="space-y-7 md:space-y-10">
             <section className="space-y-4 md:space-y-5">
-              <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">작업 성향 키워드</label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>작업 성향 키워드</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                  {WORK_STYLE_TAGS.map(tag => {
                    const sel = profileData.workStyles.includes(tag);
@@ -888,15 +898,15 @@ export default function App() {
               <div className="space-y-2.5 md:space-y-3 mt-4 md:mt-6">
                  {profileData.workStyles.map(tag => (
                    <div key={tag} className="animate-in slide-in-from-left-2">
-                      <span className="text-[10px] md:text-[11px] font-bold text-[#3182f6] ml-3 mb-1 block uppercase">Why #{tag}?</span>
-                      <input value={profileData.styleReasons[tag] || ''} onChange={e => setProfileData({...profileData, styleReasons: {...profileData.styleReasons, [tag]: e.target.value}})} className="w-full p-3.5 md:p-5 bg-white border border-gray-100 rounded-2xl md:rounded-[22px] outline-none font-medium text-sm md:text-base shadow-sm focus:border-[#3182f6]/30 transition-all" placeholder="이유를 간단히 설명해주세요." />
+                      <span className="text-[10px] md:text-[11px] font-bold ml-3 mb-1 block uppercase" style={{ color: 'var(--gc-blue)' }}>Why #{tag}?</span>
+                      <input value={profileData.styleReasons[tag] || ''} onChange={e => setProfileData({...profileData, styleReasons: {...profileData.styleReasons, [tag]: e.target.value}})} className="w-full p-3.5 md:p-4 rounded-xl outline-none font-medium text-sm md:text-base transition-all" placeholder="이유를 간단히 설명해주세요." />
                    </div>
                  ))}
               </div>
             </section>
 
             <section className="space-y-4 md:space-y-6">
-              <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">나의 작업 리듬 선호도</label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>나의 작업 리듬 선호도</label>
               <div className="space-y-6 md:space-y-8">
                  {[
                    { k: 'start', label: '시작 시간', opt: [{ v: '오전', d: '상쾌한 오전 시작', i: <Sun/> }, { v: '오후', d: '여유로운 오후 시작', i: <Coffee/> }] },
@@ -904,7 +914,7 @@ export default function App() {
                    { k: 'place', label: '작업 장소', opt: [{ v: '출퇴근', d: '개인 공간/재택', i: <Building2/> }, { v: '멤박', d: '멤버십에서 자기', i: <Bed/> }] }
                  ].map(section => (
                    <div key={section.k} className="space-y-3 md:space-y-4">
-                      <div className="flex items-center gap-2 text-sm md:text-base font-bold text-[#191f28]">{section.label}</div>
+                      <div className="flex items-center gap-2 text-sm md:text-base font-bold" style={{ color: 'var(--gc-text)' }}>{section.label}</div>
                       <div className="grid grid-cols-2 gap-2.5 md:gap-4">
                         {section.opt.map(opt => {
                           const sel = profileData.schedule[section.k] === opt.v;
@@ -939,16 +949,17 @@ export default function App() {
         <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 pb-12 md:pb-20">
            <header>
              <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">최종 협업 약속</h2>
-             <p className="text-[#8b95a1] text-sm md:text-lg font-medium">기분 좋은 팀워크를 위해 꼭 지키고 싶은 점들입니다.</p>
+             <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>기분 좋은 팀워크를 위해 꼭 지키고 싶은 점들입니다.</p>
            </header>
            <div className="space-y-6 md:space-y-8">
              {team.category === 'MEP' && (
-               <div className="p-5 md:p-10 bg-white border-2 border-[#3182f6]/20 rounded-3xl md:rounded-[42px] space-y-5 md:space-y-8 shadow-sm">
+               <div className="gcard p-5 md:p-8 space-y-5 md:space-y-7">
                  <div className="flex items-center gap-3 md:gap-4">
-                   <div className="w-11 h-11 md:w-14 md:h-14 bg-[#e8f3ff] rounded-xl md:rounded-2xl flex items-center justify-center text-[#3182f6] shrink-0"><Dna size={24} /></div>
+                   <div className="w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0"
+                     style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}><Dna size={24} /></div>
                    <div>
                      <h3 className="text-lg md:text-2xl font-bold tracking-tight">MEP 연구 관심사</h3>
-                     <p className="text-[11px] md:text-sm font-medium text-gray-400">이번 프로젝트의 개인적 연구 목표입니다.</p>
+                     <p className="text-[11px] md:text-sm font-medium" style={{ color: 'var(--gc-text-muted)' }}>이번 프로젝트의 개인적 연구 목표입니다.</p>
                    </div>
                  </div>
                  <div className="flex flex-wrap gap-1.5 md:gap-2">{MEP_TOPICS.map(topic => {
@@ -963,25 +974,25 @@ export default function App() {
                    </button>
                    );
                  })}</div>
-                 <textarea value={profileData.researchSubject} onChange={e => setProfileData({...profileData, researchSubject: e.target.value})} className="w-full p-4 md:p-8 bg-[#f2f4f6] rounded-2xl md:rounded-[32px] outline-none font-medium text-sm md:text-xl min-h-[120px] md:min-h-[160px] resize-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="구체적인 연구 주제를 적어주세요." />
+                 <textarea value={profileData.researchSubject} onChange={e => setProfileData({...profileData, researchSubject: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="구체적인 연구 주제를 적어주세요." />
                </div>
              )}
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2"><Heart size={14} className="text-red-400"/> 추구하는 협업 가치</label>
-               <textarea value={profileData.pursuits} onChange={e => setProfileData({...profileData, pursuits: e.target.value})} className="w-full p-4 md:p-8 bg-[#f2f4f6] rounded-2xl md:rounded-[32px] outline-none font-medium text-sm md:text-lg min-h-[120px] md:min-h-[160px] resize-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="예: 속도보다 논리적인 완결성을 중요하게 생각합니다." />
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Heart size={14} style={{ color: '#E85454' }}/> 추구하는 협업 가치</label>
+               <textarea value={profileData.pursuits} onChange={e => setProfileData({...profileData, pursuits: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="예: 속도보다 논리적인 완결성을 중요하게 생각합니다." />
              </div>
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2"><Ban size={14} className="text-gray-400"/> 지양하는 협업 방식 (Don't)</label>
-               <textarea value={profileData.avoid} onChange={e => setProfileData({...profileData, avoid: e.target.value})} className="w-full p-4 md:p-8 bg-[#f2f4f6] rounded-2xl md:rounded-[32px] outline-none font-medium text-sm md:text-lg min-h-[120px] md:min-h-[160px] resize-none border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="예: 사전 공유 없는 불참이나 자정 이후의 급한 연락 등" />
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ban size={14} style={{ color: 'var(--gc-text-muted)' }}/> 지양하는 협업 방식 (Don't)</label>
+               <textarea value={profileData.avoid} onChange={e => setProfileData({...profileData, avoid: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="예: 사전 공유 없는 불참이나 자정 이후의 급한 연락 등" />
              </div>
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">팀원들에게 한마디</label>
-               <input value={profileData.intro} onChange={e => setProfileData({...profileData, intro: e.target.value})} className="w-full p-4 md:p-6 bg-[#f2f4f6] rounded-2xl md:rounded-[24px] outline-none font-medium text-sm md:text-lg shadow-inner border-2 border-transparent focus:border-[#3182f6]/20 transition-all" placeholder="안녕하세요! 한 학기 잘 지내봐요!" />
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>팀원들에게 한마디</label>
+               <input value={profileData.intro} onChange={e => setProfileData({...profileData, intro: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base transition-all" placeholder="안녕하세요! 한 학기 잘 지내봐요!" />
              </div>
            </div>
            <div className="flex gap-2.5 md:gap-3 pt-6 md:pt-10">
              <Button variant="secondary" onClick={() => setStep(2)} className="flex-1">이전</Button>
-             <Button onClick={handleProfileSubmit} className="flex-[2] py-4 md:py-6 text-base md:text-2xl shadow-2xl shadow-blue-500/40">팀 아지트로 합류하기 <ArrowRight size={18}/></Button>
+             <Button onClick={handleProfileSubmit} className="flex-[2] py-4 md:py-5 text-base md:text-xl">팀 아지트로 합류하기 <ArrowRight size={18}/></Button>
            </div>
         </div>
       );
@@ -998,11 +1009,11 @@ export default function App() {
 
       {/* Photo Crop Modal */}
       {cropImageSrc && (
-        <div className="fixed inset-0 z-[600] bg-black/85 backdrop-blur-sm flex flex-col animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[600] bg-black/88 backdrop-blur-sm flex flex-col animate-in fade-in duration-200">
           <div className="flex justify-between items-center px-5 md:px-8 py-4 md:py-5 text-white">
             <div>
               <h3 className="text-lg md:text-xl font-bold tracking-tight">얼굴 위치 맞추기</h3>
-              <p className="text-xs md:text-sm font-medium text-white/60 mt-0.5">드래그해서 위치 조정 · 핀치/슬라이더로 확대</p>
+              <p className="text-xs md:text-sm font-medium text-white/55 mt-0.5">드래그해서 위치 조정 · 핀치/슬라이더로 확대</p>
             </div>
             <button onClick={() => setCropImageSrc(null)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
               <X size={20}/>
@@ -1026,25 +1037,23 @@ export default function App() {
               objectFit="contain"
             />
           </div>
-          <div className="px-5 md:px-8 py-4 md:py-6 bg-black space-y-4 md:space-y-5">
+          <div className="px-5 md:px-8 py-4 md:py-6 space-y-4 md:space-y-5" style={{ background: 'rgba(30,20,10,0.96)', borderTop: '2px solid var(--gc-gold-dark)' }}>
             <div className="flex items-center gap-3">
-              <ZoomOut size={18} className="text-white/60 shrink-0"/>
+              <ZoomOut size={18} className="text-white/55 shrink-0"/>
               <input
-                type="range"
-                min={1}
-                max={4}
-                step={0.05}
-                value={cropZoom}
+                type="range" min={1} max={4} step={0.05} value={cropZoom}
                 onChange={e => setCropZoom(Number(e.target.value))}
-                className="flex-1 accent-[#3182f6]"
+                className="flex-1" style={{ accentColor: 'var(--gc-gold)' }}
               />
-              <ZoomIn size={18} className="text-white/60 shrink-0"/>
+              <ZoomIn size={18} className="text-white/55 shrink-0"/>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setCropImageSrc(null)} className="flex-1 py-3.5 md:py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold text-sm md:text-base transition-colors">
+              <button onClick={() => setCropImageSrc(null)}
+                className="gbtn gbtn-secondary flex-1" style={{ color: 'var(--gc-text-sub)' }}>
                 취소
               </button>
-              <button onClick={confirmCrop} className="flex-[2] py-3.5 md:py-4 bg-[#3182f6] hover:bg-[#1b64da] text-white rounded-2xl font-bold text-sm md:text-base transition-colors">
+              <button onClick={confirmCrop}
+                className="gbtn gbtn-primary" style={{ flex: 2 }}>
                 적용하기
               </button>
             </div>
@@ -1054,8 +1063,10 @@ export default function App() {
 
       {isCopied && (
         <div className="fixed top-4 md:top-16 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-top-6 duration-500">
-           <div className="bg-[#191f28] text-white px-4 md:px-6 py-2.5 md:py-3 rounded-full flex items-center gap-2 shadow-2xl">
-              <div className="w-4 h-4 md:w-5 md:h-5 bg-[#00c471] rounded-full flex items-center justify-center"><Check size={10} strokeWidth={4}/></div>
+           <div className="px-4 md:px-6 py-2.5 md:py-3 rounded-full flex items-center gap-2 shadow-2xl"
+             style={{ background: 'var(--gc-text)', color: '#fff', border: '2px solid var(--gc-gold)', boxShadow: `0 4px 0 var(--gc-gold-dark), 0 8px 24px rgba(0,0,0,0.3)` }}>
+              <div className="w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center"
+                style={{ background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))` }}><Check size={10} strokeWidth={4}/></div>
               <span className="text-xs md:text-sm font-bold tracking-tight">복사 완료!</span>
            </div>
         </div>
@@ -1179,21 +1190,36 @@ export default function App() {
             <div className="hidden lg:block w-[380px]">
               <div className="sticky top-32 space-y-6">
                 <div className="flex items-center gap-3 ml-2">
-                   <Sparkles size={20} className="text-[#3182f6]"/>
-                   <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Real-time Card View</span>
+                   <Sparkles size={20} style={{ color: 'var(--gc-gold)' }}/>
+                   <span className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-sub)' }}>Real-time Card View</span>
                 </div>
-                <Card className="overflow-hidden p-0 shadow-[0_32px_80px_rgba(0,0,0,0.1)] border-none ring-1 ring-gray-100 scale-100 hover:scale-[1.02] transition-all duration-500">
-                  <div className="h-64 bg-gray-50 flex items-center justify-center overflow-hidden relative">
+                <Card className="overflow-hidden p-0 hover:scale-[1.02] transition-all duration-500">
+                  <div className="h-64 flex items-center justify-center overflow-hidden relative"
+                    style={{ background: 'var(--gc-input-bg)' }}>
                     {profileData.workItems.length > 0 ? (
-                      <><img src={profileData.workItems[0].url} className="w-full h-full object-cover" alt="preview" /><div className="absolute top-6 left-6 bg-white/95 backdrop-blur-xl px-4 py-2 rounded-2xl text-xs font-bold shadow-lg">{profileData.role}</div></>
+                      <><img src={profileData.workItems[0].url} className="w-full h-full object-cover" alt="preview" />
+                        <div className="absolute top-5 left-5 backdrop-blur-xl px-4 py-2 rounded-full text-xs font-bold shadow-lg"
+                          style={{ background: 'rgba(255,253,247,0.92)', color: 'var(--gc-blue)', border: '1.5px solid var(--gc-tan)' }}>{profileData.role}</div></>
                     ) : (
-                      <div className="flex flex-col items-center gap-4 text-gray-300"><FileImage size={56} strokeWidth={1.5} className="opacity-50" /><span className="text-sm font-bold tracking-tight">작업물 이미지가 여기에 표시됩니다.</span></div>
+                      <div className="flex flex-col items-center gap-4" style={{ color: 'var(--gc-text-muted)' }}>
+                        <FileImage size={56} strokeWidth={1.5} className="opacity-50" />
+                        <span className="text-sm font-bold tracking-tight">작업물 이미지가 여기에 표시됩니다.</span>
+                      </div>
                     )}
                   </div>
-                  <div className="p-10">
-                    <div className="flex justify-between items-start mb-4"><h4 className="text-3xl font-bold tracking-tight">{profileData.name || "이름"}</h4><span className="text-xs font-bold text-[#3182f6] px-3 py-1.5 bg-blue-50 rounded-xl">{profileData.generation}</span></div>
-                    <div className="flex gap-3 mb-6 opacity-40">{profileData.phone && <Phone size={14}/>}{profileData.portfolioLinks.filter(l=>l).length > 0 && <LinkIcon size={14}/>}</div>
-                    <p className="text-lg text-gray-500 font-medium italic line-clamp-3 leading-relaxed">"{profileData.workItems[0]?.description || '작업물에 대한 설명이 여기에 요약되어 표시됩니다.'}"</p>
+                  <div className="p-8">
+                    <div className="flex justify-between items-start mb-4">
+                      <h4 className="text-3xl font-bold tracking-tight">{profileData.name || "이름"}</h4>
+                      <span className="text-xs font-bold px-3 py-1.5 rounded-full"
+                        style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}>{profileData.generation}</span>
+                    </div>
+                    <div className="flex gap-3 mb-5 opacity-50" style={{ color: 'var(--gc-text-sub)' }}>
+                      {profileData.phone && <Phone size={14}/>}
+                      {profileData.portfolioLinks.filter(l=>l).length > 0 && <LinkIcon size={14}/>}
+                    </div>
+                    <p className="text-base font-medium italic line-clamp-3 leading-relaxed" style={{ color: 'var(--gc-text-sub)' }}>
+                      "{profileData.workItems[0]?.description || '작업물에 대한 설명이 여기에 요약되어 표시됩니다.'}"
+                    </p>
                   </div>
                 </Card>
               </div>
@@ -1217,68 +1243,89 @@ export default function App() {
 
             <BottomSheet isOpen={showJourneySheet} onClose={() => setShowJourneySheet(false)} title="우리의 여정 (Quest)">
               <div className="space-y-5 md:space-y-6 relative">
-                 <div className="absolute left-[23px] md:left-[27px] top-6 bottom-10 w-0.5 bg-gray-200 z-0"></div>
+                 <div className="absolute left-[23px] md:left-[27px] top-6 bottom-10 w-0.5 z-0" style={{ background: 'var(--gc-border)' }}></div>
 
                  <div className="relative z-10 flex gap-3 md:gap-4">
-                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#00c471] text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm"><MapPinned size={20}/></div>
+                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full text-white flex items-center justify-center shrink-0 border-4 border-white shadow-md"
+                     style={{ background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }}><MapPinned size={20}/></div>
                    <div className="pt-2.5 md:pt-3">
-                     <h4 className="font-bold text-base md:text-lg text-gray-400 line-through">프로젝트 아지트 생성</h4>
+                     <h4 className="font-bold text-base md:text-lg line-through" style={{ color: 'var(--gc-text-muted)' }}>프로젝트 아지트 생성</h4>
                    </div>
                  </div>
 
-                 {/* Step 2: 팀원 합류 */}
                  <div className="relative z-10 flex gap-3 md:gap-4">
-                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${isAligned ? 'bg-[#00c471]' : 'bg-[#3182f6]'} text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm`}>
+                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full text-white flex items-center justify-center shrink-0 border-4 border-white shadow-md"
+                     style={isAligned
+                       ? { background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }
+                       : { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }}>
                      {isAligned ? <CheckCircle2 size={20}/> : <Users size={20}/>}
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
-                     <h4 className={`font-bold text-base md:text-lg mb-1 ${isAligned ? 'text-gray-400 line-through' : 'text-[#191f28]'}`}>팀원 합류 ({currentMembers}/{targetMembers})</h4>
+                     <h4 className="font-bold text-base md:text-lg mb-1"
+                       style={{ color: isAligned ? 'var(--gc-text-muted)' : 'var(--gc-text)', textDecoration: isAligned ? 'line-through' : 'none' }}>
+                       팀원 합류 ({currentMembers}/{targetMembers})</h4>
                      {!isAligned && (
-                       <button onClick={copyInviteLink} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 bg-blue-50 text-[#3182f6] rounded-lg md:rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 hover:bg-blue-100 transition-colors">
+                       <button onClick={copyInviteLink} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
+                         style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }}>
                          <Plus size={14}/> 초대 링크 복사하기
                        </button>
                      )}
                    </div>
                  </div>
 
-                 {/* Step 3: 킥오프 일정 잡기 — active when isAligned, done when isKickoffAgreed */}
                  <div className="relative z-10 flex gap-3 md:gap-4">
-                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${isKickoffAgreed ? 'bg-[#00c471]' : isAligned ? 'bg-[#3182f6]' : 'bg-gray-200'} text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm`}>
+                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full text-white flex items-center justify-center shrink-0 border-4 border-white shadow-md"
+                     style={isKickoffAgreed
+                       ? { background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }
+                       : isAligned
+                         ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
+                         : { background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
                      {isKickoffAgreed ? <CheckCircle2 size={20}/> : <CalendarPlus size={20}/>}
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
-                     <h4 className={`font-bold text-base md:text-lg mb-1 ${isKickoffAgreed ? 'text-gray-400 line-through' : isAligned ? 'text-[#191f28]' : 'text-gray-400'}`}>첫 킥오프 일정 잡기</h4>
+                     <h4 className="font-bold text-base md:text-lg mb-1"
+                       style={{ color: isKickoffAgreed ? 'var(--gc-text-muted)' : isAligned ? 'var(--gc-text)' : 'var(--gc-text-muted)', textDecoration: isKickoffAgreed ? 'line-through' : 'none' }}>
+                       첫 킥오프 일정 잡기</h4>
                      {isAligned && !isKickoffAgreed && (
-                       <button onClick={() => { setShowJourneySheet(false); setShowKickoffSheet(true); }} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 bg-blue-50 text-[#3182f6] rounded-lg md:rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 hover:bg-blue-100 transition-colors">
+                       <button onClick={() => { setShowJourneySheet(false); setShowKickoffSheet(true); }}
+                         className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
+                         style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }}>
                          <CalendarPlus size={14}/> 가능 시간 선택하기
                        </button>
                      )}
                      {isKickoffAgreed && kickoff.proposal && (
-                       <p className="text-xs md:text-sm font-bold text-[#00c471] mt-1">{kickoff.proposal.replace('-', ' ')} 확정 ✓</p>
+                       <p className="text-xs md:text-sm font-bold mt-1" style={{ color: 'var(--gc-green)' }}>{kickoff.proposal.replace('-', ' ')} 확정 ✓</p>
                      )}
                    </div>
                  </div>
 
-                 {/* Step 4: 그라운드 룰 — active when isKickoffAgreed */}
                  <div className="relative z-10 flex gap-3 md:gap-4">
-                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${isKickoffAgreed ? 'bg-[#3182f6]' : 'bg-gray-200'} text-white flex items-center justify-center shrink-0 border-4 border-white shadow-sm`}>
+                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full text-white flex items-center justify-center shrink-0 border-4 border-white shadow-md"
+                     style={isKickoffAgreed
+                       ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
+                       : { background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
                      <Heart size={20}/>
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
-                     <h4 className={`font-bold text-base md:text-lg mb-1 ${isKickoffAgreed ? 'text-[#191f28]' : 'text-gray-400'}`}>그라운드 룰 숙지하기</h4>
-                     <button onClick={() => { setShowJourneySheet(false); setShowRulesSheet(true); }} className={`mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-lg md:rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-colors ${isKickoffAgreed ? 'bg-blue-50 text-[#3182f6] hover:bg-blue-100' : 'bg-gray-100 text-gray-400'}`}>
+                     <h4 className="font-bold text-base md:text-lg mb-1"
+                       style={{ color: isKickoffAgreed ? 'var(--gc-text)' : 'var(--gc-text-muted)' }}>그라운드 룰 숙지하기</h4>
+                     <button onClick={() => { setShowJourneySheet(false); setShowRulesSheet(true); }}
+                       className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
+                       style={isKickoffAgreed
+                         ? { background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }
+                         : { background: 'var(--gc-input-bg)', color: 'var(--gc-text-muted)', border: '1.5px solid var(--gc-border)' }}>
                        팀원들의 약속 읽어보기
                      </button>
                    </div>
                  </div>
 
-                 {/* Step 5: 프로젝트 시작 */}
                  <div className={`relative z-10 flex gap-3 md:gap-4 ${isKickoffAgreed ? '' : 'opacity-40'}`}>
-                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center shrink-0 border-4 border-white shadow-sm">
+                   <div className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shrink-0 border-4 border-white shadow-md"
+                     style={{ background: 'var(--gc-border)', color: 'var(--gc-text-muted)' }}>
                      <Flag size={20}/>
                    </div>
                    <div className="pt-2.5 md:pt-3">
-                     <h4 className="font-bold text-base md:text-lg text-gray-400">본격적인 프로젝트 시작!</h4>
+                     <h4 className="font-bold text-base md:text-lg" style={{ color: 'var(--gc-text-muted)' }}>본격적인 프로젝트 시작!</h4>
                    </div>
                  </div>
               </div>
