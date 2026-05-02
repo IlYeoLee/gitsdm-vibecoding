@@ -1075,12 +1075,13 @@ export default function App() {
 
               {/* Title + body — upper half, well above the walking characters */}
               <div className="absolute inset-x-0 top-0 h-[46%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700">
-                <h1
-                  className="text-[2.6rem] leading-[1.05] md:text-6xl lg:text-7xl font-bold mb-3.5 md:mb-5 tracking-tighter text-[#e5e7eb]"
-                  style={{ textShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
-                >
-                  첫날의 얼라인을<br />실전으로
-                </h1>
+                <img
+                  src={ASSET('logo-title.png')}
+                  alt="멤보딩"
+                  className="mb-3 md:mb-4 drop-shadow-2xl select-none"
+                  style={{ width: 'min(320px, 80vw)' }}
+                  draggable={false}
+                />
                 <p
                   className="text-[#d1d5db] text-sm md:text-base font-medium leading-relaxed max-w-[280px] md:max-w-sm"
                   style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
