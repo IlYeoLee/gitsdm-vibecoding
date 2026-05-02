@@ -48,6 +48,12 @@ label.font-bold, span.font-bold, div.font-bold, button.font-bold, p.font-bold {
   font-weight: 400 !important;
 }
 
+/* Jua minimum size — prevents overly tiny game text */
+.font-bold,
+label.font-bold, span.font-bold, div.font-bold, button.font-bold, p.font-bold {
+  font-size: max(15px, 1em) !important;
+}
+
 /* Medium stays Pretendard */
 .font-medium {
   font-family: "Pretendard Variable", Pretendard, sans-serif;

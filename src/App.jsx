@@ -12,6 +12,40 @@ import {
 // Vite handles base path (/ in dev, /gitsdm-vibecoding/ in prod build) — runtime asset URLs must be prefixed
 const ASSET = (p) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, '')}`;
 
+// PNG icons (game-style replacements for lucide-react where available)
+const ICO_PNGS = {
+  Phone: 'icons/Phone 1.png',
+  Users: 'icons/Users 1.png',
+  Plus: 'icons/Plus 1.png',
+  X: 'icons/X 1.png',
+  Upload: 'icons/Upload 1.png',
+  Sun: 'icons/Sun 1.png',
+  Moon: 'icons/Moon 1.png',
+  Sparkles: 'icons/Sparkles 1.png',
+  Zap: 'icons/Zap 1.png',
+  Trash2: 'icons/Trash2 1.png',
+  MapPinned: 'icons/MapPinned 1.png',
+  User: 'icons/User 1.png',
+  ZoomIn: 'icons/ZoomIn 1.png',
+  ZoomOut: 'icons/ZoomOut 1.png',
+  MessageCircle: 'icons/MessageCircle 1.png',
+  Monitor: 'icons/Monitor 1.png',
+  Navigation: 'icons/Navigation 1.png',
+  Smile: 'icons/Smile 1.png',
+  Share2: 'icons/Share2 1.png',
+  Map: 'icons/Map 1.png',
+  Link: 'icons/Link 1.png',
+};
+const Ico = ({ name, size = 20, className = '', style: s = {} }) => {
+  const src = ICO_PNGS[name];
+  if (!src) return null;
+  return (
+    <img src={ASSET(src)} alt="" draggable={false}
+      style={{ width: size, height: size, objectFit: 'contain', display: 'inline-block', flexShrink: 0, ...s }}
+      className={className} />
+  );
+};
+
 // --- Constants ---
 const VIEWS = {
   LANDING: 'landing',
@@ -468,7 +502,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
 
         <div className="px-5 md:px-8 py-4 md:py-6 flex justify-between items-center" style={{ borderBottom: '1.5px solid var(--gc-border)' }}>
            <h3 className="text-xl md:text-3xl font-bold" style={{ color: 'var(--gc-text)' }}>{title}</h3>
-           <button onClick={onClose} className="p-2 rounded-full transition-colors" style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><X size={18}/></button>
+           <button onClick={onClose} className="p-2 rounded-full transition-colors" style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><Ico name="X" size={18}/></button>
         </div>
         <div className="p-5 md:p-8 overflow-y-auto flex-1 pb-20 md:pb-8">
            {children}
@@ -552,7 +586,7 @@ const MemberDetailModal = ({ member, onClose }) => {
           style={{ background: `linear-gradient(to bottom, var(--gc-surface), transparent)` }}><div className="gpanel-handle"></div></div>
 
         <button onClick={onClose} className="absolute top-4 md:top-8 right-4 md:right-8 p-2.5 md:p-3 rounded-full z-20 transition-colors"
-          style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><X size={20} /></button>
+          style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><Ico name="X" size={20} /></button>
 
         <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-10">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
@@ -569,7 +603,7 @@ const MemberDetailModal = ({ member, onClose }) => {
               <p className="text-sm md:text-lg font-medium mb-3 md:mb-4" style={{ color: 'var(--gc-text-muted)' }}>{member.generation}</p>
               <div className="flex flex-wrap gap-2 md:gap-3">
                  {member.phone && <a href={`tel:${member.phone}`} className="px-3 md:px-4 py-2 md:py-2.5 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 font-medium text-xs md:text-sm transition-colors"
-                   style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-tan)' }}><Phone size={14}/> 전화</a>}
+                   style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-tan)' }}><Ico name="Phone" size={14}/> 전화</a>}
                  {member.snsLink && <a href={member.snsLink.startsWith('http') ? member.snsLink : `https://${member.snsLink}`} target="_blank" rel="noreferrer"
                    className="px-3 md:px-4 py-2 md:py-2.5 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 font-medium text-xs md:text-sm transition-colors"
                    style={{ background: 'rgba(225,48,108,0.08)', color: '#e1306c', border: '1.5px solid rgba(225,48,108,0.2)' }}><Instagram size={14}/> SNS</a>}
@@ -585,7 +619,7 @@ const MemberDetailModal = ({ member, onClose }) => {
                   <a key={i} href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noreferrer"
                     className="flex items-center gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium transition-colors"
                     style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-tan)' }}>
-                    <LinkIcon size={14} style={{ color: 'var(--gc-blue)' }} className="shrink-0"/><span className="truncate">{link}</span>
+                    <Ico name="Link" size={14} className="shrink-0"/><span className="truncate">{link}</span>
                   </a>
                 ))}
               </div>
@@ -612,8 +646,8 @@ const MemberDetailModal = ({ member, onClose }) => {
                     style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-tan)', color: 'var(--gc-text-sub)' }}>#{s}</span>)}
                </div>
                <div className="grid grid-cols-3 gap-2 md:gap-3">
-                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Sun size={16} className="mx-auto mb-1.5 md:mb-2" style={{ color: '#F59E0B' }}/><span className="text-xs md:text-sm font-bold">{member.schedule.start}</span></div>
-                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Moon size={16} className="mx-auto mb-1.5 md:mb-2" style={{ color: 'var(--gc-blue)' }}/><span className="text-xs md:text-sm font-bold">{member.schedule.night}</span></div>
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Sun" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.start}</span></div>
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Moon" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.night}</span></div>
                   <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Home size={16} className="mx-auto mb-1.5 md:mb-2" style={{ color: 'var(--gc-green)' }}/><span className="text-xs md:text-sm font-bold">{member.schedule.place}</span></div>
                </div>
             </div>
@@ -996,7 +1030,7 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Phone size={12}/> 연락처</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Phone" size={12}/> 연락처</label>
                 <input value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="010-0000-0000" />
               </div>
               <div className="space-y-1.5 md:space-y-2">
@@ -1006,7 +1040,7 @@ export default function App() {
             </div>
 
             <div className="space-y-2 md:space-y-3">
-              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><LinkIcon size={12}/> 포트폴리오 링크</label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Link" size={12}/> 포트폴리오 링크</label>
               {profileData.portfolioLinks.map((link, i) => (
                 <div key={i} className="flex gap-2 animate-in slide-in-from-top-1">
                    <input value={link} onChange={e => {
@@ -1014,10 +1048,10 @@ export default function App() {
                    }} className="flex-1 p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="https://..." />
                    <button onClick={() => setProfileData(p => ({...p, portfolioLinks: p.portfolioLinks.filter((_, idx) => idx !== i)}))}
                      className="p-3.5 md:p-4 rounded-xl shrink-0 transition-colors"
-                     style={{ background: 'rgba(232,84,84,0.1)', color: '#E85454' }}><Trash2 size={18}/></button>
+                     style={{ background: 'rgba(232,84,84,0.1)', color: '#E85454' }}><Ico name="Trash2" size={18}/></button>
                 </div>
               ))}
-              <Button variant="outline" className="w-full py-3 md:py-4 text-xs md:text-sm" onClick={() => setProfileData(p => ({...p, portfolioLinks: [...p.portfolioLinks, '']}))}><Plus size={14}/> 링크 추가하기</Button>
+              <Button variant="outline" className="w-full py-3 md:py-4 text-xs md:text-sm" onClick={() => setProfileData(p => ({...p, portfolioLinks: [...p.portfolioLinks, '']}))}><Ico name="Plus" size={14}/> 링크 추가하기</Button>
             </div>
 
             <div className="space-y-3 md:space-y-4">
@@ -1026,7 +1060,7 @@ export default function App() {
                  {profileData.workItems.map((item, i) => (
                    <div key={i} className="flex-shrink-0 w-[220px] md:w-[260px] p-3 md:p-4 gcard snap-start relative group" style={{ padding: '12px 14px' }}>
                       <img src={item.url} className="h-28 md:h-36 w-full object-cover rounded-xl md:rounded-2xl mb-3 md:mb-4" />
-                      <button onClick={() => setProfileData(p => ({...p, workItems: p.workItems.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 p-1.5 md:p-2 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"><X size={12}/></button>
+                      <button onClick={() => setProfileData(p => ({...p, workItems: p.workItems.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 p-1.5 md:p-2 bg-black/50 text-white rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"><Ico name="X" size={12}/></button>
                       <textarea value={item.description} onChange={e => {
                         const ni = [...profileData.workItems]; ni[i].description = e.target.value; setProfileData({...profileData, workItems: ni});
                       }} className="w-full p-2.5 md:p-3 rounded-xl text-xs font-medium h-16 md:h-20 outline-none resize-none transition-all" placeholder="작업물에 대한 설명" />
@@ -1037,7 +1071,7 @@ export default function App() {
                    className="flex-shrink-0 w-[220px] md:w-[260px] h-[200px] md:h-[250px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 md:gap-3 cursor-pointer transition-all"
                    style={{ borderColor: 'var(--gc-tan)', background: 'var(--gc-input-bg)' }}>
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center shadow-sm"
-                      style={{ background: 'var(--gc-surface)', color: 'var(--gc-text-muted)' }}><Upload size={20}/></div>
+                      style={{ background: 'var(--gc-surface)', color: 'var(--gc-text-muted)' }}><Ico name="Upload" size={20}/></div>
                     <span className="text-[11px] md:text-xs font-bold" style={{ color: 'var(--gc-text-muted)' }}>이미지 파일 추가</span>
                  </div>
               </div>
@@ -1085,8 +1119,8 @@ export default function App() {
               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>나의 작업 리듬 선호도</label>
               <div className="space-y-6 md:space-y-8">
                  {[
-                   { k: 'start', label: '시작 시간', opt: [{ v: '오전', d: '상쾌한 오전 시작', i: <Sun/> }, { v: '오후', d: '여유로운 오후 시작', i: <Coffee/> }] },
-                   { k: 'night', label: '밤샘 여부', opt: [{ v: '선호', d: '밤의 집중력 선호', i: <Moon/> }, { v: '비선호', d: '컨디션 관리 중시', i: <X/> }] },
+                   { k: 'start', label: '시작 시간', opt: [{ v: '오전', d: '상쾌한 오전 시작', i: <Ico name="Sun"/> }, { v: '오후', d: '여유로운 오후 시작', i: <Coffee/> }] },
+                   { k: 'night', label: '밤샘 여부', opt: [{ v: '선호', d: '밤의 집중력 선호', i: <Ico name="Moon"/> }, { v: '비선호', d: '컨디션 관리 중시', i: <Ico name="X"/> }] },
                    { k: 'place', label: '작업 장소', opt: [{ v: '출퇴근', d: '개인 공간/재택', i: <Building2/> }, { v: '멤박', d: '멤버십에서 자기', i: <Bed/> }] }
                  ].map(section => (
                    <div key={section.k} className="space-y-3 md:space-y-4">
@@ -1192,7 +1226,7 @@ export default function App() {
               <p className="text-xs md:text-sm font-medium text-white/55 mt-0.5">드래그해서 위치 조정 · 핀치/슬라이더로 확대</p>
             </div>
             <button onClick={() => setCropImageSrc(null)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
-              <X size={20}/>
+              <Ico name="X" size={20}/>
             </button>
           </div>
           <div className="relative flex-1 min-h-0">
@@ -1215,13 +1249,13 @@ export default function App() {
           </div>
           <div className="px-5 md:px-8 py-4 md:py-6 space-y-4 md:space-y-5" style={{ background: 'rgba(30,20,10,0.96)', borderTop: '2px solid var(--gc-gold-dark)' }}>
             <div className="flex items-center gap-3">
-              <ZoomOut size={18} className="text-white/55 shrink-0"/>
+              <Ico name="ZoomOut" size={18} className="text-white/55 shrink-0"/>
               <input
                 type="range" min={1} max={4} step={0.05} value={cropZoom}
                 onChange={e => setCropZoom(Number(e.target.value))}
                 className="flex-1" style={{ accentColor: 'var(--gc-gold)' }}
               />
-              <ZoomIn size={18} className="text-white/55 shrink-0"/>
+              <Ico name="ZoomIn" size={18} className="text-white/55 shrink-0"/>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setCropImageSrc(null)}
@@ -1360,7 +1394,7 @@ export default function App() {
               <p className="text-sm md:text-base font-medium" style={{ color: 'var(--gc-text-sub)' }}>
                 {team.targetSize}명을 선택하면 초대가 시작됩니다
               </p>
-              <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm"
+              <div className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-base"
                 style={{ background: selectedRoster.length >= team.targetSize ? 'rgba(91,184,92,0.15)' : 'rgba(74,144,226,0.12)',
                          color: selectedRoster.length >= team.targetSize ? 'var(--gc-green)' : 'var(--gc-blue)',
                          border: `1.5px solid ${selectedRoster.length >= team.targetSize ? 'var(--gc-green)' : 'rgba(74,144,226,0.3)'}` }}>
@@ -1368,7 +1402,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 md:gap-3 mb-8">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4 mb-8">
               {MEMBER_ROSTER.map(m => {
                 const isSel = selectedRoster.some(r => r.photo === m.photo);
                 return (
@@ -1382,23 +1416,23 @@ export default function App() {
                         setSelectedRoster(prev => [...prev, m]);
                       }
                     }}
-                    className="member-face-btn flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
+                    className="member-face-btn flex flex-col items-center gap-1.5 p-2.5 md:p-3 rounded-2xl transition-all"
                     style={isSel
                       ? { background: 'rgba(74,144,226,0.15)', border: '2px solid var(--gc-gold)', boxShadow: '0 3px 0 var(--gc-gold-dark)' }
                       : { border: '2px solid transparent', opacity: !isSel && selectedRoster.length >= team.targetSize ? 0.4 : 1 }}
                   >
                     <div className="relative">
                       <img src={ASSET(m.photo)} alt={m.name}
-                        className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover"
+                        className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover"
                         style={{ border: `2.5px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }} />
                       {isSel && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
                           style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 2px 0 var(--gc-blue-floor)' }}>
-                          <Check size={10} strokeWidth={3} color="#fff"/>
+                          <Check size={12} strokeWidth={3} color="#fff"/>
                         </div>
                       )}
                     </div>
-                    <span className="text-[9px] md:text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--gc-text)' }}>{m.name}</span>
+                    <span className="text-xs md:text-sm font-bold text-center leading-tight" style={{ color: 'var(--gc-text)' }}>{m.name}</span>
                   </button>
                 );
               })}
@@ -1467,7 +1501,7 @@ export default function App() {
             <div className="hidden lg:block w-[380px]">
               <div className="sticky top-32 space-y-6">
                 <div className="flex items-center gap-3 ml-2">
-                   <Sparkles size={20} style={{ color: 'var(--gc-gold)' }}/>
+                   <Ico name="Sparkles" size={20}/>
                    <span className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-sub)' }}>Real-time Card View</span>
                 </div>
                 <Card className="overflow-hidden p-0 hover:scale-[1.02] transition-all duration-500">
@@ -1491,8 +1525,8 @@ export default function App() {
                         style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}>{profileData.generation}</span>
                     </div>
                     <div className="flex gap-3 mb-5 opacity-50" style={{ color: 'var(--gc-text-sub)' }}>
-                      {profileData.phone && <Phone size={14}/>}
-                      {profileData.portfolioLinks.filter(l=>l).length > 0 && <LinkIcon size={14}/>}
+                      {profileData.phone && <Ico name="Phone" size={14}/>}
+                      {profileData.portfolioLinks.filter(l=>l).length > 0 && <Ico name="Link" size={14}/>}
                     </div>
                     <p className="text-base font-medium italic line-clamp-3 leading-relaxed" style={{ color: 'var(--gc-text-sub)' }}>
                       "{profileData.workItems[0]?.description || '작업물에 대한 설명이 여기에 요약되어 표시됩니다.'}"
@@ -1524,7 +1558,7 @@ export default function App() {
 
                  <div className="relative z-10 flex gap-3 md:gap-4">
                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full text-white flex items-center justify-center shrink-0 border-4 border-white shadow-md"
-                     style={{ background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }}><MapPinned size={20}/></div>
+                     style={{ background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }}><Ico name="MapPinned" size={20}/></div>
                    <div className="pt-2.5 md:pt-3">
                      <h4 className="font-bold text-base md:text-lg line-through" style={{ color: 'var(--gc-text-muted)' }}>프로젝트 아지트 생성</h4>
                    </div>
@@ -1535,7 +1569,7 @@ export default function App() {
                      style={isAligned
                        ? { background: `linear-gradient(to bottom, #6DD56E, var(--gc-green))`, boxShadow: `0 3px 0 var(--gc-green-floor)` }
                        : { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }}>
-                     {isAligned ? <CheckCircle2 size={20}/> : <Users size={20}/>}
+                     {isAligned ? <CheckCircle2 size={20}/> : <Ico name="Users" size={20}/>}
                    </div>
                    <div className="pt-1.5 md:pt-2 flex-1">
                      <h4 className="font-bold text-base md:text-lg mb-1"
@@ -1544,7 +1578,7 @@ export default function App() {
                      {!isAligned && (
                        <button onClick={copyInviteLink} className="mt-1.5 md:mt-2 px-3.5 md:px-4 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-colors"
                          style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)', border: '1.5px solid rgba(74,144,226,0.25)' }}>
-                         <Plus size={14}/> 초대 링크 복사하기
+                         <Ico name="Plus" size={14}/> 초대 링크 복사하기
                        </button>
                      )}
                    </div>
@@ -1632,7 +1666,7 @@ export default function App() {
                  <button onClick={copyInviteLink}
                    className="w-full p-4 md:p-6 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm md:text-base transition-all"
                    style={{ border: '2px dashed var(--gc-tan)', color: 'var(--gc-text-sub)', background: 'var(--gc-input-bg)' }}>
-                    <Plus size={18}/> 팀원 더 초대하기
+                    <Ico name="Plus" size={18}/> 팀원 더 초대하기
                  </button>
               </div>
             </BottomSheet>
@@ -1783,7 +1817,7 @@ export default function App() {
                 <div className="flex items-center gap-2.5 md:gap-3">
                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-md border-2 border-white font-bold shrink-0 transition-colors"
                     style={{ background: isAligned ? 'linear-gradient(135deg, #5BB85C, #3B7C3C)' : 'linear-gradient(135deg, #FFD54F, #FFCA28)', color: isAligned ? '#fff' : '#7A5C00' }}>
-                     {isAligned ? <Flag size={16} fill="currentColor"/> : <Zap size={16} fill="currentColor"/>}
+                     {isAligned ? <Flag size={16} fill="currentColor"/> : <Ico name="Zap" size={16}/>}
                   </div>
                   <div className="flex-1 gprogress-track">
                      <div className="gprogress-fill" style={{ width: `${Math.min((currentMembers / targetMembers) * 100, 100)}%` }} />
@@ -1818,7 +1852,7 @@ export default function App() {
                </button>
                <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
                   <div className="w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors"
-                    style={{ color: 'var(--gc-text-sub)' }}><Users size={20} /></div>
+                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="Users" size={20} /></div>
                   <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Members</span>
                </button>
                <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
