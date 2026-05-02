@@ -129,7 +129,7 @@ const playSfx = () => {
   try {
     if (!_sfx) {
       _sfx = new Audio(ASSET('sfx-tap.mp4'));
-      _sfx.volume = 0.8;
+      _sfx.volume = BGM_VOL * 0.8;
     }
     _sfx.currentTime = 0;
     _sfx.play().catch(() => {});
@@ -143,7 +143,7 @@ const playCheerSfx = () => {
   try {
     if (!_sfxCheer) {
       _sfxCheer = new Audio(ASSET('sfx-cheer.mp3'));
-      _sfxCheer.volume = 1.0;
+      _sfxCheer.volume = BGM_VOL * 0.8;
     }
     _sfxCheer.currentTime = 0;
     _sfxCheer.play().catch(() => {});
@@ -1008,8 +1008,11 @@ export default function App() {
     pursuits: '', avoid: '', intro: ''
   });
 
-  // Scroll to top on every view or step change
-  useEffect(() => { window.scrollTo(0, 0); }, [view]);
+  // Scroll to top and reset transient view state on navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (view !== VIEWS.ROSTER_SELECT) setRosterSearch('');
+  }, [view]);
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
 
   // BGM: persist muted state; sync module-level flag for SFX; auto-start on first interaction
@@ -1076,6 +1079,9 @@ export default function App() {
           setView(VIEWS.INVITE_LANDING);
         }
       }
+    }).catch(() => {
+      setTeam({ id: teamId, name: '초대받은 프로젝트', category: '파운데이션', targetSize: 4, members: [], kickoff: {} });
+      setView(VIEWS.INVITE_LANDING);
     });
   }, []);
 
@@ -1249,7 +1255,7 @@ export default function App() {
   };
 
   const markRulesViewed = () => {
-    if (!currentMemberId || (kickoff.rulesViewed || {})[currentMemberId]) return;
+    if (!currentMemberId || !team.id || (kickoff.rulesViewed || {})[currentMemberId]) return;
     const k = { ...kickoff, rulesViewed: { ...(kickoff.rulesViewed || {}), [currentMemberId]: true } };
     const t = { ...team, kickoff: k };
     setTeam(t); saveTeamToLocal(t);
@@ -1288,9 +1294,10 @@ export default function App() {
       setIsJumping(true);
       setShowConfetti(true);
       setShowProjectStart(true);
-      setTimeout(() => setShowConfetti(false), 2200);
-      setTimeout(() => { setIsJumping(false); setActiveCheerMessages({}); }, 2600);
-      setTimeout(() => setShowProjectStart(false), 4000);
+      const t1 = setTimeout(() => setShowConfetti(false), 2200);
+      const t2 = setTimeout(() => { setIsJumping(false); setActiveCheerMessages({}); }, 2600);
+      const t3 = setTimeout(() => setShowProjectStart(false), 4000);
+      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     }
     prevKickoffAgreed.current = isKickoffAgreed;
   }, [isKickoffAgreed]);
@@ -2237,7 +2244,7 @@ export default function App() {
                      style={{ padding: '12px 16px' }}>
                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-2xl shrink-0 overflow-hidden"
                         style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>
-                        {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : member.name[0]}
+                        {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0] ?? '?')}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5 md:mb-1">
@@ -2264,7 +2271,7 @@ export default function App() {
                    <div key={member.id} className="gcard space-y-3 md:space-y-4">
                      <div className="flex items-center gap-2 mb-1 md:mb-2">
                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-                         style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>{member.name[0]}</div>
+                         style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>{(member.name?.[0] ?? '?')}</div>
                        <span className="font-bold text-sm md:text-base">{member.name} 님의 약속</span>
                      </div>
                      <div className="p-3.5 md:p-4 rounded-xl md:rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
