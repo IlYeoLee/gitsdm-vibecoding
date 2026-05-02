@@ -13,15 +13,59 @@ import {
 // Vite handles base path (/ in dev, /gitsdm-vibecoding/ in prod build) — runtime asset URLs must be prefixed
 const ASSET = (p) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, '')}`;
 
-// Module-level BGM (lazy init so no autoplay before user gesture)
+// Module-level BGM with fade-in / fade-out on loop
 let _bgm = null;
+let _bgmReady = false;
+const BGM_VOL  = 0.28;
+const FADE_SECS = 1.8; // subtle fade at start/end of each loop
+
 const getBgm = () => {
   if (!_bgm) {
     _bgm = new Audio(ASSET('bgm.mp3'));
-    _bgm.loop = true;
-    _bgm.volume = 0.3;
+    _bgm.loop   = false;
+    _bgm.volume = 0;
   }
   return _bgm;
+};
+
+const _setupBgm = () => {
+  if (_bgmReady) return;
+  _bgmReady = true;
+  const b = getBgm();
+  b.addEventListener('timeupdate', () => {
+    if (!b.duration || b.paused) return;
+    const pos = b.currentTime;
+    const rem = b.duration - pos;
+    if      (rem < FADE_SECS) b.volume = BGM_VOL * Math.max(0, rem / FADE_SECS);
+    else if (pos < FADE_SECS) b.volume = BGM_VOL * Math.min(1, pos / FADE_SECS);
+    else                       b.volume = BGM_VOL;
+  });
+  b.addEventListener('ended', () => {
+    b.currentTime = 0;
+    b.volume = 0;
+    b.play().catch(() => {});
+  });
+};
+
+const playBgm = () => {
+  _setupBgm();
+  const b = getBgm();
+  b.currentTime = 0;
+  b.volume = 0;
+  b.play().catch(() => {});
+};
+
+const pauseBgm = () => {
+  const b = getBgm();
+  const from = b.volume;
+  const t0 = performance.now();
+  const tick = (now) => {
+    const p = Math.min((now - t0) / 500, 1);
+    b.volume = from * (1 - p);
+    if (p < 1) requestAnimationFrame(tick);
+    else b.pause();
+  };
+  requestAnimationFrame(tick);
 };
 
 // SFX tap — plays on every CTA button press
@@ -872,7 +916,7 @@ export default function App() {
   const [activeCheerMessages, setActiveCheerMessages] = useState({});
   const [showConfetti, setShowConfetti] = useState(false);
   const [isMuted, setIsMuted] = useState(() => {
-    try { return localStorage.getItem('ALIGN_MUTED') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
 
   // Photo crop modal state
@@ -894,9 +938,15 @@ export default function App() {
   useEffect(() => { window.scrollTo(0, 0); }, [view]);
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
 
-  // BGM: persist muted state only — actual play/pause happens in the click handler
+  // BGM: persist muted state; auto-start on first user interaction if unmuted
   useEffect(() => {
     try { localStorage.setItem('ALIGN_MUTED', String(isMuted)); } catch {}
+  }, [isMuted]);
+  useEffect(() => {
+    if (isMuted) return;
+    const handler = () => { playBgm(); };
+    document.addEventListener('pointerdown', handler, { once: true });
+    return () => document.removeEventListener('pointerdown', handler);
   }, [isMuted]);
 
   useEffect(() => {
@@ -1534,15 +1584,6 @@ export default function App() {
             />
 
             <div className="absolute inset-0 z-[70]">
-              {/* Mute toggle — top-right, safe inset */}
-              <button
-                onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) getBgm().play().catch(()=>{}); else getBgm().pause(); }}
-                className="gbtn gbtn-secondary"
-                style={{ position: 'absolute', zIndex: 80, top: 'max(16px, env(safe-area-inset-top, 16px))', right: '20px', padding: '7px 12px', fontSize: '12px', gap: '5px' }}
-              >
-                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
-              </button>
               <style>{`
                 @keyframes subtitleLine {
                   0%   { opacity: 0; transform: translateY(10px); }
@@ -1556,7 +1597,7 @@ export default function App() {
                 .sl2 { animation-delay: 0.38s; }
                 .sl3 { animation-delay: 0.76s; }
               `}</style>
-              {/* Title + body — upper portion */}
+              {/* Title + body — upper portion; BGM button anchored to its bottom-right */}
               <div className="absolute inset-x-0 top-0 h-[46%] md:h-[36%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700 gap-3 md:gap-4">
                 <img
                   src={ASSET('memboding-title.png')}
@@ -1582,6 +1623,15 @@ export default function App() {
                   <span className="sl sl2">어색한 소개는 스킵하고,</span>
                   <span className="sl sl3">함께 일할 준비부터 완료하세요.</span>
                 </div>
+                {/* BGM button — bottom-right of this section so it never overlaps with title content */}
+                <button
+                  onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) playBgm(); else pauseBgm(); }}
+                  className="gbtn gbtn-secondary"
+                  style={{ position: 'absolute', bottom: 12, right: 16, padding: '7px 12px', fontSize: '12px', gap: '5px' }}
+                >
+                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
+                </button>
               </div>
 
               {/* CTA button */}
@@ -2064,16 +2114,6 @@ export default function App() {
               </div>
             </BottomSheet>
 
-            {/* Mute toggle — top-right corner on dashboard, safe inset */}
-            <button
-              onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) getBgm().play().catch(()=>{}); else getBgm().pause(); }}
-              className="gbtn gbtn-secondary"
-              style={{ position: 'absolute', zIndex: 50, top: 'max(12px, env(safe-area-inset-top, 12px))', right: '20px', padding: '7px 12px', fontSize: '12px', gap: '5px' }}
-            >
-              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
-            </button>
-
             <div className="absolute top-3 md:top-8 w-[calc(100%-1.5rem)] md:w-[calc(100%-2rem)] max-w-sm md:max-w-md left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 md:gap-2.5">
               <div
                 onClick={() => setShowJourneySheet(true)}
@@ -2104,16 +2144,26 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Cheer button — just below progress bar */}
-              <button
-                onClick={handleCheer}
-                disabled={isJumping || getSceneMembers().length === 0}
-                className="gbtn gbtn-primary animate-in slide-in-from-top-4 duration-700 disabled:opacity-40"
-                style={{ fontSize: '16px', padding: '14px 32px', boxShadow: '0 5px 0 var(--gc-blue-floor), 0 8px 24px rgba(58,126,204,0.45)' }}
-              >
-                <Ico name="Party" size={24} className={isJumping ? 'animate-spin' : ''}/>
-                우리 팀 응원하기
-              </button>
+              {/* Cheer + BGM row — always below the progress widget */}
+              <div className="flex items-center gap-2 w-full justify-center">
+                <button
+                  onClick={handleCheer}
+                  disabled={isJumping || getSceneMembers().length === 0}
+                  className="gbtn gbtn-primary animate-in slide-in-from-top-4 duration-700 disabled:opacity-40"
+                  style={{ fontSize: '16px', padding: '14px 24px', boxShadow: '0 5px 0 var(--gc-blue-floor), 0 8px 24px rgba(58,126,204,0.45)', flex: 1 }}
+                >
+                  <Ico name="Party" size={22} className={isJumping ? 'animate-spin' : ''}/>
+                  우리 팀 응원하기
+                </button>
+                <button
+                  onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) playBgm(); else pauseBgm(); }}
+                  className="gbtn gbtn-secondary animate-in slide-in-from-top-4 duration-700"
+                  style={{ padding: '14px 14px', flexShrink: 0 }}
+                  title={isMuted ? 'BGM 켜기' : 'BGM 끄기'}
+                >
+                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                </button>
+              </div>
             </div>
 
             <div className="absolute bottom-0 md:bottom-6 w-full max-w-md md:max-w-2xl lg:max-w-4xl flex items-center justify-around px-6 md:px-16 z-50 transition-all py-3 md:py-4"
