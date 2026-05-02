@@ -2369,8 +2369,12 @@ export default function App() {
                  {getSceneMembers().map(member => (
                    <div key={member.id} className="gcard space-y-3 md:space-y-4" style={{ opacity: member._isPending ? 0.5 : 1 }}>
                      <div className="flex items-center gap-2 mb-1 md:mb-2">
-                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-                         style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>{(member.name?.[0] ?? '?')}</div>
+                       <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+                         style={{ background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))` }}>
+                         {member.photoUrl
+                           ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover"/>
+                           : (member.name?.[0] ?? '?')}
+                       </div>
                        <span className="font-bold text-sm md:text-base">{member.name} 님의 약속</span>
                      </div>
                      {member._isPending ? (
@@ -2471,13 +2475,19 @@ export default function App() {
                         <p className="text-xl md:text-2xl font-bold" style={{ color: 'var(--gc-blue)' }}>{formatSlot(kickoff.proposal)}</p>
                         <div className="flex items-center gap-3 flex-wrap">
                           <span className="text-xs md:text-sm font-medium" style={{ color: 'var(--gc-text-sub)' }}>{Object.keys(kickoff.agreements || {}).length}/{_rMembers.length}명 동의</span>
-                          <div className="flex gap-1">
-                            {getSceneMembers().map(m => (
-                              <div key={m.id} title={m.name} className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                                style={{ background: m._isPending ? 'var(--gc-border)' : (kickoff.agreements || {})[m.id] ? 'var(--gc-green)' : 'rgba(180,120,60,0.3)' }}>
-                                {m.name?.[0]}
-                              </div>
-                            ))}
+                          <div className="flex gap-1.5">
+                            {getSceneMembers().map(m => {
+                              const agreed = !m._isPending && (kickoff.agreements || {})[m.id];
+                              const borderColor = m._isPending ? 'var(--gc-border)' : agreed ? 'var(--gc-green)' : 'rgba(180,120,60,0.3)';
+                              return (
+                                <div key={m.id} title={m.name} className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                                  style={{ border: `2.5px solid ${borderColor}`, background: m.photoUrl ? 'transparent' : m._isPending ? 'var(--gc-border)' : 'var(--gc-blue)' }}>
+                                  {m.photoUrl
+                                    ? <img src={m.photoUrl} alt={m.name} className="w-full h-full object-cover"/>
+                                    : (m.name?.[0])}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                         {!(kickoff.agreements || {})[currentMemberId] ? (
