@@ -173,6 +173,8 @@ input::placeholder, textarea::placeholder {
 
 /* ── Game Card ───────────────────────────────────────────────────────── */
 .gcard {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(145deg, #FFFDF7, #FFF4E0);
   border: 2px solid var(--gc-gold);
   border-radius: 22px;

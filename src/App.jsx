@@ -119,9 +119,13 @@ const decryptMember = async (ck, m) => {
   return out;
 };
 
+// Shared mute flag — updated from React state via useEffect
+let _globalMuted = false;
+
 // SFX tap — plays on every CTA button press
 let _sfx = null;
 const playSfx = () => {
+  if (_globalMuted) return;
   try {
     if (!_sfx) {
       _sfx = new Audio(ASSET('sfx-tap.mp4'));
@@ -135,6 +139,7 @@ const playSfx = () => {
 // SFX cheer — plays when "우리 팀 응원하기" is triggered
 let _sfxCheer = null;
 const playCheerSfx = () => {
+  if (_globalMuted) return;
   try {
     if (!_sfxCheer) {
       _sfxCheer = new Audio(ASSET('sfx-cheer.mp3'));
@@ -277,12 +282,15 @@ const copyToClipboard = (text) => {
   }
 };
 
+const PROD_URL = 'https://ilyeolee.github.io/gitsdm-vibecoding/';
 const getInviteUrl = (teamId) => {
-  let baseUrl = window.location.href.split('?')[0];
-  if (baseUrl.startsWith('blob:') || baseUrl === 'null') {
-    return `https://align-os.app/?teamId=${teamId}`;
+  let baseUrl = window.location.href.split('?')[0].split('#')[0];
+  if (baseUrl.startsWith('blob:') || baseUrl === 'null' ||
+      baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') ||
+      !baseUrl.startsWith('https://')) {
+    baseUrl = PROD_URL;
   }
-  return `${baseUrl}?teamId=${teamId}`;
+  return `${baseUrl.replace(/\/$/, '')}/?teamId=${teamId}`;
 };
 
 // --- UI Components ---
@@ -724,15 +732,15 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center pointer-events-auto p-0 md:p-6">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
-      <div className="relative w-full max-w-md md:max-w-2xl h-[85vh] md:h-auto md:max-h-[85vh] gpanel-bg rounded-t-[32px] md:rounded-[32px] shadow-2xl animate-in slide-in-from-bottom md:zoom-in-95 flex flex-col transition-all"
+      <div className="relative w-full max-w-md md:max-w-2xl h-[85vh] md:h-auto md:max-h-[85vh] gpanel-bg rounded-t-[32px] md:rounded-[32px] shadow-2xl animate-in slide-in-from-bottom md:zoom-in-95 flex flex-col transition-all overflow-hidden"
         style={{ border: '2px solid var(--gc-gold)', borderBottom: 'none' }}>
         <div className="w-full flex justify-center py-3 md:hidden"><div className="gpanel-handle"></div></div>
 
-        <div className="px-5 md:px-8 py-4 md:py-6 flex justify-between items-center" style={{ borderBottom: '1.5px solid var(--gc-border)' }}>
+        <div className="px-5 md:px-8 py-4 md:py-6 flex justify-between items-center shrink-0" style={{ borderBottom: '1.5px solid var(--gc-border)' }}>
            <h3 className="text-xl md:text-3xl font-bold" style={{ color: 'var(--gc-text)' }}>{title}</h3>
            <button onClick={onClose} className="p-2 rounded-full transition-colors" style={{ background: 'var(--gc-border)', color: 'var(--gc-text)' }}><Ico name="X" size={18}/></button>
         </div>
-        <div className="p-5 md:p-8 overflow-y-auto flex-1 pb-20 md:pb-8">
+        <div className="p-5 md:p-8 overflow-y-auto scrollbar-hide flex-1 pb-20 md:pb-8">
            {children}
         </div>
       </div>
@@ -950,6 +958,7 @@ export default function App() {
   const [demoMembers] = useState(() => getRandomDemoMembers());
   const [team, setTeam] = useState({ id: '', name: '', category: PROJECT_CATEGORIES[0], targetSize: 4, members: [], kickoff: {} });
   const [selectedRoster, setSelectedRoster] = useState([]);
+  const [rosterSearch, setRosterSearch] = useState('');
   const [step, setStep] = useState(1);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -992,8 +1001,9 @@ export default function App() {
   useEffect(() => { window.scrollTo(0, 0); }, [view]);
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
 
-  // BGM: persist muted state; auto-start on first user interaction if unmuted
+  // BGM: persist muted state; sync module-level flag for SFX; auto-start on first interaction
   useEffect(() => {
+    _globalMuted = isMuted;
     try { localStorage.setItem('ALIGN_MUTED', String(isMuted)); } catch {}
   }, [isMuted]);
   useEffect(() => {
@@ -1508,13 +1518,17 @@ export default function App() {
               <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1" style={{ color: 'var(--gc-text-sub)' }}>나의 작업 리듬 선호도</label>
               <div className="space-y-6 md:space-y-8">
                  {[
-                   { k: 'start', label: '시작 시간', opt: [{ v: '오전', d: '상쾌한 오전 시작', i: 'Sun' }, { v: '오후', d: '여유로운 오후 시작', i: 'Coffee' }] },
+                   { k: 'start', label: '작업 시간대', opt: [
+                     { v: '오전', d: '08:00 – 11:00', i: 'Sun' },
+                     { v: '오후', d: '14:00 – 17:00', i: 'Coffee' },
+                     { v: '밤',   d: '19:00 – 22:00', i: 'Moon' }
+                   ]},
                    { k: 'night', label: '밤샘 여부', opt: [{ v: '선호', d: '밤의 집중력 선호', i: 'Moon' }, { v: '비선호', d: '컨디션 관리 중시', i: 'X' }] },
                    { k: 'place', label: '작업 장소', opt: [{ v: '출퇴근', d: '개인 공간/재택', i: 'Building2' }, { v: '멤박', d: '멤버십에서 자기', i: 'Bed' }] }
                  ].map(section => (
                    <div key={section.k} className="space-y-3 md:space-y-4">
                       <div className="flex items-center gap-2 text-sm md:text-base font-bold" style={{ color: 'var(--gc-text)' }}>{section.label}</div>
-                      <div className="grid grid-cols-2 gap-2.5 md:gap-4">
+                      <div className={`grid gap-2.5 md:gap-4 ${section.opt.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                         {section.opt.map(opt => {
                           const sel = profileData.schedule[section.k] === opt.v;
                           return (
@@ -1689,7 +1703,7 @@ export default function App() {
       )}
 
       {view !== VIEWS.DASHBOARD && view !== VIEWS.LANDING && view !== VIEWS.INVITE_LANDING && (
-        <nav className="sticky top-0 z-50 gnav-bar px-4 md:px-6 py-2.5 md:py-3">
+        <nav className="sticky top-0 z-50 gnav-bar px-[60px] py-2.5 md:py-3">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
             <img src={ASSET('memboding-title.png')} alt="멤보딩" draggable={false}
               onClick={() => setView(VIEWS.LANDING)}
@@ -1728,13 +1742,13 @@ export default function App() {
                 .sl2 { animation-delay: 0.38s; }
                 .sl3 { animation-delay: 0.76s; }
               `}</style>
-              {/* Title + body — upper portion; BGM button anchored to its bottom-right */}
+              {/* Title + body — upper portion */}
               <div className="absolute inset-x-0 top-0 h-[46%] md:h-[36%] flex flex-col items-center justify-center px-6 text-center animate-in fade-in slide-in-from-top-4 duration-700 gap-3 md:gap-4">
                 <img
                   src={ASSET('memboding-title.png')}
                   alt="멤보딩"
                   className="drop-shadow-2xl select-none"
-                  style={{ width: 'min(280px, 72vw)' }}
+                  style={{ width: 'min(320px, 82vw)' }}
                   draggable={false}
                 />
                 <div className="px-5 py-3 md:py-4 rounded-2xl text-sm md:text-base leading-relaxed max-w-[280px] md:max-w-sm"
@@ -1754,16 +1768,16 @@ export default function App() {
                   <span className="sl sl2">어색한 소개는 스킵하고,</span>
                   <span className="sl sl3">함께 일할 준비부터 완료하세요.</span>
                 </div>
-                {/* BGM button — bottom-right of this section so it never overlaps with title content */}
-                <button
-                  onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) playBgm(); else pauseBgm(); }}
-                  className="gbtn gbtn-secondary"
-                  style={{ position: 'absolute', bottom: 12, right: 16, padding: '7px 12px', fontSize: '12px', gap: '5px' }}
-                >
-                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                  <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
-                </button>
               </div>
+              {/* BGM button — fixed top-right, always above scene */}
+              <button
+                onClick={() => { playSfx(); const next = !isMuted; setIsMuted(next); if (!next) playBgm(); else pauseBgm(); }}
+                className="gbtn gbtn-secondary"
+                style={{ position: 'fixed', top: 16, right: 16, zIndex: 80, padding: '7px 12px', fontSize: '12px', gap: '5px' }}
+              >
+                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
+              </button>
 
               {/* CTA button */}
               <div
@@ -1867,8 +1881,28 @@ export default function App() {
               </div>
             </div>
 
+            {/* Name search */}
+            <div className="relative mb-4">
+              <input
+                type="text"
+                placeholder="이름으로 검색..."
+                value={rosterSearch}
+                onChange={e => setRosterSearch(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl text-base"
+                style={{ paddingLeft: '44px' }}
+              />
+              <Ico name="Search" size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--gc-text-muted)' }} />
+              {rosterSearch && (
+                <button onClick={() => setRosterSearch('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full"
+                  style={{ color: 'var(--gc-text-muted)' }}>
+                  <X size={16}/>
+                </button>
+              )}
+            </div>
+
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4 mb-4">
-              {MEMBER_ROSTER.map(m => {
+              {MEMBER_ROSTER.filter(m => !rosterSearch || m.name.includes(rosterSearch)).map(m => {
                 const isSel = selectedRoster.some(r => r.photo === m.photo);
                 return (
                   <button
