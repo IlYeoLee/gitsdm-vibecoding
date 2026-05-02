@@ -368,17 +368,23 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
     }
   };
 
-  // Tiered character sizing: mobile base is larger, scales down gracefully with more members
-  // naturalSpacing ≈ naturalCharWidth * 0.8 → allows snug walking without overlap on small screens
+  // 5+ members → 2 rows so characters stay larger
+  const shouldSplit = members.length >= 5;
+  const row1Members = shouldSplit ? members.slice(0, Math.ceil(members.length / 2)) : members;
+  const row2Members = shouldSplit ? members.slice(Math.ceil(members.length / 2)) : [];
+  const maxRowLen   = shouldSplit ? Math.max(row1Members.length, row2Members.length) : members.length;
+
   const naturalCharWidth = isMobile ? 110 : 150;
-  const naturalSpacing   = isMobile ? 88  : 160;
-  const usableWidth = viewportWidth * (isMobile ? 0.96 : 0.80);
-  const minScale = isMobile ? 0.48 : 0.40;
-  const requiredWidth = Math.max(1, members.length) * naturalSpacing;
+  const naturalSpacing   = isMobile ? 82  : 140;
+  const usableWidth = viewportWidth * (isMobile ? 0.96 : 0.82);
+  const minScale = isMobile ? 0.55 : 0.52;
+  const requiredWidth = Math.max(1, maxRowLen) * naturalSpacing;
   const fitScale = requiredWidth > usableWidth ? Math.max(minScale, usableWidth / requiredWidth) : 1;
   const charWidth  = naturalCharWidth * fitScale;
   const charHeight = charWidth * SPRITE_ASPECT;
   const charOffset = naturalSpacing * fitScale;
+  // Row vertical gap: back row sits charHeight*0.65 above front row baseline
+  const rowShift = shouldSplit ? charHeight * 0.68 : 0;
 
   return (
     <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
@@ -419,101 +425,133 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
         ))}
       </div>
 
-      {/* Layer 3: Characters — clear of tab nav (mobile 80px, desktop 144px from bottom) */}
+      {/* Layer 3: Characters — 2-row layout for 5+ members */}
       <div
         className="absolute w-full pointer-events-auto flex items-end justify-center z-50"
-        style={{ height: `${charHeight + 70}px`, bottom: isMobile ? '100px' : '170px' }}
+        style={{
+          height: `${charHeight * (shouldSplit ? 1.82 : 1) + 72}px`,
+          bottom: isMobile ? '96px' : '160px',
+        }}
       >
-        {members.map((member, index) => {
-          const indexOffset = index - (members.length - 1) / 2;
-          const zIndex = 50 - index;
-          const frame = ((tick + index) % SPRITE_FRAME_COUNT) + 1;
-          const ringColor = getRoleColor(member.role);
-          const roleKey = ROLE_SPRITES[member.role] ? member.role : 'ID';
-          const spriteInfo = ROLE_SPRITES[roleKey];
-          const faceFrame = spriteInfo.frames[frame - 1];
-          const photoSize = charWidth * spriteInfo.dia;
-          const faceLeft = charWidth * faceFrame.cx - photoSize / 2;
-          const faceTop = charHeight * faceFrame.cy - photoSize / 2;
+        {[
+          { rowMembers: shouldSplit ? row2Members : null, isBack: false, zBase: 60 },
+          { rowMembers: shouldSplit ? row1Members : null, isBack: true,  zBase: 30 },
+          { rowMembers: shouldSplit ? null : members,      isBack: false, zBase: 60 },
+        ].map(({ rowMembers: rm, isBack, zBase }) => {
+          if (!rm) return null;
+          return rm.map((member, index) => {
+            const rowLen = rm.length;
+            const indexOffset = index - (rowLen - 1) / 2;
+            const globalIndex = isBack
+              ? members.indexOf(member)
+              : members.indexOf(member);
+            const zIndex = zBase - index;
+            const frame = ((tick + globalIndex) % SPRITE_FRAME_COUNT) + 1;
+            const ringColor = getRoleColor(member.role);
+            const roleKey = ROLE_SPRITES[member.role] ? member.role : 'ID';
+            const spriteInfo = ROLE_SPRITES[roleKey];
+            const faceFrame = spriteInfo.frames[frame - 1];
+            const photoSize = charWidth * spriteInfo.dia;
+            const faceLeft = charWidth * faceFrame.cx - photoSize / 2;
+            const faceTop = charHeight * faceFrame.cy - photoSize / 2;
 
-          const cheerMsg = cheerMessages?.[member.id];
-          const bubbleText = cheerMsg || `"${member.intro || '안녕!'}"`;
-          const bubbleBg = cheerMsg ? 'bg-[#3182f6]' : 'bg-white';
-          const bubbleText2 = cheerMsg ? 'text-white' : 'text-[#4e5968]';
-          const bubbleBorder = cheerMsg ? 'border-[#3182f6]' : 'border-gray-100';
-          const tailBg = cheerMsg ? 'bg-[#3182f6]' : 'bg-white';
+            const cheerMsg = cheerMessages?.[member.id];
+            const bubbleText = cheerMsg || `"${member.intro || '안녕!'}"`;
+            const bubbleBg   = cheerMsg ? '#3182f6' : '#fff';
+            const bubbleTextColor = cheerMsg ? '#fff' : '#4e5968';
+            const bubbleBorderColor = cheerMsg ? '#3182f6' : '#e5e7eb';
 
-          return (
-            <div
-              key={member.id}
-              className="absolute bottom-0 flex flex-col items-center cursor-pointer"
-              style={{ transform: `translateX(${indexOffset * charOffset}px)`, zIndex }}
-            >
-              {/* Inner wrapper gets jump animation; click still fires on outer */}
+            // Back-row chars sit higher; front-row at floor
+            const bottomPos = isBack ? rowShift : 0;
+
+            return (
               <div
-                className={`flex flex-col items-center hover:scale-110 transition-transform ${isJumping ? 'char-jumping' : ''}`}
-                style={{ animationDelay: `${index * 55}ms` }}
-                onClick={() => onMemberClick(member)}
+                key={member.id}
+                className="absolute flex flex-col items-center cursor-pointer"
+                style={{ transform: `translateX(${indexOffset * charOffset}px)`, zIndex, bottom: `${bottomPos}px` }}
               >
-                {/* Speech Bubble */}
                 <div
-                  className={`absolute ${bubbleBg} ${bubbleBorder} border px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl shadow-md animate-in fade-in zoom-in duration-300 whitespace-nowrap text-center transition-all bubble-float`}
-                  style={{ bottom: `${charHeight + 8}px`, animationDelay: `${(index * 0.55) % 2.5}s` }}
+                  className={`flex flex-col items-center hover:scale-110 transition-transform ${isJumping ? 'char-jumping' : ''}`}
+                  style={{ animationDelay: `${globalIndex * 55}ms` }}
+                  onClick={() => onMemberClick(member)}
                 >
+                  {/* Speech Bubble — sits above character, compact */}
                   <div
-                    className={`text-[10px] md:text-sm font-bold ${bubbleText2} truncate`}
-                    style={{ maxWidth: `${charWidth + 70}px` }}
-                  >{bubbleText}</div>
-                  <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 ${tailBg} rotate-45 border-b border-r ${bubbleBorder}`}></div>
+                    className="absolute bubble-float animate-in fade-in zoom-in duration-300"
+                    style={{
+                      bottom: `${charHeight + 6}px`,
+                      animationDelay: `${(globalIndex * 0.55) % 2.5}s`,
+                      background: bubbleBg,
+                      border: `1.5px solid ${bubbleBorderColor}`,
+                      borderRadius: '10px',
+                      padding: '4px 10px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                      whiteSpace: 'nowrap',
+                      maxWidth: `${charWidth + 50}px`,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', fontFamily: "'Jua', sans-serif", color: bubbleTextColor, letterSpacing: '-0.02em' }}>
+                      {bubbleText}
+                    </div>
+                    <div style={{
+                      position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%) rotate(45deg)',
+                      width: '8px', height: '8px', background: bubbleBg,
+                      borderBottom: `1.5px solid ${bubbleBorderColor}`,
+                      borderRight: `1.5px solid ${bubbleBorderColor}`,
+                    }}/>
+                  </div>
+
+                  {/* Character sprite + face photo */}
+                  <div
+                    className="relative drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)]"
+                    style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
+                  >
+                    <div
+                      className="absolute rounded-full overflow-hidden"
+                      style={{ left: `${faceLeft}px`, top: `${faceTop}px`, width: `${photoSize}px`, height: `${photoSize}px` }}
+                    >
+                      {member.photoUrl ? (
+                        <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white"
+                          style={{ backgroundColor: ringColor, fontSize: `${photoSize * 0.42}px`, fontFamily: "'Jua', sans-serif" }}>
+                          {member.name?.[0] || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <img
+                      src={ASSET(`avatar/${roleKey}/${roleKey}${frame}.png`)}
+                      alt="" draggable={false}
+                      className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+                    />
+                  </div>
                 </div>
 
-                {/* Character: role-specific sprite + face photo locked to face-hole per frame */}
-                <div
-                  className="relative drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)]"
-                  style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
-                >
-                  <div
-                    className="absolute rounded-full overflow-hidden"
-                    style={{ left: `${faceLeft}px`, top: `${faceTop}px`, width: `${photoSize}px`, height: `${photoSize}px` }}
-                  >
-                    {member.photoUrl ? (
-                      <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
-                    ) : (
-                      <div
-                        className="w-full h-full flex items-center justify-center font-bold text-white"
-                        style={{ backgroundColor: ringColor, fontSize: `${photoSize * 0.42}px` }}
-                      >{member.name?.[0] || '?'}</div>
-                    )}
-                  </div>
-                  <img
-                    src={ASSET(`avatar/${roleKey}/${roleKey}${frame}.png`)}
-                    alt=""
-                    draggable={false}
-                    className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
-                  />
+                {/* Name pill badge */}
+                <div style={{
+                  marginTop: '3px',
+                  padding: '2px 9px',
+                  background: 'rgba(255,253,247,0.92)',
+                  border: '1.5px solid rgba(212,169,106,0.7)',
+                  borderRadius: '9999px',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+                  fontSize: '11px',
+                  fontFamily: "'Jua', sans-serif",
+                  color: '#3D2B1F',
+                  letterSpacing: '-0.02em',
+                  whiteSpace: 'nowrap',
+                  maxWidth: `${charWidth + 20}px`,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  pointerEvents: 'none',
+                }}>
+                  {member.name}
                 </div>
               </div>
-              {/* Name label below character */}
-              <div style={{
-                fontSize: '11px',
-                fontFamily: "'Jua', sans-serif",
-                color: 'rgba(61,43,31,0.85)',
-                textAlign: 'center',
-                marginTop: '2px',
-                lineHeight: 1.3,
-                maxWidth: `${charWidth + 16}px`,
-                textShadow: '0 1px 3px rgba(255,255,255,0.9)',
-                pointerEvents: 'none',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}>
-                {members.length <= 5
-                  ? `${member.role} ${member.generation || ''} ${member.name}`.trim()
-                  : member.name}
-              </div>
-            </div>
-          );
+            );
+          });
         })}
       </div>
     </div>
@@ -1851,7 +1889,7 @@ export default function App() {
                 <div className="flex justify-between items-center px-1">
                   <span className="font-bold text-[11px] md:text-sm uppercase tracking-wider flex items-center gap-2"
                     style={{ color: isAligned ? 'var(--gc-green)' : 'var(--gc-blue)' }}>
-                    {isAligned ? 'Ready to Kick-off 🚀' : 'Team Building 🏃'}
+                    {isAligned ? 'Ready to Kick-off 🚀' : '우리의 여정 🏃'}
                   </span>
                   <span className="font-bold text-[10px] md:text-[11px] px-2 py-0.5 md:py-1 rounded-full"
                     style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-border)' }}>
