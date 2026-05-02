@@ -675,6 +675,44 @@ const MemberDropdown = ({ value, onSelect, roster }) => {
   );
 };
 
+// Animated character sprite with face overlay — used in profile detail modal
+const MemberCharacter = ({ member, size = 130 }) => {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => (t + 1) % SPRITE_FRAME_COUNT), 160);
+    return () => clearInterval(id);
+  }, []);
+  const charWidth = size;
+  const charHeight = charWidth * SPRITE_ASPECT;
+  const roleKey = ROLE_SPRITES[member.role] ? member.role : 'ID';
+  const roleColors = { PL: '#FF6B9D', ID: '#4A8FE0', VD: '#FFD600', UX: '#FF8A00' };
+  const roleColor = roleColors[member.role] || '#4A8FE0';
+  const spriteInfo = ROLE_SPRITES[roleKey];
+  const frame = (tick % SPRITE_FRAME_COUNT) + 1;
+  const faceFrame = spriteInfo.frames[frame - 1];
+  const photoSize = charWidth * spriteInfo.dia;
+  const faceLeft = charWidth * faceFrame.cx - photoSize / 2;
+  const faceTop = charHeight * faceFrame.cy - photoSize / 2;
+  return (
+    <div style={{ width: charWidth, height: charHeight, position: 'relative', flexShrink: 0 }}
+      className="drop-shadow-[0_8px_14px_rgba(0,0,0,0.18)]">
+      <div className="absolute rounded-full overflow-hidden"
+        style={{ left: faceLeft, top: faceTop, width: photoSize, height: photoSize }}>
+        {member.photoUrl ? (
+          <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" draggable={false}/>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white"
+            style={{ backgroundColor: roleColor, fontSize: `${photoSize * 0.42}px`, fontFamily: "'Jua',sans-serif" }}>
+            {member.name?.[0] || '?'}
+          </div>
+        )}
+      </div>
+      <img src={ASSET(`avatar/${roleKey}/${roleKey}${frame}.png`)} alt="" draggable={false}
+        className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"/>
+    </div>
+  );
+};
+
 const MemberDetailModal = ({ member, onClose }) => {
   if (!member) return null;
   return (
@@ -690,10 +728,7 @@ const MemberDetailModal = ({ member, onClose }) => {
 
         <div className="px-5 md:px-12 pt-2 md:pt-12 space-y-6 md:space-y-10">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
-            <div className="w-20 h-20 md:w-32 md:h-32 rounded-3xl md:rounded-[40px] flex items-center justify-center text-white text-3xl md:text-5xl font-bold shadow-lg overflow-hidden shrink-0"
-              style={{ background: `linear-gradient(135deg, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 6px 0 var(--gc-blue-floor)` }}>
-              {member.photoUrl ? <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" /> : <span>{member.name[0]}</span>}
-            </div>
+            <MemberCharacter member={member} size={140} />
             <div className="flex-1 w-full">
               <div className="flex items-center gap-2 md:gap-3 mb-1.5 md:mb-2 flex-wrap">
                 <h2 className="text-3xl md:text-5xl font-bold tracking-tight">{member.name}</h2>
@@ -746,9 +781,17 @@ const MemberDetailModal = ({ member, onClose }) => {
                     style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-tan)', color: 'var(--gc-text-sub)' }}>#{s}</span>)}
                </div>
                <div className="grid grid-cols-3 gap-2 md:gap-3">
-                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Sun" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.start}</span></div>
-                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Moon" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.night}</span></div>
-                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl text-center" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}><Ico name="Home" size={16} className="mx-auto mb-1.5 md:mb-2"/><span className="text-xs md:text-sm font-bold">{member.schedule.place}</span></div>
+                  {[
+                    { ico: 'Sun',  label: '시작',  val: member.schedule?.start },
+                    { ico: 'Moon', label: '밤샘',  val: member.schedule?.night },
+                    { ico: 'Home', label: '장소',  val: member.schedule?.place },
+                  ].map(({ ico, label, val }) => (
+                    <div key={ico} className="p-3 md:p-4 rounded-xl md:rounded-2xl flex flex-col items-center gap-1" style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-border)' }}>
+                      <Ico name={ico} size={22} className="mb-0.5"/>
+                      <span style={{ fontSize: '10px', color: 'var(--gc-text-muted)', fontFamily: 'Pretendard Variable, sans-serif', fontWeight: 500 }}>{label}</span>
+                      <span style={{ fontSize: '13px', fontFamily: "'Jua', sans-serif", color: 'var(--gc-text)', lineHeight: 1.2 }}>{val || '-'}</span>
+                    </div>
+                  ))}
                </div>
             </div>
 
