@@ -45,7 +45,9 @@ const ICO_PNGS = {
   Note: 'icons/note.png',
   Party: 'icons/party.png',
   Flag: 'icons/party.png',
-  Home: 'icons/building.png',
+  Home: 'icons/home.png',
+  Camera: 'icons/camera.png',
+  Instagram: 'icons/insta.png',
 };
 const Ico = ({ name, size = 20, className = '', style: s = {} }) => {
   const src = ICO_PNGS[name];
@@ -248,13 +250,19 @@ const ROLE_SPRITES = {
   },
 };
 
-// Demo members shown on the landing screen preview
-const DEMO_MEMBERS = [
-  { id: 'demo-pl', name: '김민준', role: 'PL', photoUrl: ASSET('preview/PL.png'), intro: '반가워요! 👑' },
-  { id: 'demo-id', name: '이서연', role: 'ID', photoUrl: ASSET('preview/ID.png'), intro: '잘부탁해요 🤖' },
-  { id: 'demo-ux', name: '박지후', role: 'UX', photoUrl: ASSET('preview/UX.png'), intro: '같이 해봐요! 🧡' },
-  { id: 'demo-vd', name: '최유나', role: 'VD', photoUrl: ASSET('preview/VD.png'), intro: '화이팅! 🌼' },
-];
+// Demo members shown on the landing screen preview — randomized per visit
+const DEMO_INTROS = ['반가워요! 👋', '잘 부탁해요! ✨', '같이 해봐요! 🧡', '화이팅! 🔥'];
+const DEMO_ROLES = ['PL', 'ID', 'UX', 'VD'];
+const getRandomDemoMembers = () => {
+  const shuffled = [...MEMBER_ROSTER].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 4).map((m, i) => ({
+    id: `demo-${i}`,
+    name: m.name,
+    role: DEMO_ROLES[i],
+    photoUrl: ASSET(m.photo),
+    intro: DEMO_INTROS[i],
+  }));
+};
 
 const MEMBER_ROSTER = [
   { name: '강동헌',      photo: 'members/강동헌.png' },
@@ -456,10 +464,11 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
             const faceTop = charHeight * faceFrame.cy - photoSize / 2;
 
             const cheerMsg = cheerMessages?.[member.id];
+            const roleColor = getRoleColor(member.role);
             const bubbleText = cheerMsg || `"${member.intro || '안녕!'}"`;
-            const bubbleBg   = cheerMsg ? '#3182f6' : '#fff';
+            const bubbleBg   = cheerMsg ? roleColor : '#fff';
             const bubbleTextColor = cheerMsg ? '#fff' : '#4e5968';
-            const bubbleBorderColor = cheerMsg ? '#3182f6' : '#e5e7eb';
+            const bubbleBorderColor = cheerMsg ? roleColor : '#e5e7eb';
 
             // Back-row chars sit higher; front-row at floor
             const bottomPos = isBack ? rowShift : 0;
@@ -483,16 +492,15 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
                       animationDelay: `${(globalIndex * 0.55) % 2.5}s`,
                       background: bubbleBg,
                       border: `1.5px solid ${bubbleBorderColor}`,
-                      borderRadius: '10px',
-                      padding: '4px 10px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-                      whiteSpace: 'nowrap',
-                      maxWidth: `${charWidth + 50}px`,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
+                      borderRadius: '9px',
+                      padding: '3px 8px',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.10)',
+                      maxWidth: `${charWidth + 20}px`,
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word',
                     }}
                   >
-                    <div style={{ fontSize: '13px', fontFamily: "'Jua', sans-serif", color: bubbleTextColor, letterSpacing: '-0.02em' }}>
+                    <div style={{ fontSize: '11px', fontFamily: "'Jua', sans-serif", color: bubbleTextColor, letterSpacing: '-0.02em', lineHeight: 1.4 }}>
                       {bubbleText}
                     </div>
                     <div style={{
@@ -547,7 +555,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
                   textOverflow: 'ellipsis',
                   pointerEvents: 'none',
                 }}>
-                  {member.name}
+                  {[member.role, member.name].filter(Boolean).join(' ')}
                 </div>
               </div>
             );
@@ -675,14 +683,14 @@ const MemberDetailModal = ({ member, onClose }) => {
                    style={{ background: 'var(--gc-input-bg)', color: 'var(--gc-text-sub)', border: '1.5px solid var(--gc-tan)' }}><Ico name="Phone" size={14}/> 전화</a>}
                  {member.snsLink && <a href={member.snsLink.startsWith('http') ? member.snsLink : `https://${member.snsLink}`} target="_blank" rel="noreferrer"
                    className="px-3 md:px-4 py-2 md:py-2.5 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 font-medium text-xs md:text-sm transition-colors"
-                   style={{ background: 'rgba(225,48,108,0.08)', color: '#e1306c', border: '1.5px solid rgba(225,48,108,0.2)' }}><Instagram size={14}/> SNS</a>}
+                   style={{ background: 'rgba(225,48,108,0.08)', color: '#e1306c', border: '1.5px solid rgba(225,48,108,0.2)' }}><Ico name="Instagram" size={14}/> SNS</a>}
               </div>
             </div>
           </div>
 
           {member.portfolioLinks?.length > 0 && (
             <div className="space-y-2 md:space-y-3">
-              <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>포트폴리오</h4>
+              <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>포트폴리오</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                 {member.portfolioLinks.map((link, i) => (
                   <a key={i} href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noreferrer"
@@ -696,7 +704,7 @@ const MemberDetailModal = ({ member, onClose }) => {
           )}
 
           <div className="space-y-3 md:space-y-4">
-             <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>대표 작업물</h4>
+             <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>대표 작업물</h4>
              <div className="flex gap-3 md:gap-4 overflow-x-auto snap-x scrollbar-hide pb-2 -mx-5 px-5 md:mx-0 md:px-0">
                {member.workItems.map((item, i) => (
                  <div key={i} className="flex-shrink-0 w-[220px] md:w-[320px] gcard overflow-hidden snap-start" style={{ padding: 0 }}>
@@ -709,7 +717,7 @@ const MemberDetailModal = ({ member, onClose }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div className="space-y-3 md:space-y-4">
-               <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>작업 성향 & 리듬</h4>
+               <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>작업 성향 & 리듬</h4>
                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
                   {member.workStyles.map(s => <span key={s} className="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold"
                     style={{ background: 'var(--gc-input-bg)', border: '1.5px solid var(--gc-tan)', color: 'var(--gc-text-sub)' }}>#{s}</span>)}
@@ -722,7 +730,7 @@ const MemberDetailModal = ({ member, onClose }) => {
             </div>
 
             <div className="space-y-3 md:space-y-4">
-               <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>협업 약속</h4>
+               <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>협업 약속</h4>
                <div className="space-y-2 md:space-y-3">
                  <div className="p-4 md:p-5 rounded-2xl" style={{ background: 'rgba(232,84,84,0.06)', border: '1.5px solid rgba(232,84,84,0.2)' }}>
                    <h5 className="text-[10px] md:text-[11px] font-bold mb-1.5 md:mb-2 flex items-center gap-1.5" style={{ color: '#E85454' }}><Ico name="Heart" size={12}/> 추구하는 가치</h5>
@@ -744,6 +752,7 @@ const MemberDetailModal = ({ member, onClose }) => {
 // --- Main App ---
 export default function App() {
   const [view, setView] = useState(VIEWS.LANDING);
+  const [demoMembers] = useState(() => getRandomDemoMembers());
   const [team, setTeam] = useState({ id: '', name: '', category: PROJECT_CATEGORIES[0], targetSize: 4, members: [], kickoff: {} });
   const [selectedRoster, setSelectedRoster] = useState([]);
   const [step, setStep] = useState(1);
@@ -829,7 +838,6 @@ export default function App() {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 3000);
 
-      try { window.history.pushState({}, '', `?teamId=${teamId}`); } catch(e){}
 
       setTeam(newTeam);
       setSelectedRoster([]);
@@ -1005,7 +1013,7 @@ export default function App() {
             {/* 1. 이름 드롭다운 + 기수 + 역할 */}
             <div className="space-y-3 md:space-y-4">
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>이름 <span style={{ color: '#E85454' }}>✦</span></label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>이름 <span style={{ color: '#E85454' }}>✦</span></label>
                 <MemberDropdown
                   value={profileData.name}
                   roster={team.kickoff?.rosterMembers || []}
@@ -1039,7 +1047,7 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>기수 <span style={{ color: '#E85454' }}>✦</span></label>
+                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>기수 <span style={{ color: '#E85454' }}>✦</span></label>
                   <div className="relative">
                     <select value={profileData.generation} onChange={e => setProfileData({...profileData, generation: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
                       <option value="">기수 선택 *</option>
@@ -1049,7 +1057,7 @@ export default function App() {
                   </div>
                 </div>
                 <div className="space-y-1.5 md:space-y-2">
-                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>역할 <span style={{ color: '#E85454' }}>✦</span></label>
+                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>역할 <span style={{ color: '#E85454' }}>✦</span></label>
                   <div className="relative">
                     <select value={profileData.role} onChange={e => setProfileData({...profileData, role: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
                       <option value="">역할 선택 *</option>
@@ -1063,8 +1071,8 @@ export default function App() {
 
             {/* 2. 프로필 사진 업로드 */}
             <div className="space-y-2.5 md:space-y-3">
-              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}>
-                <Camera size={12}/> 프로필 사진 <span style={{ color: '#E85454' }}>✦</span> <span className="normal-case font-medium tracking-normal" style={{ color: 'var(--gc-text-muted)' }}>— 이름 선택 시 자동 채워져요</span>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}>
+                <Ico name="Camera" size={12}/> 프로필 사진 <span style={{ color: '#E85454' }}>✦</span> <span className="normal-case font-medium tracking-normal" style={{ color: 'var(--gc-text-muted)' }}>— 이름 선택 시 자동 채워져요</span>
               </label>
               <input type="file" accept="image/*" ref={photoInputRef} onChange={e => { handlePhotoUpload(e.target.files?.[0]); e.target.value = ''; }} className="hidden" />
               <div className="flex items-center gap-4 md:gap-5 p-4 md:p-5 rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)' }}>
@@ -1075,7 +1083,7 @@ export default function App() {
                     <img src={profileData.photoUrl} alt="프로필 사진" className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex flex-col items-center gap-0.5 transition-colors" style={{ color: 'var(--gc-text-muted)' }}>
-                      <Camera size={24}/>
+                      <Ico name="Camera" size={24}/>
                       <span className="text-[9px] font-bold uppercase tracking-wider">Upload</span>
                     </div>
                   )}
@@ -1102,17 +1110,17 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Phone" size={12}/> 연락처</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Phone" size={12}/> 연락처</label>
                 <input value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="010-0000-0000" />
               </div>
               <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Instagram size={12}/> SNS 링크</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Instagram" size={12}/> SNS 링크</label>
                 <input value={profileData.snsLink} onChange={e => setProfileData({...profileData, snsLink: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="instagram.com/id" />
               </div>
             </div>
 
             <div className="space-y-2 md:space-y-3">
-              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Link" size={12}/> 포트폴리오 링크</label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Link" size={12}/> 포트폴리오 링크</label>
               {profileData.portfolioLinks.map((link, i) => (
                 <div key={i} className="flex gap-2 animate-in slide-in-from-top-1">
                    <input value={link} onChange={e => {
@@ -1127,7 +1135,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3 md:space-y-4">
-              <label className="text-[10px] md:text-xs font-bold block uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>대표 작업물 ({profileData.workItems.length})</label>
+              <label className="text-[10px] md:text-xs font-bold block uppercase tracking-wide ml-1" style={{ color: 'var(--gc-text-sub)' }}>대표 작업물 ({profileData.workItems.length})</label>
               <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3 md:pb-4 snap-x -mx-4 px-4 md:mx-0 md:px-0">
                  {profileData.workItems.map((item, i) => (
                    <div key={i} className="flex-shrink-0 w-[220px] md:w-[260px] p-3 md:p-4 gcard snap-start relative group" style={{ padding: '12px 14px' }}>
@@ -1159,12 +1167,12 @@ export default function App() {
       case 2: return (
         <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 pb-28">
           <header>
-            <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">작업 성향과 리듬</h2>
-            <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>팀원들이 당신을 어떻게 도와주면 좋을까요?</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-2 md:mb-3">작업 성향과 리듬</h2>
+            <p className="text-base md:text-xl font-medium" style={{ color: 'var(--gc-text-sub)' }}>팀원들이 당신을 어떻게 도와주면 좋을까요?</p>
           </header>
           <div className="space-y-7 md:space-y-10">
             <section className="space-y-4 md:space-y-5">
-              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>작업 성향 키워드 <span style={{ color: '#E85454' }}>✦</span></label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-1" style={{ color: 'var(--gc-text-sub)' }}>작업 성향 키워드 <span style={{ color: '#E85454' }}>✦</span></label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                  {WORK_STYLE_TAGS.map(tag => {
                    const sel = profileData.workStyles.includes(tag);
@@ -1192,12 +1200,12 @@ export default function App() {
             </section>
 
             <section className="space-y-4 md:space-y-6">
-              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>나의 작업 리듬 선호도</label>
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1" style={{ color: 'var(--gc-text-sub)' }}>나의 작업 리듬 선호도</label>
               <div className="space-y-6 md:space-y-8">
                  {[
-                   { k: 'start', label: '시작 시간', opt: [{ v: '오전', d: '상쾌한 오전 시작', i: <Ico name="Sun"/> }, { v: '오후', d: '여유로운 오후 시작', i: <Coffee/> }] },
-                   { k: 'night', label: '밤샘 여부', opt: [{ v: '선호', d: '밤의 집중력 선호', i: <Ico name="Moon"/> }, { v: '비선호', d: '컨디션 관리 중시', i: <Ico name="X"/> }] },
-                   { k: 'place', label: '작업 장소', opt: [{ v: '출퇴근', d: '개인 공간/재택', i: <Building2/> }, { v: '멤박', d: '멤버십에서 자기', i: <Bed/> }] }
+                   { k: 'start', label: '시작 시간', opt: [{ v: '오전', d: '상쾌한 오전 시작', i: 'Sun' }, { v: '오후', d: '여유로운 오후 시작', i: 'Coffee' }] },
+                   { k: 'night', label: '밤샘 여부', opt: [{ v: '선호', d: '밤의 집중력 선호', i: 'Moon' }, { v: '비선호', d: '컨디션 관리 중시', i: 'X' }] },
+                   { k: 'place', label: '작업 장소', opt: [{ v: '출퇴근', d: '개인 공간/재택', i: 'Building2' }, { v: '멤박', d: '멤버십에서 자기', i: 'Bed' }] }
                  ].map(section => (
                    <div key={section.k} className="space-y-3 md:space-y-4">
                       <div className="flex items-center gap-2 text-sm md:text-base font-bold" style={{ color: 'var(--gc-text)' }}>{section.label}</div>
@@ -1210,12 +1218,12 @@ export default function App() {
                             style={sel
                               ? { background: `linear-gradient(145deg, #FFFDF7, rgba(74,144,226,0.08))`, border: `2.5px solid var(--gc-blue)`, boxShadow: `0 3px 0 var(--gc-blue-floor)` }
                               : { background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)' }}>
-                             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-3"
-                               style={sel ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, color: '#fff' } : { background: 'var(--gc-border)', color: 'var(--gc-text-sub)' }}>
-                               {React.cloneElement(opt.i, { size: 18 })}
+                             <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center mb-3"
+                               style={sel ? { background: `linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))`, boxShadow: `0 3px 0 var(--gc-blue-floor)` } : { background: 'var(--gc-border)' }}>
+                               <Ico name={opt.i} size={28}/>
                              </div>
-                             <div className="font-bold text-base md:text-xl">{opt.v}</div>
-                             <div className="text-[10px] md:text-xs font-medium mt-0.5 md:mt-1" style={{ color: 'var(--gc-text-muted)' }}>{opt.d}</div>
+                             <div style={{ fontFamily: "'Jua', sans-serif", fontSize: '17px', fontWeight: 400, color: sel ? 'var(--gc-blue)' : 'var(--gc-text)', marginBottom: '3px' }}>{opt.v}</div>
+                             <div style={{ fontSize: '11px', fontFamily: "'Pretendard Variable', Pretendard, sans-serif", fontWeight: 500, color: 'var(--gc-text-muted)' }}>{opt.d}</div>
                           </button>
                           );
                         })}
@@ -1244,7 +1252,7 @@ export default function App() {
                <div className="gcard p-5 md:p-8 space-y-5 md:space-y-7">
                  <div className="flex items-center gap-3 md:gap-4">
                    <div className="w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0"
-                     style={{ background: 'rgba(74,144,226,0.12)', color: 'var(--gc-blue)' }}><Dna size={24} /></div>
+                     style={{ background: 'rgba(74,144,226,0.12)' }}><Ico name="Note" size={28}/></div>
                    <div>
                      <h3 className="text-lg md:text-2xl font-bold tracking-tight">MEP 연구 관심사</h3>
                      <p className="text-[11px] md:text-sm font-medium" style={{ color: 'var(--gc-text-muted)' }}>이번 프로젝트의 개인적 연구 목표입니다.</p>
@@ -1266,22 +1274,22 @@ export default function App() {
                </div>
              )}
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Heart" size={14}/> 추구하는 협업 가치</label>
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Heart" size={14}/> 추구하는 협업 가치</label>
                <textarea value={profileData.pursuits} onChange={e => setProfileData({...profileData, pursuits: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="예: 속도보다 논리적인 완결성을 중요하게 생각합니다." />
              </div>
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Ban" size={14}/> 지양하는 협업 방식 (Don't)</label>
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1 flex items-center gap-2" style={{ color: 'var(--gc-text-sub)' }}><Ico name="Ban" size={14}/> 지양하는 협업 방식 (Don't)</label>
                <textarea value={profileData.avoid} onChange={e => setProfileData({...profileData, avoid: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base min-h-[120px] md:min-h-[140px] resize-none transition-all" placeholder="예: 사전 공유 없는 불참이나 자정 이후의 급한 연락 등" />
              </div>
              <div className="space-y-3 md:space-y-4">
-               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>팀원들에게 한마디</label>
+               <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-1" style={{ color: 'var(--gc-text-sub)' }}>팀원들에게 한마디</label>
                <input value={profileData.intro} onChange={e => setProfileData({...profileData, intro: e.target.value})} className="w-full p-4 md:p-5 rounded-xl outline-none font-medium text-sm md:text-base transition-all" placeholder="안녕하세요! 한 학기 잘 지내봐요!" />
              </div>
            </div>
            <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
                <div className="max-w-xl mx-auto flex gap-3">
                  <Button variant="secondary" onClick={() => setStep(2)} className="flex-1">이전</Button>
-                 <Button onClick={handleProfileSubmit} className="flex-[2]">완료하고 합류하기 🎉</Button>
+                 <Button onClick={handleProfileSubmit} className="flex-[2]">완료하고 합류하기 <Ico name="Party" size={18}/></Button>
                </div>
              </div>
         </div>
@@ -1382,7 +1390,7 @@ export default function App() {
         {view === VIEWS.LANDING && (
           <div className="fixed inset-0 overflow-hidden">
             <FinchWalkingScene
-              members={DEMO_MEMBERS}
+              members={demoMembers}
               onMemberClick={() => {}}
               isJumping={false}
               cheerMessages={{}}
@@ -1432,7 +1440,7 @@ export default function App() {
             <h2 className="text-3xl md:text-5xl font-bold mb-7 md:mb-12 tracking-tight text-center" style={{ color: 'var(--gc-text)' }}>프로젝트 시작</h2>
             <div className="space-y-7 md:space-y-10">
               <div className="space-y-3 md:space-y-4">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2" style={{ color: 'var(--gc-text-sub)' }}>Category</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-2" style={{ color: 'var(--gc-text-sub)' }}>Category</label>
                 <div className="relative">
                   <select value={team.category} onChange={e => setTeam({...team, category: e.target.value})}
                     className="w-full p-4 md:p-5 rounded-2xl outline-none text-base md:text-xl font-bold appearance-none transition-all"
@@ -1444,7 +1452,7 @@ export default function App() {
               </div>
 
               <div className="space-y-3 md:space-y-4">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2" style={{ color: 'var(--gc-text-sub)' }}>Team Size</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-2" style={{ color: 'var(--gc-text-sub)' }}>Team Size</label>
                 <div className="relative">
                   <select value={team.targetSize || 4} onChange={e => setTeam({...team, targetSize: Number(e.target.value)})}
                     className="w-full p-4 md:p-5 rounded-2xl outline-none text-base md:text-xl font-bold appearance-none transition-all"
@@ -1456,7 +1464,7 @@ export default function App() {
               </div>
 
               <div className="space-y-3 md:space-y-4">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] md:tracking-[0.2em] ml-2" style={{ color: 'var(--gc-text-sub)' }}>Project Name</label>
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-wide ml-2" style={{ color: 'var(--gc-text-sub)' }}>Project Name</label>
                 <textarea
                   className="w-full p-5 md:p-7 outline-none text-base md:text-xl font-medium min-h-[120px] md:min-h-[160px] resize-none transition-all"
                   style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)', borderRadius: '20px', color: 'var(--gc-text)' }}
@@ -1468,7 +1476,7 @@ export default function App() {
         )}
 
         {view === VIEWS.ROSTER_SELECT && (
-          <div className="max-w-2xl mx-auto py-8 md:py-16 px-5 md:px-6 animate-in slide-in-from-bottom-8 duration-700">
+          <div className="max-w-2xl mx-auto py-8 md:py-16 px-5 md:px-6 pb-28 animate-in slide-in-from-bottom-8 duration-700">
             <div className="text-center mb-6 md:mb-10">
               <h2 className="text-3xl md:text-5xl font-bold mb-2 tracking-tight" style={{ color: 'var(--gc-text)' }}>
                 팀원을 선택하세요
@@ -1484,7 +1492,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4 mb-8">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4 mb-4">
               {MEMBER_ROSTER.map(m => {
                 const isSel = selectedRoster.some(r => r.photo === m.photo);
                 return (
@@ -1520,13 +1528,17 @@ export default function App() {
               })}
             </div>
 
-            <Button
-              onClick={handleRosterConfirm}
-              className="w-full py-5 md:py-6 text-base md:text-xl"
-              disabled={selectedRoster.length < team.targetSize}
-            >
-              팀원 확정하고 내 프로필 작성 <ArrowRight size={18}/>
-            </Button>
+            <div className="fixed bottom-0 left-0 right-0 z-30 px-4 pb-6 pt-4" style={{ background: 'linear-gradient(to top, var(--gc-bg) 75%, transparent)' }}>
+              <div className="max-w-2xl mx-auto">
+                <Button
+                  onClick={handleRosterConfirm}
+                  className="w-full py-5 md:py-6 text-base md:text-xl"
+                  disabled={selectedRoster.length < team.targetSize}
+                >
+                  팀원 확정하고 내 프로필 작성 <ArrowRight size={18}/>
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1584,7 +1596,7 @@ export default function App() {
               <div className="sticky top-32 space-y-6">
                 <div className="flex items-center gap-3 ml-2">
                    <Ico name="Sparkles" size={20}/>
-                   <span className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-sub)' }}>Real-time Card View</span>
+                   <span className="text-sm font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-sub)' }}>Real-time Card View</span>
                 </div>
                 <Card className="overflow-hidden p-0 hover:scale-[1.02] transition-all duration-500">
                   <div className="h-64 flex items-center justify-center overflow-hidden relative"
@@ -1857,7 +1869,7 @@ export default function App() {
                       </div>
                     ) : (
                       <div className="space-y-3 md:space-y-4">
-                        <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--gc-text-muted)' }}>추천 시간대 (많이 겹치는 순)</h4>
+                        <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--gc-text-muted)' }}>추천 시간대 (많이 겹치는 순)</h4>
                         {getBestSlots(kickoff.availability).slice(0, 4).length > 0 ? (
                           getBestSlots(kickoff.availability).slice(0, 4).map(({ slot, count }) => (
                             <button
@@ -1915,37 +1927,43 @@ export default function App() {
               <button
                 onClick={handleCheer}
                 disabled={isJumping || getSceneMembers().length === 0}
-                className="gbtn gbtn-secondary animate-in slide-in-from-top-4 duration-700 disabled:opacity-40"
-                style={{ fontSize: '14px' }}
+                className="gbtn gbtn-primary animate-in slide-in-from-top-4 duration-700 disabled:opacity-40"
+                style={{ fontSize: '16px', padding: '14px 32px', boxShadow: '0 5px 0 var(--gc-blue-floor), 0 8px 24px rgba(58,126,204,0.45)' }}
               >
-                <span className={`text-lg ${isJumping ? 'animate-spin' : ''}`}>🎉</span>
+                <Ico name="Party" size={24} className={isJumping ? 'animate-spin' : ''}/>
                 우리 팀 응원하기
               </button>
             </div>
 
-            <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 gnav-bottom flex items-center justify-around px-2 md:px-10 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
+            <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-24 md:h-32 gnav-bottom flex items-center justify-around px-3 md:px-10 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
               style={{ border: '2.5px solid var(--gc-gold)' }}>
-               <button className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-100 transition-opacity">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center"
-                    style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', color: '#fff', boxShadow: `0 3px 0 var(--gc-blue-floor)` }}>
-                    <Ico name="Home" size={28} />
+               <button className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95">
+                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 4px 0 var(--gc-blue-floor)', padding: '10px' }}>
+                    <Ico name="Home" size={34} />
                   </div>
-                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-blue)' }}>Home</span>
+                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-blue)' }}>홈</span>
                </button>
-               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-colors"
-                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="Users" size={28} /></div>
-                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Members</span>
+               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95 opacity-60 hover:opacity-100">
+                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '2px solid var(--gc-tan)', boxShadow: '0 4px 0 var(--gc-gold-floor)', padding: '10px' }}>
+                    <Ico name="Users" size={34} />
+                  </div>
+                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-text-sub)' }}>멤버</span>
                </button>
-               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-colors"
-                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="Heart" size={28} /></div>
-                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Rules</span>
+               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95 opacity-60 hover:opacity-100">
+                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '2px solid var(--gc-tan)', boxShadow: '0 4px 0 var(--gc-gold-floor)', padding: '10px' }}>
+                    <Ico name="Heart" size={34} />
+                  </div>
+                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-text-sub)' }}>약속</span>
                </button>
-               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-colors"
-                    style={{ color: 'var(--gc-text-sub)' }}><Ico name="CalendarPlus" size={28} /></div>
-                  <span className="font-bold text-[10px] md:text-xs hidden md:block" style={{ color: 'var(--gc-text-sub)' }}>Schedule</span>
+               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95 opacity-60 hover:opacity-100">
+                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '2px solid var(--gc-tan)', boxShadow: '0 4px 0 var(--gc-gold-floor)', padding: '10px' }}>
+                    <Ico name="CalendarPlus" size={34} />
+                  </div>
+                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-text-sub)' }}>일정</span>
                </button>
             </div>
           </div>
