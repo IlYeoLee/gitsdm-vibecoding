@@ -15,9 +15,14 @@ body,
 body {
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  font-weight: 500; /* Medium — default body weight */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Project policy: only Medium (500) and Bold (700) weights of Pretendard are used.
+   Defensive — clamp anything outside the policy to the nearest allowed weight. */
+strong, b, h1, h2, h3, h4, h5, h6 { font-weight: 700; }
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
