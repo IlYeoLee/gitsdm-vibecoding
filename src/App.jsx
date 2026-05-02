@@ -6,11 +6,23 @@ import {
   ExternalLink, Sparkles, Image as ImageIcon, Heart, Ban, Upload, X, Sun, Moon,
   Coffee, Home, Building2, ChevronDown, FileImage, Calendar,
   MessageCircle, Dna, Phone, Instagram, Link as LinkIcon, Trash2, CheckCircle2,
-  Copy, Share2, Check, Navigation, AlertCircle, Smile, MapPinned, Flag, CalendarPlus, Circle, Monitor, Bed, Camera, ZoomIn, ZoomOut
+  Copy, Share2, Check, Navigation, AlertCircle, Smile, MapPinned, Flag, CalendarPlus, Circle, Monitor, Bed, Camera, ZoomIn, ZoomOut,
+  Volume2, VolumeX
 } from 'lucide-react';
 
 // Vite handles base path (/ in dev, /gitsdm-vibecoding/ in prod build) — runtime asset URLs must be prefixed
 const ASSET = (p) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, '')}`;
+
+// Module-level BGM (lazy init so no autoplay before user gesture)
+let _bgm = null;
+const getBgm = () => {
+  if (!_bgm) {
+    _bgm = new Audio(ASSET('bgm.mp3'));
+    _bgm.loop = true;
+    _bgm.volume = 0.3;
+  }
+  return _bgm;
+};
 
 // PNG icons (game-style replacements for lucide-react where available)
 const ICO_PNGS = {
@@ -417,8 +429,7 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
 
   const naturalCharWidth = isMobile ? 108 : 126;
   const naturalSpacing   = isMobile ? 80  : 112;
-  // 0.88 on mobile gives ≥40px margin each side, preventing edge clipping
-  const usableWidth = viewportWidth * (isMobile ? 0.88 : 0.84) - naturalCharWidth;
+  const usableWidth = viewportWidth * (isMobile ? 0.92 : 0.86);
   const minScale = isMobile ? 0.50 : 0.48;
   const requiredWidth = Math.max(1, maxRowLen) * naturalSpacing;
   const fitScale = requiredWidth > usableWidth ? Math.max(minScale, usableWidth / requiredWidth) : 1;
@@ -829,6 +840,9 @@ export default function App() {
   const [isJumping, setIsJumping] = useState(false);
   const [activeCheerMessages, setActiveCheerMessages] = useState({});
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => {
+    try { return localStorage.getItem('ALIGN_MUTED') !== 'false'; } catch { return true; }
+  });
 
   // Photo crop modal state
   const [cropImageSrc, setCropImageSrc] = useState(null);
@@ -844,6 +858,27 @@ export default function App() {
     schedule: { start: '', night: '', place: '' },
     pursuits: '', avoid: '', intro: ''
   });
+
+  // Scroll to top on every view or step change
+  useEffect(() => { window.scrollTo(0, 0); }, [view]);
+  useEffect(() => { window.scrollTo(0, 0); }, [step]);
+
+  // BGM control
+  useEffect(() => {
+    const bgm = getBgm();
+    if (!isMuted) {
+      bgm.play().catch(() => {});
+    } else {
+      bgm.pause();
+    }
+    try { localStorage.setItem('ALIGN_MUTED', String(isMuted)); } catch {}
+  }, [isMuted]);
+
+  useEffect(() => {
+    if ((view === VIEWS.LANDING || view === VIEWS.DASHBOARD) && !isMuted) {
+      getBgm().play().catch(() => {});
+    }
+  }, [view]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -971,6 +1006,16 @@ export default function App() {
   const agreeToProposal = () => {
     if (!currentMemberId) return;
     const k = { ...kickoff, agreements: { ...(kickoff.agreements || {}), [currentMemberId]: true } };
+    const t = { ...team, kickoff: k };
+    setTeam(t); saveTeamToLocal(t);
+    dbUpdateKickoff(team.id, k);
+  };
+
+  const disagreeFromProposal = () => {
+    if (!currentMemberId) return;
+    const newAgreements = { ...(kickoff.agreements || {}) };
+    delete newAgreements[currentMemberId];
+    const k = { ...kickoff, agreements: newAgreements };
     const t = { ...team, kickoff: k };
     setTeam(t); saveTeamToLocal(t);
     dbUpdateKickoff(team.id, k);
@@ -1469,6 +1514,15 @@ export default function App() {
             />
 
             <div className="absolute inset-0 z-[70]">
+              {/* Mute toggle — top-right */}
+              <button
+                onClick={() => setIsMuted(m => !m)}
+                className="absolute top-4 right-4 z-[80] gbtn gbtn-secondary"
+                style={{ padding: '8px 12px', fontSize: '13px', gap: '6px' }}
+              >
+                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '13px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
+              </button>
               <style>{`
                 @keyframes subtitleLine {
                   0%   { opacity: 0; transform: translateY(10px); }
@@ -1956,8 +2010,13 @@ export default function App() {
                             동의하기
                           </button>
                         ) : (
-                          <div className="flex items-center gap-2 font-bold text-sm md:text-base" style={{ color: 'var(--gc-green)' }}>
-                            <CheckCircle2 size={18}/> 동의 완료
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <div className="flex items-center gap-2 font-bold text-sm md:text-base" style={{ color: 'var(--gc-green)' }}>
+                              <CheckCircle2 size={18}/> 동의 완료
+                            </div>
+                            <button onClick={disagreeFromProposal} className="gbtn gbtn-secondary text-xs md:text-sm" style={{ padding: '6px 14px' }}>
+                              동의 취소
+                            </button>
                           </div>
                         )}
                         <button onClick={() => proposeSlot(null)} className="text-xs font-bold underline underline-offset-2 transition-colors" style={{ color: 'var(--gc-text-muted)' }}>
@@ -1989,6 +2048,16 @@ export default function App() {
                 )}
               </div>
             </BottomSheet>
+
+            {/* Mute toggle — top-right corner on dashboard */}
+            <button
+              onClick={() => setIsMuted(m => !m)}
+              className="absolute top-3 right-3 md:top-6 md:right-6 z-50 gbtn gbtn-secondary"
+              style={{ padding: '7px 12px', fontSize: '12px', gap: '5px' }}
+            >
+              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              <span style={{ fontFamily: "'Jua', sans-serif", fontSize: '12px' }}>{isMuted ? 'BGM 켜기' : 'BGM 끄기'}</span>
+            </button>
 
             <div className="absolute top-3 md:top-8 w-[calc(100%-1.5rem)] md:w-[calc(100%-2rem)] max-w-sm md:max-w-md left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 md:gap-2.5">
               <div
