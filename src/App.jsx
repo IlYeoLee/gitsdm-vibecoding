@@ -1067,7 +1067,7 @@ export default function App() {
             {/* Layer 2: Gradient dim — dark top for text, fades to clear at bottom */}
             <div
               className="absolute inset-0 z-[60] pointer-events-none"
-              style={{ background: 'linear-gradient(to bottom, rgba(10,14,26,0.82) 0%, rgba(10,14,26,0.60) 30%, rgba(10,14,26,0.10) 65%, rgba(10,14,26,0.00) 100%)' }}
+              style={{ background: 'linear-gradient(to bottom, rgba(10,14,26,0.45) 0%, rgba(10,14,26,0.20) 40%, rgba(10,14,26,0.00) 70%)' }}
             />
 
             {/* Layer 3: Content — title top half / button bottom */}
