@@ -209,6 +209,63 @@ const DEMO_MEMBERS = [
   { id: 'demo-vd', name: '최유나', role: 'VD', photoUrl: ASSET('preview/VD.png'), intro: '화이팅! 🌼' },
 ];
 
+const MEMBER_ROSTER = [
+  { name: '강동헌',      photo: 'members/강동헌.png' },
+  { name: '고유하',      photo: 'members/고유하.png' },
+  { name: '권세진',      photo: 'members/권세진.png' },
+  { name: '권솔',        photo: 'members/권솔.png' },
+  { name: '김도완',      photo: 'members/김도완.png' },
+  { name: '김민정',      photo: 'members/김민정.png' },
+  { name: '김소진',      photo: 'members/김소진.png' },
+  { name: '김승희',      photo: 'members/김승희.png' },
+  { name: '김시우',      photo: 'members/김시우.png' },
+  { name: '김예영',      photo: 'members/김예영.png' },
+  { name: '김정빈',      photo: 'members/김정빈.png' },
+  { name: '김정현',      photo: 'members/김정현.png' },
+  { name: '김채은',      photo: 'members/김채은.png' },
+  { name: '나승환',      photo: 'members/나승환.png' },
+  { name: '박도현',      photo: 'members/박도현.png' },
+  { name: '박도현 ②',   photo: 'members/박도현-1.png' },
+  { name: '박세연',      photo: 'members/박세연.png' },
+  { name: '박우희',      photo: 'members/박우희.png' },
+  { name: '박정민 (ID)', photo: 'members/ID박정민.png' },
+  { name: '박정민 (UX)', photo: 'members/UX박정민.png' },
+  { name: '박주원',      photo: 'members/박주원.png' },
+  { name: '백채영',      photo: 'members/백채영.png' },
+  { name: '서유빈',      photo: 'members/서유빈.png' },
+  { name: '서주원',      photo: 'members/서주원.png' },
+  { name: '서주원 ②',   photo: 'members/서주원-1.png' },
+  { name: '서현빈',      photo: 'members/서현빈.png' },
+  { name: '송시헌',      photo: 'members/송시헌.png' },
+  { name: '양준홍',      photo: 'members/양준홍.png' },
+  { name: '양현지',      photo: 'members/양현지.png' },
+  { name: '윤영실',      photo: 'members/윤영실.png' },
+  { name: '윤지원',      photo: 'members/윤지원.png' },
+  { name: '윤현경',      photo: 'members/윤현경.png' },
+  { name: '이서희',      photo: 'members/이서희.png' },
+  { name: '이일여',      photo: 'members/이일여.png' },
+  { name: '이정현',      photo: 'members/이정현.png' },
+  { name: '이주은',      photo: 'members/이주은.png' },
+  { name: '이준영',      photo: 'members/이준영.png' },
+  { name: '이지우',      photo: 'members/이지우.png' },
+  { name: '이화인',      photo: 'members/이화인.png' },
+  { name: '임준우',      photo: 'members/임준우.png' },
+  { name: '임찬주',      photo: 'members/임찬주.png' },
+  { name: '임채은',      photo: 'members/임채은.png' },
+  { name: '장별',        photo: 'members/장별.png' },
+  { name: '장유진',      photo: 'members/장유진.png' },
+  { name: '전다빈',      photo: 'members/전다빈.png' },
+  { name: '전주현',      photo: 'members/전주현.png' },
+  { name: '정민서',      photo: 'members/정민서.png' },
+  { name: '정민영',      photo: 'members/정민영.png' },
+  { name: '정유진',      photo: 'members/정유진.png' },
+  { name: '조서현',      photo: 'members/조서현.png' },
+  { name: '주형준',      photo: 'members/주형준.png' },
+  { name: '최선우',      photo: 'members/최선우.png' },
+  { name: '최완혁',      photo: 'members/최완혁.png' },
+  { name: '한예지',      photo: 'members/한예지.png' },
+];
+
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIME_SLOTS = ['오전', '오후', '저녁'];
 
@@ -415,6 +472,69 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
            {children}
         </div>
       </div>
+    </div>
+  );
+};
+
+const MemberDropdown = ({ value, onSelect }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const selected = MEMBER_ROSTER.find(m => m.name === value);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between p-3.5 rounded-xl transition-all"
+        style={{ background: 'var(--gc-input-bg)', border: `2px solid ${open ? 'var(--gc-gold)' : 'var(--gc-tan)'}`, boxShadow: open ? '0 0 0 4px rgba(232,164,74,0.18)' : 'none', outline: 'none' }}
+      >
+        {selected ? (
+          <div className="flex items-center gap-3">
+            <img src={ASSET(selected.photo)} alt={selected.name}
+              className="w-8 h-8 rounded-full object-cover border-2"
+              style={{ borderColor: 'var(--gc-gold)' }} />
+            <span className="font-bold text-sm" style={{ color: 'var(--gc-text)' }}>{value}</span>
+          </div>
+        ) : (
+          <span className="text-sm font-medium" style={{ color: 'var(--gc-text-muted)' }}>이름을 선택하세요 (가나다순)</span>
+        )}
+        <ChevronDown size={18} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} style={{ color: 'var(--gc-text-muted)' }} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 z-[100] mt-2 rounded-2xl overflow-y-auto scrollbar-hide"
+          style={{ background: 'var(--gc-surface)', border: '2px solid var(--gc-gold)', boxShadow: '0 8px 0 var(--gc-gold-dark), 0 16px 40px rgba(180,120,50,0.18)', maxHeight: '288px', padding: '12px' }}>
+          <div className="grid grid-cols-5 gap-2">
+            {MEMBER_ROSTER.map(m => {
+              const isSel = m.name === value;
+              return (
+                <button
+                  key={m.photo}
+                  type="button"
+                  onClick={() => { onSelect(m); setOpen(false); }}
+                  className="member-face-btn flex flex-col items-center gap-1 p-2 rounded-xl transition-all"
+                  style={isSel
+                    ? { background: 'rgba(74,144,226,0.15)', border: '2px solid var(--gc-gold)' }
+                    : { border: '2px solid transparent' }}
+                >
+                  <img src={ASSET(m.photo)} alt={m.name}
+                    className="w-11 h-11 rounded-full object-cover"
+                    style={{ border: `2px solid ${isSel ? 'var(--gc-gold)' : 'var(--gc-tan)'}` }} />
+                  <span className="text-[9px] font-bold text-center leading-tight" style={{ color: 'var(--gc-text)' }}>{m.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -751,13 +871,69 @@ export default function App() {
         <div className="space-y-7 md:space-y-10 animate-in slide-in-from-right-4 duration-500 pb-6 md:pb-10">
           <header>
             <h2 className="text-2xl md:text-4xl font-bold mb-1.5 md:mb-2 tracking-tight">당신에 대해 알려주세요</h2>
-            <p className="text-[#8b95a1] text-sm md:text-lg font-medium">협업 멤버들에게 공유될 정보를 구성합니다.</p>
+            <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>협업 멤버들에게 공유될 정보를 구성합니다.</p>
           </header>
           <div className="space-y-6 md:space-y-8">
-            {/* Profile Photo Upload */}
+            {/* 1. 이름 드롭다운 + 기수 + 역할 */}
+            <div className="space-y-3 md:space-y-4">
+              <div className="space-y-1.5 md:space-y-2">
+                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>이름</label>
+                <MemberDropdown
+                  value={profileData.name}
+                  onSelect={async (m) => {
+                    setProfileData(prev => ({ ...prev, name: m.name }));
+                    try {
+                      const res = await fetch(ASSET(m.photo));
+                      const blob = await res.blob();
+                      const reader = new FileReader();
+                      reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                          const SIZE = 320;
+                          const canvas = document.createElement('canvas');
+                          canvas.width = SIZE; canvas.height = SIZE;
+                          const ctx = canvas.getContext('2d');
+                          const side = Math.min(img.width, img.height);
+                          const sx = (img.width - side) / 2;
+                          const sy = (img.height - side) / 2;
+                          ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+                          setProfileData(prev => ({ ...prev, photoUrl: canvas.toDataURL('image/jpeg', 0.85) }));
+                        };
+                        img.src = e.target.result;
+                      };
+                      reader.readAsDataURL(blob);
+                    } catch (err) {
+                      console.warn('auto-fill photo failed', err);
+                    }
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="space-y-1.5 md:space-y-2">
+                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>기수</label>
+                  <div className="relative">
+                    <select value={profileData.generation} onChange={e => setProfileData({...profileData, generation: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
+                      {GENERATIONS.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                    <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
+                  </div>
+                </div>
+                <div className="space-y-1.5 md:space-y-2">
+                  <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>역할</label>
+                  <div className="relative">
+                    <select value={profileData.role} onChange={e => setProfileData({...profileData, role: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
+                      {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. 프로필 사진 업로드 */}
             <div className="space-y-2.5 md:space-y-3">
               <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1 flex items-center gap-1.5" style={{ color: 'var(--gc-text-sub)' }}>
-                <Camera size={12}/> 프로필 사진 <span className="normal-case font-medium tracking-normal" style={{ color: 'var(--gc-text-muted)' }}>— 본인 얼굴 권장</span>
+                <Camera size={12}/> 프로필 사진 <span className="normal-case font-medium tracking-normal" style={{ color: 'var(--gc-text-muted)' }}>— 이름 선택 시 자동 채워져요</span>
               </label>
               <input type="file" accept="image/*" ref={photoInputRef} onChange={e => { handlePhotoUpload(e.target.files?.[0]); e.target.value = ''; }} className="hidden" />
               <div className="flex items-center gap-4 md:gap-5 p-4 md:p-5 rounded-2xl" style={{ background: 'var(--gc-input-bg)', border: '2px solid var(--gc-tan)' }}>
@@ -789,31 +965,6 @@ export default function App() {
                       </button>
                     )}
                   </div>
-                </div>
-              </div>
-            </div>
-
-             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>이름</label>
-                <input value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none transition-all" placeholder="성함" />
-              </div>
-              <div className="space-y-1.5 md:space-y-2">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>기수</label>
-                <div className="relative">
-                  <select value={profileData.generation} onChange={e => setProfileData({...profileData, generation: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
-                    {GENERATIONS.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
-                </div>
-              </div>
-              <div className="space-y-1.5 md:space-y-2 col-span-2 md:col-span-1">
-                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest ml-1" style={{ color: 'var(--gc-text-sub)' }}>역할</label>
-                <div className="relative">
-                  <select value={profileData.role} onChange={e => setProfileData({...profileData, role: e.target.value})} className="w-full p-3.5 md:p-4 rounded-xl font-medium text-sm md:text-base outline-none appearance-none cursor-pointer">
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={18} style={{ color: 'var(--gc-text-muted)' }} />
                 </div>
               </div>
             </div>

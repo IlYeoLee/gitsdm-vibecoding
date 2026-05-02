@@ -282,3 +282,66 @@ input::placeholder, textarea::placeholder {
 /* ── Scrollbar hide ──────────────────────────────────────────────────── */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── pixi-game-ui inspired: shimmer sweep on cards ──────────────────── */
+@keyframes shimmer {
+  0%   { transform: translateX(-110%) skewX(-18deg); }
+  100% { transform: translateX(210%)  skewX(-18deg); }
+}
+.gcard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255,255,255,0.22) 50%,
+    transparent 100%
+  );
+  transform: translateX(-110%) skewX(-18deg);
+}
+.gcard-clickable:hover::after {
+  animation: shimmer 0.6s ease forwards;
+}
+
+/* ── pixi-game-ui inspired: glow ring on active gcard ───────────────── */
+.gcard-active {
+  box-shadow: 0 4px 0 var(--gc-gold-dark), 0 0 0 3px rgba(232,164,74,0.45), 0 8px 28px rgba(180,120,50,0.18) !important;
+}
+
+/* ── pixi-game-ui inspired: ornate divider ───────────────────────────── */
+.gdivider {
+  position: relative;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--gc-tan), var(--gc-gold), var(--gc-tan), transparent);
+  border-radius: 9999px;
+  margin: 0 auto;
+}
+.gdivider::before, .gdivider::after {
+  content: '✦';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gc-gold);
+  font-size: 10px;
+  line-height: 1;
+}
+.gdivider::before { left: -14px; }
+.gdivider::after  { right: -14px; }
+
+/* ── pixi-game-ui inspired: member-face glow on hover ───────────────── */
+.member-face-btn:hover img {
+  box-shadow: 0 0 0 3px var(--gc-gold), 0 4px 12px rgba(232,164,74,0.4);
+}
+
+/* ── pixi-game-ui inspired: green success glow on gbtn ──────────────── */
+.gbtn-success {
+  background: linear-gradient(to bottom, #7ED87F 0%, var(--gc-green) 100%);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--gc-green-floor), 0 6px 18px rgba(91,184,92,0.38);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+.gbtn-success:hover:not(:disabled) { filter: brightness(1.07); }
