@@ -22,6 +22,19 @@ const VIEWS = {
 const ROLES = ["PL", "ID", "VD", "UX"];
 const GENERATIONS = ["31기", "32기", "33기", "34기"];
 const PROJECT_CATEGORIES = ["파운데이션", "인텐시브", "소모임", "산학", "MEP", "기타"];
+
+const CHEER_POOL = (category) => [
+  '우리 화이팅! 🔥',
+  '잘해보자! 💪',
+  '아자아자! ✨',
+  `${category} 가보자! 🚀`,
+  '우리팀 최고야! 🎉',
+  '같이 하면 돼! 👊',
+  '파이팅!! 💥',
+  '믿어, 우리 할 수 있어! 🌟',
+  '오늘도 화이팅! ⚡',
+  '최강 팀! 🏆',
+];
 const WORK_STYLE_TAGS = ["빠른 시각화", "깊은 리서치", "논리적 근거", "디테일 집착", "아이디어 위주", "문서화 강점"];
 const MEP_TOPICS = ["가전", "AR", "VR", "로봇", "모빌리티", "휴머노이드", "바이브코딩", "AI", "헬스케어", "에코시스템"];
 
@@ -109,10 +122,45 @@ const Button = ({ children, onClick, variant = 'primary', className = "", disabl
   );
 };
 
+// --- Confetti burst (pure CSS, no library) ---
+const CONFETTI_COLORS = ['#3182f6','#00c471','#ff8a00','#9b51e0','#FFD54F','#E91E63','#00BCD4','#FF7043'];
+const Confetti = ({ active }) => {
+  if (!active) return null;
+  const pieces = Array.from({ length: 72 }, (_, i) => ({
+    id: i,
+    left: `${(i / 72) * 100 + (Math.sin(i * 2.4) * 6)}%`,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    delay: `${(i % 12) * 0.05}s`,
+    duration: `${1.1 + (i % 7) * 0.18}s`,
+    w: 6 + (i % 5),
+    h: 4 + (i % 4),
+    rot: (i * 37) % 360,
+    shape: i % 3 === 0 ? '50%' : '2px', // circle or rect
+  }));
+  return (
+    <div className="fixed inset-0 z-[450] pointer-events-none overflow-hidden">
+      <style>{`
+        @keyframes cfFall {
+          0%   { transform: translateY(-10px) rotate(0deg) scaleX(1);   opacity: 1; }
+          50%  { scaleX(-1); }
+          100% { transform: translateY(105vh) rotate(600deg) scaleX(1); opacity: 0; }
+        }
+      `}</style>
+      {pieces.map(p => (
+        <div key={p.id} style={{
+          position: 'absolute', left: p.left, top: 0,
+          width: p.w, height: p.h,
+          backgroundColor: p.color,
+          borderRadius: p.shape,
+          transform: `rotate(${p.rot}deg)`,
+          animation: `cfFall ${p.duration} ${p.delay} ease-in both`,
+        }} />
+      ))}
+    </div>
+  );
+};
+
 // --- Full Screen Finch Style Scene ---
-// Avatar sprite — 5 frames at /avatar/{1..5}.png, 759x909 each.
-// Face circle CENTER per frame (measured from PNG, normalized to image width/height).
-// Frame 2 is the squat moment so the face drops dramatically — these are NOT all the same.
 const SPRITE_FRAME_COUNT = 5;
 const SPRITE_ASPECT = 909 / 759; // h/w
 
@@ -172,7 +220,7 @@ const getBestSlots = (availability) => {
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([slot, count]) => ({ slot, count }));
 };
 
-const FinchWalkingScene = ({ members, onMemberClick }) => {
+const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages }) => {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false);
   const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const [tick, setTick] = useState(0);
@@ -216,24 +264,36 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
     }
   };
 
-  // Auto-scale character size + spacing to fit up to 10 members
-  const naturalCharWidth = isMobile ? 90 : 140;
-  const naturalSpacing = isMobile ? 95 : 150;
-  const usableWidth = viewportWidth * (isMobile ? 0.94 : 0.78);
-  const minScale = 0.45;
+  // Tiered character sizing: mobile base is larger, scales down gracefully with more members
+  // naturalSpacing ≈ naturalCharWidth * 0.8 → allows snug walking without overlap on small screens
+  const naturalCharWidth = isMobile ? 110 : 150;
+  const naturalSpacing   = isMobile ? 88  : 160;
+  const usableWidth = viewportWidth * (isMobile ? 0.96 : 0.80);
+  const minScale = isMobile ? 0.48 : 0.40;
   const requiredWidth = Math.max(1, members.length) * naturalSpacing;
   const fitScale = requiredWidth > usableWidth ? Math.max(minScale, usableWidth / requiredWidth) : 1;
-  const charWidth = naturalCharWidth * fitScale;
+  const charWidth  = naturalCharWidth * fitScale;
   const charHeight = charWidth * SPRITE_ASPECT;
   const charOffset = naturalSpacing * fitScale;
 
   return (
     <div className="absolute inset-0 bg-[#E8DDE0] overflow-hidden pointer-events-none">
       <style>{`
-        .scene-bg-pan { animation: sceneScroll 70s linear infinite; }
-        .scene-objects-pan { animation: sceneScroll 40s linear infinite; }
+        .scene-bg-pan     { animation: sceneScroll 70s linear infinite; }
+        .scene-objects-pan{ animation: sceneScroll 40s linear infinite; }
         @keyframes sceneScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .text-shadow-sm { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        @keyframes charJump {
+          0%   { transform: translateY(0px)   scaleX(1)    scaleY(1);    }
+          12%  { transform: translateY(-42px) scaleX(0.92) scaleY(1.08); }
+          26%  { transform: translateY(0px)   scaleX(1.08) scaleY(0.94); }
+          40%  { transform: translateY(-26px) scaleX(0.95) scaleY(1.05); }
+          54%  { transform: translateY(0px)   scaleX(1.05) scaleY(0.96); }
+          67%  { transform: translateY(-14px) scaleX(0.97) scaleY(1.03); }
+          78%  { transform: translateY(0px)   scaleX(1.02) scaleY(0.99); }
+          88%  { transform: translateY(-6px)  scaleX(1)    scaleY(1);    }
+          100% { transform: translateY(0px)   scaleX(1)    scaleY(1);    }
+        }
+        .char-jumping { animation: charJump 0.95s ease-in-out both; transform-origin: bottom center; }
       `}</style>
 
       {/* Layer 1: Office Interior Background — slow parallax */}
@@ -267,56 +327,62 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
           const faceLeft = charWidth * faceFrame.cx - photoSize / 2;
           const faceTop = charHeight * faceFrame.cy - photoSize / 2;
 
+          const cheerMsg = cheerMessages?.[member.id];
+          const bubbleText = cheerMsg || `"${member.intro || '안녕!'}"`;
+          const bubbleBg = cheerMsg ? 'bg-[#3182f6]' : 'bg-white';
+          const bubbleText2 = cheerMsg ? 'text-white' : 'text-[#4e5968]';
+          const bubbleBorder = cheerMsg ? 'border-[#3182f6]' : 'border-gray-100';
+          const tailBg = cheerMsg ? 'bg-[#3182f6]' : 'bg-white';
+
           return (
             <div
               key={member.id}
-              onClick={() => onMemberClick(member)}
-              className="absolute bottom-0 flex flex-col items-center cursor-pointer transition-transform hover:scale-110"
+              className="absolute bottom-0 flex flex-col items-center cursor-pointer"
               style={{ transform: `translateX(${indexOffset * charOffset}px)`, zIndex }}
             >
-              {/* Speech Bubble */}
+              {/* Inner wrapper gets jump animation; click still fires on outer */}
               <div
-                className="absolute bg-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl shadow-md border border-gray-100 animate-in fade-in zoom-in slide-in-from-bottom-2 duration-500 whitespace-nowrap text-center"
-                style={{ bottom: `${charHeight + 8}px` }}
+                className={`flex flex-col items-center hover:scale-110 transition-transform ${isJumping ? 'char-jumping' : ''}`}
+                style={{ animationDelay: `${index * 55}ms` }}
+                onClick={() => onMemberClick(member)}
               >
+                {/* Speech Bubble */}
                 <div
-                  className="text-[10px] md:text-sm font-bold text-[#4e5968] truncate"
-                  style={{ maxWidth: `${charWidth + 70}px` }}
-                >"{member.intro || '안녕!'}"</div>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-b border-r border-gray-100"></div>
-              </div>
-
-              {/* Character: role-specific sprite + face photo locked to the face-hole per frame */}
-              <div
-                className="relative drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)]"
-                style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
-              >
-                {/* Profile photo fills the face hole — rendered BEHIND the sprite so the ring rim covers the edge */}
-                <div
-                  className="absolute rounded-full overflow-hidden"
-                  style={{
-                    left: `${faceLeft}px`,
-                    top: `${faceTop}px`,
-                    width: `${photoSize}px`,
-                    height: `${photoSize}px`,
-                  }}
+                  className={`absolute ${bubbleBg} ${bubbleBorder} border px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl shadow-md animate-in fade-in zoom-in duration-300 whitespace-nowrap text-center transition-all`}
+                  style={{ bottom: `${charHeight + 8}px` }}
                 >
-                  {member.photoUrl ? (
-                    <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center font-bold text-white"
-                      style={{ backgroundColor: ringColor, fontSize: `${photoSize * 0.42}px` }}
-                    >{member.name?.[0] || '?'}</div>
-                  )}
+                  <div
+                    className={`text-[10px] md:text-sm font-bold ${bubbleText2} truncate`}
+                    style={{ maxWidth: `${charWidth + 70}px` }}
+                  >{bubbleText}</div>
+                  <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 ${tailBg} rotate-45 border-b border-r ${bubbleBorder}`}></div>
                 </div>
-                {/* Sprite on top — the transparent hole reveals the photo beneath */}
-                <img
-                  src={ASSET(`avatar/${roleKey}/${roleKey}${frame}.png`)}
-                  alt=""
-                  draggable={false}
-                  className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
-                />
+
+                {/* Character: role-specific sprite + face photo locked to face-hole per frame */}
+                <div
+                  className="relative drop-shadow-[0_6px_8px_rgba(0,0,0,0.15)]"
+                  style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
+                >
+                  <div
+                    className="absolute rounded-full overflow-hidden"
+                    style={{ left: `${faceLeft}px`, top: `${faceTop}px`, width: `${photoSize}px`, height: `${photoSize}px` }}
+                  >
+                    {member.photoUrl ? (
+                      <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover select-none" draggable={false}/>
+                    ) : (
+                      <div
+                        className="w-full h-full flex items-center justify-center font-bold text-white"
+                        style={{ backgroundColor: ringColor, fontSize: `${photoSize * 0.42}px` }}
+                      >{member.name?.[0] || '?'}</div>
+                    )}
+                  </div>
+                  <img
+                    src={ASSET(`avatar/${roleKey}/${roleKey}${frame}.png`)}
+                    alt=""
+                    draggable={false}
+                    className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+                  />
+                </div>
               </div>
             </div>
           );
@@ -455,6 +521,9 @@ export default function App() {
   const [currentMemberId, setCurrentMemberId] = useState(() => {
     try { return localStorage.getItem('ALIGN_CURRENT_MEMBER_ID') || null; } catch { return null; }
   });
+  const [isJumping, setIsJumping] = useState(false);
+  const [activeCheerMessages, setActiveCheerMessages] = useState({});
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Photo crop modal state
   const [cropImageSrc, setCropImageSrc] = useState(null);
@@ -557,6 +626,20 @@ export default function App() {
     const k = { ...kickoff, agreements: { ...(kickoff.agreements || {}), [currentMemberId]: true } };
     const t = { ...team, kickoff: k };
     setTeam(t); saveTeamToLocal(t);
+  };
+
+  const handleCheer = () => {
+    if (isJumping || team.members.length === 0) return;
+    const pool = CHEER_POOL(team.category || '');
+    const msgs = {};
+    // Each member gets a unique message (shuffle-assign)
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    team.members.forEach((m, i) => { msgs[m.id] = shuffled[i % shuffled.length]; });
+    setActiveCheerMessages(msgs);
+    setIsJumping(true);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2200);
+    setTimeout(() => { setIsJumping(false); setActiveCheerMessages({}); }, 2600);
   };
 
   // Photo selection now opens an interactive crop modal instead of auto-cropping center.
@@ -1009,7 +1092,14 @@ export default function App() {
         {view === VIEWS.DASHBOARD && (
           <div className="fixed inset-0 w-full h-full bg-[#8FCB81] overflow-hidden flex justify-center">
 
-            <FinchWalkingScene members={team.members} onMemberClick={setSelectedMember} />
+            <FinchWalkingScene
+              members={team.members}
+              onMemberClick={setSelectedMember}
+              isJumping={isJumping}
+              cheerMessages={activeCheerMessages}
+            />
+
+            <Confetti active={showConfetti} />
 
             <MemberDetailModal member={selectedMember} onClose={() => setSelectedMember(null)} />
 
@@ -1241,6 +1331,17 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {/* Cheer FAB — floats just above nav bar, centered */}
+            <button
+              onClick={handleCheer}
+              disabled={isJumping || team.members.length === 0}
+              className="absolute left-1/2 -translate-x-1/2 z-[55] flex items-center gap-2 px-5 py-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-white/80 font-bold text-sm text-[#191f28] active:scale-95 transition-all hover:shadow-2xl hover:bg-white disabled:opacity-40"
+              style={{ bottom: 'calc(env(safe-area-inset-bottom) + 88px)' }}
+            >
+              <span className={`text-lg ${isJumping ? 'animate-spin' : ''}`}>🎉</span>
+              우리 팀 응원하기
+            </button>
 
             <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 bg-white/95 backdrop-blur-xl flex items-center justify-around px-2 md:px-10 rounded-t-[32px] md:rounded-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-2xl z-50 border-t md:border border-white transition-all pb-[env(safe-area-inset-bottom)]">
                <button className="flex flex-col items-center gap-1 md:gap-1.5 p-2 w-14 md:w-24 opacity-100 transition-opacity">
