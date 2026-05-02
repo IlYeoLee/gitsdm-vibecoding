@@ -485,7 +485,8 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
 
             const cheerMsg = cheerMessages?.[member.id];
             const roleColor = getRoleColor(member.role);
-            const bubbleText = cheerMsg || `"${member.intro || '안녕!'}"`;
+            const rawBubble = cheerMsg || `"${member.intro || '안녕!'}"`;
+            const bubbleText = rawBubble.length > 30 ? rawBubble.slice(0, 29) + '…' : rawBubble;
             const bubbleBg   = cheerMsg ? roleColor : '#fff';
             const bubbleTextColor = cheerMsg ? '#fff' : '#4e5968';
             const bubbleBorderColor = cheerMsg ? roleColor : '#e5e7eb';
@@ -1960,21 +1961,33 @@ export default function App() {
 
             <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 gnav-bottom flex items-center justify-around px-4 md:px-12 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
               style={{ border: '2.5px solid var(--gc-gold)' }}>
-               <button className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90">
-                  <Ico name="Home" size={40} />
-                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-blue)' }}>홈</span>
+               <button className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 3px 0 var(--gc-blue-floor)', padding: '6px' }}>
+                    <Ico name="Home" size={28} />
+                  </div>
+                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-blue)' }}>홈</span>
                </button>
-               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90 opacity-55 hover:opacity-100">
-                  <Ico name="Users" size={40} />
-                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-text-sub)' }}>멤버</span>
+               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90 opacity-55 hover:opacity-100">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '1.5px solid var(--gc-tan)', boxShadow: '0 3px 0 var(--gc-gold-floor)', padding: '6px' }}>
+                    <Ico name="Users" size={28} />
+                  </div>
+                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-text-sub)' }}>멤버</span>
                </button>
-               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90 opacity-55 hover:opacity-100">
-                  <Ico name="Heart" size={40} />
-                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-text-sub)' }}>약속</span>
+               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90 opacity-55 hover:opacity-100">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '1.5px solid var(--gc-tan)', boxShadow: '0 3px 0 var(--gc-gold-floor)', padding: '6px' }}>
+                    <Ico name="Heart" size={28} />
+                  </div>
+                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-text-sub)' }}>약속</span>
                </button>
-               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90 opacity-55 hover:opacity-100">
-                  <Ico name="CalendarPlus" size={40} />
-                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-text-sub)' }}>일정</span>
+               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-90 opacity-55 hover:opacity-100">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '1.5px solid var(--gc-tan)', boxShadow: '0 3px 0 var(--gc-gold-floor)', padding: '6px' }}>
+                    <Ico name="CalendarPlus" size={28} />
+                  </div>
+                  <span className="font-bold text-[10px]" style={{ color: 'var(--gc-text-sub)' }}>일정</span>
                </button>
             </div>
           </div>
