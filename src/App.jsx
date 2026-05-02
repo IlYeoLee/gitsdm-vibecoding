@@ -7,6 +7,9 @@ import {
   Copy, Share2, Check, Navigation, AlertCircle, Smile, MapPinned, Flag, CalendarPlus, Circle, Monitor, Bed, Camera
 } from 'lucide-react';
 
+// Vite handles base path (/ in dev, /gitsdm-vibecoding/ in prod build) — runtime asset URLs must be prefixed
+const ASSET = (p) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, '')}`;
+
 // --- Constants ---
 const VIEWS = {
   LANDING: 'landing',
@@ -148,7 +151,7 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
   useEffect(() => {
     for (let i = 1; i <= SPRITE_FRAME_COUNT; i++) {
       const img = new Image();
-      img.src = `/avatar/${i}.png`;
+      img.src = ASSET(`avatar/${i}.png`);
     }
   }, []);
 
@@ -185,14 +188,14 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
       {/* Layer 1: Office Interior Background — slow parallax */}
       <div className="absolute top-0 left-0 h-full flex scene-bg-pan z-0" style={{ width: 'max-content' }}>
         {[...Array(6)].map((_, i) => (
-          <img key={i} src="/scene-bg.png" alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none" />
+          <img key={i} src={ASSET('scene-bg.png')} alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none" />
         ))}
       </div>
 
       {/* Layer 2: Foreground Furniture — faster parallax (chairs/desk align with carpet line per finished example) */}
       <div className="absolute top-0 left-0 h-full flex scene-objects-pan z-10" style={{ width: 'max-content' }}>
         {[...Array(6)].map((_, i) => (
-          <img key={i} src="/objects.png" alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none" />
+          <img key={i} src={ASSET('objects.png')} alt="" draggable={false} className="h-full w-auto block flex-shrink-0 select-none" />
         ))}
       </div>
 
@@ -235,7 +238,7 @@ const FinchWalkingScene = ({ members, onMemberClick }) => {
                 style={{ width: `${charWidth}px`, height: `${charHeight}px` }}
               >
                 <img
-                  src={`/avatar/${frame}.png`}
+                  src={ASSET(`avatar/${frame}.png`)}
                   alt=""
                   draggable={false}
                   className="absolute inset-0 w-full h-full object-contain select-none"
