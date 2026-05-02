@@ -250,6 +250,26 @@ const ROLE_SPRITES = {
   },
 };
 
+// Role lookup for pending roster members (before they fill their profile)
+const MEMBER_ROLE_LOOKUP = {
+  // UX
+  '김채은': 'UX', '윤현경': 'UX', '이채연': 'UX', '장유진': 'UX',
+  '김승희': 'UX', '박정민 (UX)': 'UX', '이서희': 'UX', '장별': 'UX',
+  '전주현': 'UX', '한예지': 'UX', '백채영': 'UX', '서유빈': 'UX',
+  '양준홍': 'UX', '이일여': 'UX', '이주은': 'UX', '정유진': 'UX',
+  '조서현': 'UX', '권세진': 'UX', '서주원': 'UX', '서주원 ②': 'UX',
+  '김정빈': 'UX', '임채은': 'UX', '최선우': 'UX', '임찬주': 'UX',
+  '권솔': 'UX', '박우희': 'UX', '전다빈': 'UX', '윤영실': 'UX',
+  '이지우': 'UX', '김예영': 'UX', '이정현': 'UX',
+  // ID
+  '이준영': 'ID', '주형준': 'ID', '나승환': 'ID', '김도완': 'ID',
+  '박도현': 'ID', '박정민 (ID)': 'ID', '송시헌': 'ID', '임준우': 'ID',
+  '강동헌': 'ID', '김시우': 'ID', '박세연': 'ID', '서현빈': 'ID',
+  '양현지': 'ID', '정민서': 'ID', '정민영': 'ID', '최완혁': 'ID',
+  '고유하': 'ID', '김소진': 'ID', '김정현': 'ID', '박주원': 'ID',
+  '윤지원': 'ID', '김민정': 'ID', '이화인': 'ID',
+};
+
 // Demo members shown on the landing screen preview — randomized per visit
 const DEMO_INTROS = ['반가워요! 👋', '잘 부탁해요! ✨', '같이 해봐요! 🧡', '화이팅! 🔥'];
 const DEMO_ROLES = ['PL', 'ID', 'UX', 'VD'];
@@ -280,7 +300,7 @@ const MEMBER_ROSTER = [
   { name: '김채은',      photo: 'members/김채은.png' },
   { name: '나승환',      photo: 'members/나승환.png' },
   { name: '박도현',      photo: 'members/박도현.png' },
-  { name: '박도현 ②',   photo: 'members/박도현-1.png' },
+  { name: '이채연',      photo: 'members/이채연.png' },
   { name: '박세연',      photo: 'members/박세연.png' },
   { name: '박우희',      photo: 'members/박우희.png' },
   { name: '박정민 (ID)', photo: 'members/ID박정민.png' },
@@ -368,16 +388,16 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
 
   const getRoleColor = (role) => {
     switch(role) {
-      case 'PL': return '#3182f6';
-      case 'ID': return '#00c471';
-      case 'VD': return '#ff8a00';
-      case 'UX': return '#9b51e0';
-      default: return '#3182f6';
+      case 'PL': return '#FF6B9D'; // pink
+      case 'ID': return '#4A8FE0'; // blue
+      case 'VD': return '#FFD600'; // yellow
+      case 'UX': return '#FF8A00'; // orange
+      default: return '#4A8FE0';
     }
   };
 
-  // 5+ members → 2 rows so characters stay larger
-  const shouldSplit = members.length >= 5;
+  // 5+ members on mobile → 2 rows; desktop always 1 row (wide viewport fits all)
+  const shouldSplit = members.length >= 5 && isMobile;
   const row1Members = shouldSplit ? members.slice(0, Math.ceil(members.length / 2)) : members;
   const row2Members = shouldSplit ? members.slice(Math.ceil(members.length / 2)) : [];
   const maxRowLen   = shouldSplit ? Math.max(row1Members.length, row2Members.length) : members.length;
@@ -537,26 +557,28 @@ const FinchWalkingScene = ({ members, onMemberClick, isJumping, cheerMessages })
                   </div>
                 </div>
 
-                {/* Name pill badge */}
-                <div style={{
-                  marginTop: '3px',
-                  padding: '2px 9px',
-                  background: 'rgba(255,253,247,0.92)',
-                  border: '1.5px solid rgba(212,169,106,0.7)',
-                  borderRadius: '9999px',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
-                  fontSize: '11px',
-                  fontFamily: "'Jua', sans-serif",
-                  color: '#3D2B1F',
-                  letterSpacing: '-0.02em',
-                  whiteSpace: 'nowrap',
-                  maxWidth: `${charWidth + 20}px`,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  pointerEvents: 'none',
-                }}>
-                  {[member.role, member.name].filter(Boolean).join(' ')}
-                </div>
+                {/* Name pill badge — only in single-row layout */}
+                {!shouldSplit && (
+                  <div style={{
+                    marginTop: '3px',
+                    padding: '2px 9px',
+                    background: 'rgba(255,253,247,0.92)',
+                    border: '1.5px solid rgba(212,169,106,0.7)',
+                    borderRadius: '9999px',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+                    fontSize: '11px',
+                    fontFamily: "'Jua', sans-serif",
+                    color: '#3D2B1F',
+                    letterSpacing: '-0.02em',
+                    whiteSpace: 'nowrap',
+                    maxWidth: `${charWidth + 20}px`,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    pointerEvents: 'none',
+                  }}>
+                    {[member.role, member.name].filter(Boolean).join(' ')}
+                  </div>
+                )}
               </div>
             );
           });
@@ -874,7 +896,8 @@ export default function App() {
     return roster.map(r => {
       const registered = (t.members || []).find(m => m.name === r.name);
       if (registered) return { ...registered, intro: registered.intro || '작성 중..' };
-      return { id: `pending-${r.name}`, name: r.name, role: 'UX', photoUrl: ASSET(r.photo), intro: '아직 초대 전', _isPending: true };
+      const pendingRole = MEMBER_ROLE_LOOKUP[r.name] || 'UX';
+      return { id: `pending-${r.name}`, name: r.name, role: pendingRole, photoUrl: ASSET(r.photo), intro: '아직 초대 전', _isPending: true };
     });
   };
 
@@ -1935,35 +1958,23 @@ export default function App() {
               </button>
             </div>
 
-            <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-24 md:h-32 gnav-bottom flex items-center justify-around px-3 md:px-10 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
+            <div className="absolute bottom-0 md:bottom-8 w-full max-w-md md:max-w-2xl lg:max-w-4xl h-20 md:h-28 gnav-bottom flex items-center justify-around px-4 md:px-12 rounded-t-[32px] md:rounded-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.10)] md:shadow-2xl z-50 transition-all pb-[env(safe-area-inset-bottom)]"
               style={{ border: '2.5px solid var(--gc-gold)' }}>
-               <button className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95">
-                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(to bottom, var(--gc-blue-top), var(--gc-blue))', boxShadow: '0 4px 0 var(--gc-blue-floor)', padding: '10px' }}>
-                    <Ico name="Home" size={34} />
-                  </div>
-                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-blue)' }}>홈</span>
+               <button className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90">
+                  <Ico name="Home" size={40} />
+                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-blue)' }}>홈</span>
                </button>
-               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95 opacity-60 hover:opacity-100">
-                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '2px solid var(--gc-tan)', boxShadow: '0 4px 0 var(--gc-gold-floor)', padding: '10px' }}>
-                    <Ico name="Users" size={34} />
-                  </div>
-                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-text-sub)' }}>멤버</span>
+               <button onClick={() => setShowMembersSheet(true)} className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90 opacity-55 hover:opacity-100">
+                  <Ico name="Users" size={40} />
+                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-text-sub)' }}>멤버</span>
                </button>
-               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95 opacity-60 hover:opacity-100">
-                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '2px solid var(--gc-tan)', boxShadow: '0 4px 0 var(--gc-gold-floor)', padding: '10px' }}>
-                    <Ico name="Heart" size={34} />
-                  </div>
-                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-text-sub)' }}>약속</span>
+               <button onClick={() => setShowRulesSheet(true)} className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90 opacity-55 hover:opacity-100">
+                  <Ico name="Heart" size={40} />
+                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-text-sub)' }}>약속</span>
                </button>
-               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1.5 p-1.5 transition-all active:scale-95 opacity-60 hover:opacity-100">
-                  <div className="w-14 h-14 md:w-18 md:h-18 rounded-2xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(to bottom, #FFFEF8, #F5E5C4)', border: '2px solid var(--gc-tan)', boxShadow: '0 4px 0 var(--gc-gold-floor)', padding: '10px' }}>
-                    <Ico name="CalendarPlus" size={34} />
-                  </div>
-                  <span className="font-bold text-[11px] md:text-sm" style={{ color: 'var(--gc-text-sub)' }}>일정</span>
+               <button onClick={() => setShowKickoffSheet(true)} className="flex flex-col items-center gap-1 p-2 transition-all active:scale-90 opacity-55 hover:opacity-100">
+                  <Ico name="CalendarPlus" size={40} />
+                  <span className="font-bold text-[11px]" style={{ color: 'var(--gc-text-sub)' }}>일정</span>
                </button>
             </div>
           </div>
