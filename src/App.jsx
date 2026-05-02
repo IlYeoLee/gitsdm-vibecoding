@@ -219,7 +219,7 @@ const CHEER_POOL = (category) => [
   '우리팀 최고야! 🎉',
   '같이 하면 돼! 👊',
   '파이팅!! 💥',
-  '믿어, 우리 할 수 있어! 🌟',
+  '우리 할 수 있어! 🌟',
   '오늘도 화이팅! ⚡',
   '최강 팀! 🏆',
 ];
@@ -1017,6 +1017,7 @@ export default function App() {
   const [showProjectStart, setShowProjectStart] = useState(false);
   const prevKickoffAgreed = useRef(null);
   const [showKakaoGuide, setShowKakaoGuide] = useState(false);
+  const [showInviteBanner, setShowInviteBanner] = useState(false);
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
@@ -1192,13 +1193,6 @@ export default function App() {
       saveTeamToLocal(newTeam);
       dbCreateTeam(newTeam);
 
-      // Key goes in URL hash — browsers never send # to the server
-      const inviteUrl = `${getInviteUrl(teamId)}#k=${rawB64}`;
-      copyToClipboard(inviteUrl);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 3000);
-      setPendingShareUrl(inviteUrl);
-
       setTeam(newTeam);
       setSelectedRoster([]);
       setView(VIEWS.ROSTER_SELECT);
@@ -1215,8 +1209,9 @@ export default function App() {
     try { localStorage.setItem('ALIGN_CURRENT_MEMBER_ID', newUser.id); } catch {}
     try { localStorage.removeItem(`ALIGN_DRAFT_${team.id}`); } catch {}
     setCurrentMemberId(newUser.id);
+    // Show invite banner only for the creator (device that holds the encryption key)
+    if (encKeyRaw.current) setShowInviteBanner(true);
     setView(VIEWS.DASHBOARD);
-    // Encrypt and persist to DB in background — does not block navigation
     encryptMember(encKey, newUser)
       .then(encrypted => dbAddMember(team.id, encrypted))
       .catch(() => dbAddMember(team.id, newUser));
@@ -1988,28 +1983,6 @@ export default function App() {
         {view === VIEWS.ROSTER_SELECT && (
           <div className="max-w-2xl mx-auto py-8 md:py-16 px-5 md:px-6 pb-28 animate-in slide-in-from-bottom-8 duration-700">
 
-          {/* Share banner — appears right after team creation */}
-          {pendingShareUrl && (
-            <div className="mb-6 p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-500"
-              style={{ background: 'linear-gradient(135deg, rgba(74,144,226,0.12), rgba(107,180,255,0.08))', border: '2px solid var(--gc-blue)', boxShadow: '0 4px 0 var(--gc-blue-floor)' }}>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm" style={{ color: 'var(--gc-blue)' }}>초대 링크가 복사됐어요! 🎉</p>
-                <p className="text-xs font-medium mt-0.5 truncate" style={{ color: 'var(--gc-text-muted)' }}>{pendingShareUrl}</p>
-              </div>
-              <button
-                onClick={() => shareInviteLink(pendingShareUrl)}
-                className="gbtn gbtn-primary shrink-0"
-                style={{ padding: '10px 16px', fontSize: '13px', gap: '6px' }}
-              >
-                <Ico name="Share2" size={16}/> 공유하기
-              </button>
-              <button onClick={() => setPendingShareUrl(null)}
-                className="shrink-0 p-1.5 rounded-full transition-colors"
-                style={{ color: 'var(--gc-text-muted)', background: 'var(--gc-border)' }}>
-                <X size={14}/>
-              </button>
-            </div>
-          )}
             <div className="text-center mb-6 md:mb-10">
               <h2 className="text-3xl md:text-5xl font-bold mb-2 tracking-tight" style={{ color: 'var(--gc-text)' }}>
                 팀원을 선택하세요
@@ -2554,6 +2527,30 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              {/* Invite banner — appears after profile submit, creator only */}
+              {showInviteBanner && (
+                <div className="w-full animate-in slide-in-from-top-4 duration-500">
+                  <div className="w-full p-3.5 rounded-2xl flex items-center gap-3"
+                    style={{ background: 'rgba(255,253,247,0.96)', border: '2px solid var(--gc-gold)', boxShadow: '0 4px 0 var(--gc-gold-dark), 0 8px 20px rgba(0,0,0,0.14)', backdropFilter: 'blur(12px)' }}>
+                    <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>🎉</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm leading-tight" style={{ color: 'var(--gc-text)' }}>이제 팀원을 초대하세요!</p>
+                      <p className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--gc-text-muted)' }}>링크를 공유해서 팀원을 불러오세요</p>
+                    </div>
+                    <button onClick={() => { setShowInviteBanner(false); shareInviteLink(); }}
+                      className="gbtn gbtn-primary shrink-0"
+                      style={{ padding: '10px 14px', fontSize: '13px', gap: '5px' }}>
+                      <Ico name="Share2" size={15}/> 공유
+                    </button>
+                    <button onClick={() => setShowInviteBanner(false)}
+                      className="rounded-full flex items-center justify-center shrink-0 transition-colors"
+                      style={{ width: 28, height: 28, background: 'var(--gc-border)', color: 'var(--gc-text-sub)' }}>
+                      <X size={13}/>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Cheer + BGM row — always below the progress widget */}
               <div className="flex items-center gap-2 w-full justify-center">
