@@ -1018,6 +1018,7 @@ export default function App() {
   const prevKickoffAgreed = useRef(null);
   const [showKakaoGuide, setShowKakaoGuide] = useState(false);
   const [showInviteBanner, setShowInviteBanner] = useState(false);
+  const [bgmStarted, setBgmStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
@@ -1057,7 +1058,7 @@ export default function App() {
   }, [isMuted]);
   useEffect(() => {
     if (isMuted) return;
-    const handler = () => { playBgm(); };
+    const handler = () => { playBgm(); setBgmStarted(true); };
     document.addEventListener('pointerdown', handler, { once: true });
     return () => document.removeEventListener('pointerdown', handler);
   }, [isMuted]);
@@ -1261,7 +1262,7 @@ export default function App() {
     })();
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${team.name || '멤보딩'} 팀 합류 초대`, text: '프로필 작성하고 팀에 합류하세요!', url: shareUrl });
+        await navigator.share({ title: `${team.name || '멤보딩'} 팀 합류 초대`, url: shareUrl });
       } catch {}
     } else {
       copyToClipboard(shareUrl);
@@ -1920,9 +1921,16 @@ export default function App() {
 
               {/* CTA button */}
               <div
-                className="absolute inset-x-0 bottom-0 flex justify-center px-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
+                className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 px-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
                 style={{ paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom) + 20px))' }}
               >
+                {!bgmStarted && !isMuted && (
+                  <div className="flex items-center gap-1.5 px-4 py-2 rounded-full animate-pulse"
+                    style={{ background: 'rgba(255,253,247,0.85)', border: '1.5px solid var(--gc-tan)', color: 'var(--gc-text-sub)', backdropFilter: 'blur(8px)' }}>
+                    <Volume2 size={13}/>
+                    <span style={{ fontSize: '12px', fontFamily: "'Jua', sans-serif" }}>탭하면 소리와 함께 시작돼요</span>
+                  </div>
+                )}
                 <Button
                   onClick={() => setView(VIEWS.SETUP_TEAM)}
                   className="text-base md:text-lg px-8 md:px-14 py-4 md:py-5 rounded-2xl md:rounded-[28px] shadow-2xl shadow-blue-500/50 w-full max-w-xs md:max-w-sm"
@@ -2071,7 +2079,7 @@ export default function App() {
         {view === VIEWS.INVITE_LANDING && (
           <div className="fixed inset-0 overflow-hidden">
             <FinchWalkingScene
-              members={getSceneMembers()}
+              members={(() => { const m = getSceneMembers(); return m.length > 0 ? m : demoMembers; })()}
               onMemberClick={() => {}}
               isJumping={false}
               cheerMessages={{}}
