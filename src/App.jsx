@@ -1060,6 +1060,8 @@ export default function App() {
   const [showInviteBanner, setShowInviteBanner] = useState(false);
   const [bgmStarted, setBgmStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(() => {
+    const q = new URLSearchParams(location.search).get('muted');  // embeds pass ?muted=1|0
+    if (q !== null) return q === '1';
     try { return localStorage.getItem('ALIGN_MUTED') === 'true'; } catch { return false; }
   });
 
