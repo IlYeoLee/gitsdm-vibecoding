@@ -404,7 +404,7 @@ const MEMBER_ROLE_LOOKUP = {
   '전주현': 'UX', '한예지': 'UX', '백채영': 'UX', '서유빈': 'UX',
   '양준홍': 'UX', '이일여': 'UX', '이주은': 'UX', '정유진': 'UX',
   '조서현': 'UX', '권세진': 'UX', '서주원': 'UX', '서주원 ②': 'UX',
-  '김정빈': 'UX', '임채은': 'UX', '최선우': 'UX', '임찬주': 'UX',
+  '김정빈': 'UX', '임채은': 'UX', '최선우': 'UX',
   '권솔': 'UX', '박우희': 'UX', '전다빈': 'UX', '윤영실': 'UX',
   '이지우': 'UX', '김예영': 'UX', '이정헌': 'UX', '이정현': 'UX',
   // ID
@@ -482,7 +482,6 @@ const MEMBER_ROSTER = [
   { name: '이지우',      photo: 'members/이지우.png' },
   { name: '이화인',      photo: 'members/이화인.png' },
   { name: '임준우',      photo: 'members/임준우.png' },
-  { name: '임찬주',      photo: 'members/임찬주.png' },
   { name: '임채은',      photo: 'members/임채은.png' },
   { name: '장별',        photo: 'members/장별.png' },
   { name: '장유진',      photo: 'members/장유진.png' },
