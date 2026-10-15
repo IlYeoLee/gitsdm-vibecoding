@@ -1488,7 +1488,7 @@ export default function App() {
                   roster={team.kickoff?.rosterMembers || []}
                   takenNames={team.members.filter(m => m.id !== currentMemberId).map(m => m.name)}
                   onSelect={async (m) => {
-                    setProfileData(prev => ({ ...prev, name: m.name }));
+                    setProfileData(prev => ({ ...prev, name: m.name, role: MEMBER_ROLE_LOOKUP[m.name] || prev.role }));
                     try {
                       const res = await fetch(ASSET(m.photo));
                       const blob = await res.blob();
