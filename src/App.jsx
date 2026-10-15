@@ -2007,10 +2007,10 @@ export default function App() {
           <div className="max-w-2xl mx-auto py-8 md:py-16 px-5 md:px-6 pb-28 animate-in slide-in-from-bottom-8 duration-700">
 
             <div className="text-center mb-6 md:mb-10">
-              <h2 className="text-3xl md:text-5xl font-bold mb-2 tracking-tight" style={{ color: 'var(--gc-text)' }}>
+              <h2 className="mb-1.5 md:mb-2 tracking-tight" style={{ fontSize: '24px', fontFamily: "'Jua', sans-serif", fontWeight: 400, color: 'var(--gc-text)' }}>
                 팀원을 선택하세요
               </h2>
-              <p className="text-sm md:text-base font-medium" style={{ color: 'var(--gc-text-sub)' }}>
+              <p className="text-sm md:text-lg font-medium" style={{ color: 'var(--gc-text-sub)' }}>
                 {team.targetSize}명을 선택하면 초대가 시작됩니다
               </p>
               <div className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-base"
